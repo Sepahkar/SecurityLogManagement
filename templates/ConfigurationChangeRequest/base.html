@@ -1,0 +1,70 @@
+<html dir="rtl" lang="fa-IR">
+{%  load static %}
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.rtl.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/jquery-confirm.min.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/fontawesome.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/solid.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/brands.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/change-request.css" >
+    <link rel="stylesheet" href="/static/ConfigurationChangeRequest/scss/select2.scss">
+    <link rel="stylesheet" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
+    <title>درخواست تغییرات</title>
+</head>
+<body>
+    <form id="requestForm" method="POST" action="">
+    <div class="header">
+
+            {% csrf_token %}
+            <input type="hidden" name="request_id" id="request_id" value="{{request.id}}"/>
+
+            <div class="col-2">
+                <img src="{% static 'ConfigurationChangeRequest/images/EIT.png' %}" alt="فناوران اطلاعات خبره" title="فناوران اطلاعات خبره" class="logo">
+            </div>
+            <div class='button-container right col-2'>
+                {% if status == 'INSERT' %}
+                <button type="submit" class="btn btn-primary" id="save">شروع فرآیند</button>
+                {% elif status == 'UPDATE' %}
+                <button type="submit" class="btn btn-primary" id="save">تایید</button>
+                {% endif %}
+            </div>
+            <div class="title col-4">
+                درخواست تغییرات
+                <div class="step-button">
+                    <span class="step">{{bc}}</span>
+                </div> 
+                <nav class="breadcrumbs">
+                    {%for bc in breadcrumbs%}
+                    <a href="#home" class="breadcrumbs__item {%if bc.default%}is-active{%endif%}" id="bc-{{bc.order}}">{{bc.name}}</a>
+                    {%if bc.default%}<input type="hidden" id="bc-value" value="bc-{{bc.order}}">{%endif%}
+                    {%endfor%}
+                    
+                </nav>                   
+            </div>
+            <div class='button-container left col-2'>
+                {% if status == 'INSERT' %}
+                <button type="reset" class="btn btn-secondary">لغو</button>
+                {% elif status == 'UPDATE' %}
+                <button type="button" class="btn btn-error" id="reject">رد مدرک</button>
+                {% endif %}
+
+            </div>
+            <div class='info col-2'>
+                <p><b>شماره درخواست: </b><span>{{request_number}}<span></p>
+                <p><b>تاریخ ثبت درخواست: </b><span>{{request_date}}</span></p>
+            </div>
+
+    </div>
+
+    {% block main_content%}
+    {% endblock %}
+</form>
+</body>
+<script src="/static/ConfigurationChangeRequest/js/jquery-3.6.0.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/jquery-confirm.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/select2.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/change-request.js"></script>
+
+</html>

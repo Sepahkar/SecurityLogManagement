@@ -1,0 +1,11 @@
+requests
+jdatetime
+python-dateutil
+django
+pytz
+python-dotenv
+pyjwt
+djangorestframework
+mssql-django
+mssql
+django-environ

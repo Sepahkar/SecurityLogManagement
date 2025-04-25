@@ -1,0 +1,146 @@
+@font-face
+{
+  font-family: Defined-Titr;
+  src: url("../font/BTitrBd.TTF");
+}
+.feature-text{
+    font-family: Defined-Titr;
+    font-size: 10pt;
+    width: 150px;
+    overflow-x: hidden;
+}
+.content
+{
+    display: flex;
+}
+.column1
+{
+
+}
+.team_feature_page .content
+{
+    width: 1080px;
+    overflow-y: hidden;
+}
+.row2 td
+{
+    height: 120px;
+    overflow-y: hidden;
+}
+.content .column1
+{
+    width: 230px;
+}
+.content .row1 .column2
+{
+    overflow-y: scroll;
+    overflow-x: scroll;
+}
+.content .row2 .column2
+{
+    overflow-y: scroll;
+}
+.team_feature_page .row2
+{
+    height: 600px;
+    overflow-y: scroll;
+}
+
+.hidden
+{
+    display: none;
+}
+.feature-icon
+{
+    width: 25px;
+    cursor: pointer;
+}
+.feature-icon:hover
+{
+    width: 27px;
+    cursor: pointer;
+}
+.combo{
+    padding-right: 10px;
+}
+
+.team-info
+{
+    font-family: Defined-Titr;
+    width: 100%;
+    text-align: center;
+}
+.team-info img
+{
+    width: 100px;
+}
+.team-feature
+{
+    width: 100%;
+    text-align: center;
+}
+
+.corp
+{
+    width: 65px;
+}
+.icon
+{
+    width: 45px;
+    cursor: pointer;
+}
+.icon:hover
+{
+    width: 50px;
+}
+tbody .icon.all:hover
+{
+    width: 45px;
+}
+thead .icon.all
+{
+    width: 60px;
+}
+.year-no
+{
+    width: 50px;
+    font-size: 10pt;
+    color: gray;
+    border:none;
+    border-bottom: gray solid 1px;
+    text-align: center;
+
+}
+table
+{
+    text-align: center;
+    box-shadow: 0 5px 12px -12px rgb(0 0 0 / 29%);
+    color: #212529;
+
+}
+table tbody
+{
+        display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+table td, table th
+{
+    padding: 5px;
+    height: 85px;
+    width: 85px;
+}
+table tbody tr:nth-child(odd)
+{
+    background-color: rgba(0,0,0,.05);
+}
+table tbody tr:nth-child(odd) .year-no
+{
+    background-color: rgba(0,0,0,0);
+}
+
+table thead tr,table thead tr .year-no
+{
+    background-color: #c7d2db;
+}
+

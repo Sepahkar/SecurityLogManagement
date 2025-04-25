@@ -1,0 +1,95 @@
+{% extends 'ConfigurationChangerRequest/base.html' %}
+    {% block main_content %}
+
+    <div class="container mt-5">
+        <h2 class="text-center">درخواست تغییرات بخش فناوری اطلاعات</h2>
+        <form>
+            <div class="form-row">
+
+
+            <h4>ویژگی‌های تغییر</h4>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="classification">طبقه‌بندی تغییر:</label>
+                    <select id="classification" class="form-control">
+                        <option>عادی</option>
+                        <option>محرمانه</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="scope">دامنه تغییر:</label>
+                    <select id="scope" class="form-control">
+                        <option>جزئی</option>
+                        <option>بخشی</option>
+                        <option>کلان</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="priority">اولویت تغییر:</label>
+                    <select id="priority" class="form-control">
+                        <option>استاندارد</option>
+                        <option>فوری</option>
+                        <option>اضطراری</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="riskLevel">سطح ریسک تغییر:</label>
+                    <select id="riskLevel" class="form-control">
+                        <option>پایین</option>
+                        <option>معمولی</option>
+                        <option>بالا</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="changeArea">حوزه و الزامات تغییر:</label>
+                    <select id="changeArea" class="form-control">
+                        <option>درون سازمانی</option>
+                        <option>بین سازمانی</option>
+                        <option>برون سازمانی</option>
+                    </select>
+                </div>
+            </div>
+
+            <h4>اطلاعات تغییر</h4>
+            <div class="form-group">
+                <label for="changeTitle">عنوان تغییر:</label>
+                <input type="text" class="form-control" id="changeTitle" placeholder="عنوان تغییر را وارد کنید">
+            </div>
+            <div class="form-group">
+                <label for="changeType">نوع تغییر:</label>
+                <select id="changeType" class="form-control">
+                    <option>تغییرات نرم‌افزاری</option>
+                    <option>تغییرات سخت‌افزاری</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="changeDescription">شرح تغییر:</label>
+                <textarea class="form-control" id="changeDescription" rows="3" placeholder="شرح تغییر را وارد کنید"></textarea>
+            </div>
+
+            <h4>محل تغییرات</h4>
+            <div class="form-group">
+                <label>محل تغییر:</label><br>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="location1" value="option1">
+                    <label class="form-check-label" for="location1">مرکز داده</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="location2" value="option2">
+                    <label class="form-check-label" for="location2">پایگاه داده</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="location3" value="option3">
+                    <label class="form-check-label" for="location3">سیستم‌ها</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">ثبت</button>
+            <button type="reset" class="btn btn-secondary">لغو</button>
+        </form>
+    </div>
+
+    {% endblock %}

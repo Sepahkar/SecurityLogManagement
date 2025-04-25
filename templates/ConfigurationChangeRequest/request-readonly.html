@@ -1,0 +1,642 @@
+{% extends 'ConfigurationChangeRequest/base.html' %}
+{% load static %} 
+{% load custom_filters %}
+{% block main_content %}
+    {% if status == 'INSERT' or status == 'UPDATE' %}
+    <div class="container">
+        <div id="pnl-step-1" >
+                <div class='panel-row'>
+                    <div class='col-6 fieldBox user-list'>
+                        <div class="col-4 requestor user-info">
+                            <div class="title">اطلاعات درخواست دهنده</div>
+                            <hr/>
+                            <div class="content">
+                                <div class="user-avatar">
+                                    <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ current_user.username|split:'@' }}.jpg" 
+                                    alt="{{ current_user.fullname }}" title="{{ current_user.fullname }}" class="personnel-avatar">
+                                </div>
+                                <div class="user-information">
+                                    <input type="hidden" name="requestor_user_nationalcode" value="{{current_user.national_code}}"/>
+                                    <label>درخواست دهنده:</label><span>{{current_user.fullname}}</span>
+                                    <label>سمت درخواست دهنده:</label>
+                                    {% if current_user.team_roles|length == 1 %}
+                                        <span class='single-role'>{{ current_user.team_roles.0.role_title }} {{current_user.team_roles.0.team_name}}</span>
+                                        <input type="hidden" name="requestor_user_team_role" value="{{ current_user.team_roles.0.team_code }}-{{ current_user.team_roles.0.role_id }}"/>
+                                    {% elif current_user.team_roles|length > 1 %}
+                                        <select class='role-select' name="requestor_user_team_role">
+                                            {% for team_role in current_user.team_roles %}
+                                                <option value="{{ team_role.team_code }}-{{ team_role.role_id }}">{{ team_role.role_title }} {{team_role.0.team_name}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}
+                                        <span class='no-role'>کاربر فاقد سمت است</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 executor user-info">
+                            <div class="title">اطلاعات مجری</div>
+                            <hr/>
+                            <div class="content">
+                                <div class="user-avatar">
+                                    <img id="executor-avatar" src="{% static 'ConfigurationChangeRequest/images/Avatar.png' %}" class="personnel-avatar">
+                                </div>
+                                <div class="user-information">
+                                    <label>مجری:</label>
+                                    <select name="executor_user_nationalcode" class="user-select required" data-field-name="انتخاب مجری">
+                                        <option value="">انتخاب کاربر</option>
+                                        {% for user in all_users %}
+                                            <option value="{{ user.national_code }}" data-username="{{ user.username }}" data-fullname="{{ user.fullname }}" data-gender="{{ user.gender }}">
+                                                {{ user.fullname }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="role-container" style="display: none;">
+                                        <label>سمت مجری:</label>
+                                        <select class="role-select" name="executor_user_team_role" style="display: none;">
+                                            {% for user in all_users%}
+                                                {% for team_role in user.team_roles %}
+                                                    <option data-national-code="{{ user.national_code|replace_none_with_zero }}" value="{{ team_role.team_code }}-{{ team_role.role_id }}">{{ team_role.role_title }} (تیم {{team_role.team_name}})</option>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </select>
+                                        <span class="single-role" style="display:none"></span>
+                                        <span class="no-role" style="display:none">کاربر فاقد سمت است</span>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 tester user-info">
+                            <div class="title">اطلاعات تستر</div>
+                            <hr/>
+                            <div class="content">
+                                <div class="user-avatar">
+                                    <img id="tester-avatar" src="{% static 'ConfigurationChangeRequest/images/Avatar.png' %}" class="personnel-avatar">
+                                </div>
+                                <div class="user-information">
+                                    <label>تستر:</label>
+                                    <select name="tester_user_nationalcode" class="user-select required" data-field-name="انتخاب تستر">
+                                        <option value="">انتخاب کاربر</option>
+                                        {% for user in all_users %}
+                                            <option value="{{ user.national_code }}" data-username="{{ user.username }}" data-fullname="{{ user.fullname }}" data-gender="{{ user.gender }}">
+                                                {{ user.fullname }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="role-container" style="display: none;">
+                                        <label>سمت تستر:</label>
+                                        <select class="role-select" name="tester_user_team_role" style="display: none;">
+                                            {% for user in all_users%}
+                                                {% for team_role in user.team_roles %}
+                                                    <option data-national-code="{{ user.national_code }}" value="{{ team_role.team_code }}-{{ team_role.role_id }}">{{ team_role.role_title }} (تیم {{team_role.team_name}})</option>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </select>
+                                        <span class="single-role" style="display:none"></span>
+                                        <span class="no-role" style="display:none">کاربر فاقد سمت است</span>
+                                    </div>
+                                </div>
+                                <div class="need-test">
+                                    <span>نیاز به تست</span> 
+                                    <input type="radio" name="need_test" value="1" checked><label>دارد</label>
+                                    <input type="radio" name="need_test" value="0"><label>ندارد</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='col-6 fieldBox'>
+                        <div class="title">ویژگی های تغییر</div>
+                        <hr/>
+                        <div class="content">
+                            <div class="content-row col-12">
+                                <div class="col-3 radio-label">طبقه بندی تغییر:</div>
+                                <div class="radio-list col-9">
+                                    {% for value in classification_values %}
+                                        <div class='radio-box {% if classification_default == value.Code %}active{%else%}inactive{%endif%}'>
+                                            <div class='radio-button'>
+                                                <input type="radio" name="classification" value="{{ value.id }}" {%if classification_default == value.Code %}checked="checked"{%endif%} >
+                                            </div>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if classification_default != value.Code %}_Gray{%endif%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}                                    
+                                </div>
+                            </div>
+                            <div class="content-row col-12">
+                                <div class="col-3 radio-label">گستردگی تغییرات:</div>
+                                <div class="radio-list col-9">
+                                    {% for value in change_level_values %}
+                                        <div class='radio-box {% if change_level_default == value.Code %}active{%else%}inactive{%endif%}'>
+                                            <div class='radio-button'>
+                                                <input type="radio" name="change_level" value="{{ value.id }}" {%if change_level_default == value.Code %}checked="checked"{%endif%} >
+                                            </div>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if change_level_default != value.Code %}_Gray{%endif%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}                                    
+                                </div>
+                            </div>
+                            <div class="content-row col-12">
+                                <div class="col-3 radio-label">اولویت تغییر:</div>
+                                <div class="radio-list col-9">
+                                    {% for value in priority_values %}
+                                        <div class='radio-box {% if priority_default == value.Code %}active{%else%}inactive{%endif%}'>
+                                            <div class='radio-button'>
+                                                <input type="radio" name="priority" value="{{ value.id }}"  {%if priority_default == value.Code %}checked="checked"{%endif%} >
+                                            </div>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if priority_default != value.Code %}_Gray{%endif%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}                                    
+                                </div>
+                            </div>
+                            <div class="content-row col-12">
+                                <div class="col-3 radio-label">سطح ریسک تغییر:</div>
+                                <div class="radio-list col-9">
+                                    {% for value in risk_level_values %}
+                                        <div class='radio-box {% if risk_level_default == value.Code %}active{%else%}inactive{%endif%}'>
+                                            <div class='radio-button'>
+                                                <input type="radio" name="risk_level" value="{{ value.id }}"  {%if risk_level_default == value.Code %}checked="checked"{%endif%} >
+                                            </div>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if risk_level_default != value.Code %}_Gray{%endif%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class='panel-row'>
+                    <div class='col-6 fieldBox change-info'>
+                        <div class="title">اطلاعات تغییر</div>
+                        <hr/>
+                        <div class="content">
+                            <div class="content-row">
+                                <label for="changeTitle" >عنوان تغییر:</label>
+                                <input type="text" name="change_title" class="form-control required" id="changeTitle" placeholder="عنوان تغییر را وارد کنید" data-field-name="عنوان تغییر">
+                            </div>
+                            <div class="content-row">
+                                <label for="changeType">نوع تغییر:</label>
+                                <select name="change_type" class="form-control required" data-field-name="نوع تغییر">
+                                    <option value="">انتخاب نوع تغییر</option>
+                                        {% for ct in change_type %}
+                                        <option value="{{ ct.id }}" 
+                                        data-code="{{ ct.code }}" 
+                                        
+
+                                        {% comment %} اطلاعات افراد درگیر {% endcomment %}
+                                        data-executor-nationalcode="{{ ct.executor_nationalcode.national_code }}" 
+                                        data-tester-nationalcode="{{ ct.tester_nationalcode.national_code }}" 
+                                        data-test-required="{{ ct.test_required }}"
+                                        
+                                        {% comment %} اطلاعات ویژگی های تغییر  {% endcomment %}
+                                        data-change-level="{{ ct.change_level.id }}" 
+                                        data-classification="{{ ct.classification.id }}" 
+                                        data-priority="{{ ct.priority.id }}"
+                                        data-risk-level="{{ ct.risk_level.id }}"
+                                        
+
+                                        data-change-type-title="{{ ct.change_type_title }}" 
+                                        data-change-title="{{ ct.change_title }}" 
+                                        data-change-description="{{ ct.change_description }}" 
+                                        
+                                        {% comment %} محل تغییر {% endcomment %}
+                                        data-change-location-data-center="{{ ct.change_location_data_center }}" 
+                                        data-change-location-data-center-list="[
+                                            {% for data_center in change_type_data_center_list %}
+                                                {% if data_center.change_type.id == ct.id %}
+                                                    '{{ data_center.extra_info.Code}}'{% if not forloop.last %}, {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        ]"                                            
+
+                                        data-change-location-database="{{ ct.change_location_database }}" 
+                                        data-change-location-database-list="[
+                                            {% for database in change_type_database_list %}
+                                                {% if database.change_type.id == ct.id %}
+                                                    '{{ database.extra_info.Code}}'{% if not forloop.last %}, {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        ]"  
+                                        data-change-location-systems="{{ ct.change_location_systems }}" 
+                                        data-change-location-systems-list="[
+                                            {% for systems in change_type_systems_list %}
+                                                {% if systems.change_type.id == ct.id %}
+                                                    '{{ systems.extra_info.Code}}'{% if not forloop.last %}, {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        ]"  
+                                        data-change-location-other="{{ ct.change_location_other }}"                                             
+                                        data-change-location-other-description="{{ ct.change_location_other_description }}" 
+
+                                        {% comment %} حوزه و ارتباطات تغییر {% endcomment %}
+                                        data-need-committee="{{ ct.need_committee }}" 
+                                        data-committee-id="{{ ct.committee_id }}" 
+                                        {% comment %} تیمها {% endcomment %}
+                                        data-domain="{{ ct.domain }}" 
+                                        data-teams="[
+                                            {% for team in change_type_request_team %}
+                                                {% if team.changetype.id == ct.id %}
+                                                    '{{ team.team_code.team_code}}'{% if not forloop.last %}, {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        ]"  
+                                        {% comment %} شرکت ها {% endcomment %}
+                                        data-corps="[
+                                            {% for corp in change_type_request_corp %}
+                                                {% if corp.changetype.id == ct.id %}
+                                                    '{{ corp.corp_code.corp_code }}'{% if not forloop.last %}, {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        ]"  
+
+
+                                        data-changing-duration="{{ ct.changing_duration }}" 
+                                        data-downtime-duration="{{ ct.downtime_duration }}" 
+                                        data-downtime-duration-worstcase="{{ ct.downtime_duration_worstcase }}" 
+
+                                        
+                                        data-stop-critical-service="{{ ct.stop_critical_service }}" 
+                                        data-critical-service-title="{{ ct.critical_service_title }}" 
+                                        data-stop-sensitive-service="{{ ct.stop_sensitive_service }}" 
+                                        data-stop-service-title="{{ ct.stop_service_title }}" 
+                                        data-not-stop-any-service="{{ ct.not_stop_any_service }}" 
+                                        
+                                        data-has-role-back-plan="{{ ct.has_role_back_plan }}" 
+                                        data-role-back-plan-description="{{ ct.role_back_plan_description }}" 
+                                        
+                                        data-reason-regulatory="{{ ct.reason_regulatory }}" 
+                                        data-reason-technical="{{ ct.reason_technical }}" 
+                                        data-reason-security="{{ ct.reason_security }}" 
+                                        data-reason-business="{{ ct.reason_business }}" 
+                                        data-reason-other="{{ ct.reason_other }}" 
+                                        data-reason-other-description="{{ ct.reason_other_description }}"                                             
+                                        >
+                                        {{ ct.change_type_title }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="content-row">
+                                <label for="changeDescription" >شرح تغییر:</label>
+                                <textarea name="change_description" class="form-control required" id="changeDescription" rows="3" data-field-name="شرح تغییر" placeholder="شرح تغییر را وارد کنید"></textarea>
+                            </div>
+                            <div>
+                                <label>محل تغییر:</label><br>
+                                <div class="content-row col-12">
+                                    <div class="col-3 check-list-main-checkbox">
+                                        <input class="form-check-input" name="change_location_data_center" type="checkbox" id="data_center" value=true>
+                                        <label class="form-check-label" for="change_location_data_center">مرکز داده</label>
+                                    </div>
+                                    <div class="check-list-detail col-9 data-center-list">
+                                        {% for value in data_center_values %}
+                                        <div class='check-list-box {% if data_center_default == value.Code %}active{%else%}inactive{%endif%}'>
+                                            <div>
+                                                <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if data_center_default != value.Code %}_Gray{%endif%}.png" 
+                                                title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="{{ value.Code }}"
+                                                {%if data_center_default == value.Code %}checked="checked"{%endif%}>
+                                            </div>
+                                            <div class='check-list-caption'>            
+                                                {{ value.Caption }}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="content-row col-12 database-list">
+                                    <div class="col-3 check-list-main-checkbox">
+                                        <input class="form-check-input" type="checkbox" name="change_location_database" id="database" value=true>
+                                        <label class="form-check-label" for="change_location_database">پایگاه داده</label>
+                                    </div>
+                                    <div class="check-list-detail col-9">
+                                    </div>
+                                </div>
+                                <div class="content-row col-12 systems-list">
+                                    <div class="col-3 check-list-main-checkbox">
+                                        <input class="form-check-input" type="checkbox" name="change_location_systems" id="systems" value=true>
+                                        <label class="form-check-label" for="change_location_systems">سیستم ها</label>
+                                    </div>
+                                    <div class="check-list-detail col-9">
+                                        {% for value in systems_services_values %}
+                                        <div class='check-list-box {% if systems_services_default == value.Code %}active{%else%}inactive{%endif%}'>
+                                            <div>
+                                                <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if systems_services_default != value.Code %}_Gray{%endif%}.png" 
+                                                title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="{{ value.Code }}"
+                                                {%if systems_services_default == value.Code %}checked="checked"{%endif%}>
+                                            </div>
+                                            <div class='check-list-caption'>            
+                                                {{ value.Caption }}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+
+                                </div>
+                                <div class="content-row col-12">
+                                    <div class="col-3 check-list-main-checkbox">
+                                        <input class="form-check-input" type="checkbox" name="change_location_other" id="other" value=true>
+                                        <label class="form-check-label" for="other">سایر</label>
+                                    </div>
+                                    <div class="check-list-detail col-9">
+                                        <input type="text" class="form-control" name="change_location_other_description" placeholder="محل تغییر را وارد کنید">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='col-6 fieldBox'>
+                        <div class="title">دامنه تغییرات</div>
+                        <hr/>
+                        <div class="content ">
+                            <div class="content-row col-12 ">
+                                <div class="col-3 radio-label">نیاز به کمیته :</div>
+                                <div class="col-9  need-committee-box">
+                                    <input class="radio-input" type="radio" name="need_committee" id="need_committee_no" value="0" checked="checked">
+                                    <label class="radio-label" for="need_committee_no">ندارد</label>
+                                    <input class="radio-input" type="radio" name="need_committee" id="need_committee_yes" value="1">
+                                    <label class="radio-label" for="need_committee_yes">دارد</label>
+                                    <select class="select-box" name="committee" id="committee" style="display:none">
+                                        <option value="-1">یک کمیته را انتخاب کنید</option>
+                                        {% for c in committee %}
+                                        <option value="{{c.id}}">{{ c.title }}</option>
+                                        {% endfor %}                                    
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="change-team-corp">
+                                <div class="content-row col-12">
+                                    <div class="col-3 radio-label">دامنه تغییر:</div>
+                                    <div class="radio-list col-9">
+                                        {% for value in domain_values %}
+                                            <div class='radio-box {% if domain_default == value.Code %}active{%else%}inactive{%endif%} {{ value.Code }}' data-code='{{ value.Code }}'>
+                                                <div class='radio-button'>
+                                                    <input type="radio" name="domain" value="{{ value.Code }}" {%if domain_default == value.Code %}checked="checked"{%endif%} >
+                                                </div>
+                                                <div class='radio-info'>
+                                                    <div class='radio-image'>
+                                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if domain_default != value.Code %}_Gray{%endif%}.png" 
+                                                        title="{{ value.Caption }}" alt="{{ value.Caption }}" class="{{ value.Code }}">
+                                                    </div>
+                                                    <div class='radio-caption'>
+                                                        {{ value.Caption }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}                                    
+                                    </div>
+                                </div>
+                                <div class="content-row col-12 team-icons" style="display:none;">
+                                    <div class="col-2 radio-label">
+                                        <input class="form-check-input team-corp-checkbox team" type="checkbox" value=true>
+                                        انتخاب همه تیم ها
+                                    </div>
+                                    <div class="icon-list col-10">
+                                        {%for team in teams%}
+                                        <input type="checkbox" class="form-check-input" value="{{ team.team_code }}" name="{{ team.team_code }}"/>
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/team/'|add:team.team_code%}.png" 
+                                        alt="{{ team.team_name }}" data-code="{{team.team_code}}" title="{{ team.team_name }}" class="inactive"/>
+                                        {%endfor%}
+                                    </div>
+                                </div>
+                                <div class="content-row col-12 corp-icons" style="display:none;">
+                                    <div class="col-2 radio-label">
+                                        <input class="form-check-input team-corp-checkbox corp" type="checkbox" value=true>
+                                        انتخاب همه شرکت ها
+                                    </div>
+                                    <div class="icon-list col-10">
+                                        {%for corp in corps%}
+                                        <input type="checkbox" class="form-check-input" value="{{ corp.corp_code }}" name="{{ corp.corp_code }}"/>
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/corp/'|add:corp.corp_code%}_Gray.png" 
+                                        alt="{{ corp.corp_name }}" data-code="{{ corp.corp_code }}" title="{{ corp.corp_name }}" class="inactive"/>
+                                        {%endfor%}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+        <div id="pnl-step-2" style="display:none">
+            <div class='panel-row'>
+                <div class='col-6 fieldBox'>
+                    <div class="title">زمانبندی تغییرات</div>
+                    <hr/>
+                    <div class="content">
+                        <table class="scheduling-table">
+                            <tr>
+                                <td class="title-text">
+                                    زمان درخواست تغییرات:
+                                </td>
+                                <td class="subtitle-text" >
+                                    تاریخ
+                                    <input type="text" class="date-time" name="request_date" placeholder="YYYY/MM/DD" />
+                                </td>
+                                <td class="subtitle-text">
+                                    زمان
+                                    <input type=text class="date-time" name="request_time" placeholder="HH:MM"/>
+                                </td>
+                            </tr>
+                            <tr class='duration'>
+                                <td class="title-text">
+                                    مدت زمان لازم برای تغییرات:
+                                </td>
+                                <td class="subtitle-text">
+                                    ساعت
+                                    <input type="number" class='hours' name="duration_hour" max="72" min="0" value="0" />
+                                </td>
+                                <td class="subtitle-text">
+                                    دقیقه
+                                    <input type="number" class='minutes' name="duration_minute" max="59" min="0" value="0" />
+                                </td>
+                            </tr>
+                            <tr class='downtime'>
+                                <td class="title-text">
+                                    میزان تخمینی قطعی سیستم:
+                                </td>
+                                <td class="subtitle-text">
+                                    ساعت
+                                    <input type="number" class='hours' name="estimate_downtime_hour" max="72" min="0" value="0" />
+                                </td>
+                                <td class="subtitle-text">
+                                    دقیقه
+                                    <input type="number" class='minutes' name="estimate_downtime_minute" max="59" min="0" value="0" />
+                                </td>
+                            </tr>
+                            <tr class='downtime-worstcase'>
+                                <td class="title-text">
+                                    بدترین میزان قطعی سیستم:
+                                </td>
+                                <td class="subtitle-text">
+                                    ساعت
+                                    <input type="number" class='hours' name="worstcase_downtime_hour" max="72" min="0" value="0" />
+                                </td>
+                                <td class="subtitle-text">
+                                    دقیقه
+                                    <input type="number" class='minutes' name="worstcase_downtime_minute" max="59" min="0" value="0" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class='col-6 fieldBox'>
+                    <div class="title">حوزه اثرگذاری</div>
+                    <hr/>
+                    <div class="content">
+                        <table class="impact-table">
+                            <tr>
+                                <td class="checkbox">
+                                    <input type="checkbox" class="form-check-input" value="true" name="ImpactOnCriticalService" />
+                                </td>
+                                <td class="title-text">
+                                    منجر به قطعی سرویس های حیاتی می شود
+                                    <span class="subtitle-text">منجر به قطعی سرویس های مشتریان شده و تاثیر منفی بر وجهه شرکت دارد</span>
+                                </td>
+                                <td>
+                                    <input type="text" name="ImpactOnCriticalServiceDescription" placeholder="توضیحات قطعی، تاثیرات و پیامدها" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="checkbox">
+                                    <input type="checkbox" class="form-check-input" value="true" name="ImpactOnSensitiveService" />
+                                </td>
+                                <td class="title-text">
+                                    منجر به قطعی سرویس های حساس می شود
+                                    <span class="subtitle-text">سرویس های مشتریان و سامانه های اصلی شرکت قطع نمی شود</span>
+                                </td>
+                                <td>
+                                    <input type="text" name="ImpactOnSensitiveServiceDescription" placeholder="توضیحات قطعی، تاثیرات و پیامدها" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input" value="true" name="ImpactNotOnAnyService" />
+                                </td>
+                                <td class="title-text">
+                                    عدم قطعی سرویس ها
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class='panel-row'>
+                <div class='col-6 fieldBox'>
+                    <div class="title">الزام به تغییر</div>
+                    <hr/>
+                    <div class="content">
+                        <table class="reason-table">
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input" value="true" name="ReasonRegulatory" />
+                                </td>
+                                <td>
+                                    رگولاتوری
+                                </td>
+                                <td>
+                                    <input type="checkbox" class="form-check-input" value="true" name="ReasonTechnical" />
+                                </td>
+                                <td>
+                                    فنی
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input" value="true" name="ReasonSecurity" />
+                                </td>
+                                <td>
+                                    امنیتی
+                                </td>
+                                <td>
+                                    <input type="checkbox" class="form-check-input" value="true" name="ReasonBusiness" />
+                                </td>
+                                <td>
+                                    توسعه کسب و کاری
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input" value="true" name="ReasonOther" />
+                                </td>
+                                <td>
+                                    سایر
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                    <input type="text" name="ReasonOtherDescription" placeholder="توضیحات" />
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+                <div class='col-6 fieldBox'>
+                    <div class="title">بازگشت تغییرات</div>
+                    <hr/>
+                    <div class="content">
+                        <table class="return-plan-table">
+                            <tr>
+                                <td class="title-text">
+                                    امکان بازگشت به عقب وجود دارد؟
+                                </td>
+                                <td>
+                                    <input type="radio" class="form-check-input has" value="1" name="Rollback" />بله
+                                    <input type="radio" class="form-check-input has-not" value="0" name="Rollback" />خیر
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    طرح بازگشت
+                                </td>
+                                <td>
+                                    <textarea name="RollbackPlan" placeholder="طرح بازگشت"></textarea>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% else %}
+        {% if message %}
+            <h1 class="error">{{message}}</h1>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+
