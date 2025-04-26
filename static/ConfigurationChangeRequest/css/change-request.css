@@ -584,4 +584,63 @@ input[type="text"], textarea
 }
 /************** page 2 end***************/
 
+/*************Readonly start******************/
+.readonly .panel-row
+{
+  text-align: center;
+}
 
+.readonly .change-info label
+{
+  margin:0;
+  align-content: center;
+}
+
+.readonly .check-list-caption
+{
+  font-size: 7pt;
+}
+.readonly .icon.team
+{
+  width: 40px;
+  background-color: rgb(13, 0, 78);
+  border-radius: 50%;
+}
+.readonly .icon.corp
+{
+  height: 60px;
+}
+.readonly .icons
+{
+  align-content: center;
+  display: ruby;
+}
+.readonly .scheduling-table div
+{
+  display: flex;
+}
+.readonly .has-rollback-plan
+{
+  color: red;
+    text-decoration: double;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-style: solid;
+}
+.readonly .content .rollback
+{
+  display: flex;
+}
+.readonly .user-info .single-role
+{
+  font-size: 10pt;
+}
+.readonly .previous_step
+{
+  opacity: 0.4;
+}
+.readonly .next_step
+{
+  opacity: 0.2;
+}
+/*************Readonly end******************/

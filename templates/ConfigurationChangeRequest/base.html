@@ -27,7 +27,7 @@
                 {% if status == 'INSERT' %}
                 <button type="submit" class="btn btn-primary" id="save">شروع فرآیند</button>
                 {% elif status == 'UPDATE' %}
-                <button type="submit" class="btn btn-primary" id="save">تایید</button>
+                <button type="submit" class="btn btn-primary confirm" data-status="{{ request.status_code }}">تایید</button>
                 {% endif %}
             </div>
             <div class="title col-4">
@@ -45,9 +45,9 @@
             </div>
             <div class='button-container left col-2'>
                 {% if status == 'INSERT' %}
-                <button type="reset" class="btn btn-secondary">لغو</button>
+                <button type="reset" class="btn btn-warning">لغو</button>
                 {% elif status == 'UPDATE' %}
-                <button type="button" class="btn btn-error" id="reject">رد مدرک</button>
+                <button type="button" class="btn btn-danger" id="reject">رد مدرک</button>
                 {% endif %}
 
             </div>

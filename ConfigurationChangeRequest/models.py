@@ -18,6 +18,11 @@ class User(models.Model):
         verbose_name_plural = 'کاربران'
         managed = True
 
+    @property
+    def fullname(self):
+        return f"{self.first_name} {self.last_name}"
+
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.national_code})"
 
@@ -224,7 +229,7 @@ class ChangeType(models.Model):
         managed = True
 
     def __str__(self):
-        return self.change_code
+        return self.Code
     
     def clean(self) -> None:
         v.ConstValue_Validator(prefix="change_level")
@@ -586,7 +591,7 @@ class RequestTeam(models.Model):
 
 
 class RequestExtraInformation(models.Model):
-    extra_info = models.ForeignKey(to='ConstValue', on_delete=models.CASCADE, null=False, verbose_name='شناسه اطلاعات تکمیلی')
+    extra_info = models.ForeignKey(to=ConstValue, on_delete=models.CASCADE, null=False, verbose_name='شناسه اطلاعات تکمیلی')
     request = models.ForeignKey(to='ConfigurationChangeRequest', on_delete=models.CASCADE, null=False, verbose_name='شناسه درخواست')
     class Meta:
         verbose_name = 'اطلاعات تکمیلی درخواست'

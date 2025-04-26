@@ -25,3 +25,11 @@ def split_and_return(value, arg):
 @register.filter
 def replace_none_with_zero(value):
     return value if value is not None else 0
+
+
+
+@register.filter
+def startswith(value, arg):
+    if value:
+        return value.startswith(arg)
+    return False

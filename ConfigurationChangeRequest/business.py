@@ -86,7 +86,7 @@ def check_form_status(user_nationalcode: str, request_id: int) -> str:
     return 'INVALID'
 
 # این تابع با توجه به مرحله فعلی، به مرحله بعدی می رود
-def next_step(request_id: int,user_nationalcode:int ,action: str)->str:
+def next_step(request_id: int,user_nationalcode:int ,action: str, form_data: dict)->str:
     # دریافت درخواست بر اساس request_id
     request_instance = m.ConfigurationChangeRequest.objects.get(id=request_id)
     
@@ -105,6 +105,7 @@ def next_step(request_id: int,user_nationalcode:int ,action: str)->str:
     current_status = request_instance.status_code
     
     # حالا مرحله بعدی را مشخص می کنیم
+    validation_error = ''
     # تعیین وضعیت جدید بر اساس action
     if action == "CON":
         if current_status == 'EXECUT' and not request_instance.test_required:
@@ -116,9 +117,15 @@ def next_step(request_id: int,user_nationalcode:int ,action: str)->str:
     elif action == "RET":
         new_status = get_previous_status(current_status)
     elif action == "REJ":
+        # اعتبارسنجی را انجام می دهیم
         new_status = 'FAILED'
     else:
         return {'success':False, 'message':'نوع عملیات درخواستی معتبر نمی باشد'}
+
+    # اگر اعتبارسنجی با خطا مواجه شده باشد
+    validation_error = step_data_validation(action=action,step=current_status)
+    if validation_error:
+        return  {'success':False, 'message':'<br>'.join(validation_error)}
 
     # با توجه به وضعیت فعلی اطلاعات کاربر مربوطه را به دست می آوریم
     if new_status not in ('FAILED','FINISH' ):
@@ -130,30 +137,10 @@ def next_step(request_id: int,user_nationalcode:int ,action: str)->str:
     request_instance.status_code = new_status
     request_instance.save()
     
-    
-    # به‌روزرسانی فیلدهای opinion و date بر اساس نقش و action
-    current_date = jdatetime.datetime.now()
-    current_time = current_date.strftime('%H:%M')
-    
-    if current_status == 'MANAGE':
-        request_instance.manager_opinion = (action == 'CON')
-        request_instance.manager_opinion_date = current_date.strftime('%Y/%m/%d')
-        request_instance.manager_opinion_time = current_time
-    elif current_status == 'COMITE':
-        request_instance.committee_opinion = (action == 'CON')
-        request_instance.committee_opinion_date = current_date.strftime('%Y/%m/%d')
-        request_instance.committee_opinion_time = current_time
-    elif current_status == 'EXECUT':
-        request_instance.executor_report = (action == 'CON')
-        request_instance.executor_report_date = current_date.strftime('%Y/%m/%d')
-        request_instance.executor_report_time = current_time
-    elif current_status == 'TESTER':
-        request_instance.tester_report = (action == 'CON')
-        request_instance.tester_report_date = current_date.strftime('%Y/%m/%d')
-        request_instance.tester_report_time = current_time
-    
-    request_instance.save()
-    
+    # داده ها را ذخیره می کنیم
+    step_data_save(action=action, request=request_instance, status=current_status, data=form_data)
+
+
     # فراخوانی توابع مربوطه بر اساس وضعیت جدید
     if current_status == 'DRAFTD':
         doc_response = register_document(
@@ -194,6 +181,85 @@ def get_next_status(current_status):
     status_order = ['DRAFTD', 'MANAGE', 'COMITE', 'EXECUT', 'TESTER', 'FINISH']
     return status_order[status_order.index(current_status) + 1]
 
+# این تابع بر اساس مرحله و عملیات، داده های ارسالی را صحت سنجی می کند
+def step_data_validation(action:str, step:str, data:dict)->list[str]:
+    # اگر عملیات رد مدرک باشد، فقط باید کنترل کنیم که دلیل رد مدرک ارسال شده است
+    error_message = []
+    if action == 'REJ':
+        if not data.get('reject_reason'):
+            return ['دلیل رد مدرک مشخص نشده است']
+    # اگر عملیات تایید و مرحله تستر یا مجری باشد باید فیلدهای مربوطه را کنترل کنیم
+    elif step in ['EXECUT','TESTER']:
+        operation_date = data.get('operation_date')
+        if not operation_date:
+            error_message.append('تاریخ انجام عملیات مشخص نشده است')
+        operation_time = data.get('operation_time')
+        if not operation_time:
+            error_message.append('زمان انجام عملیات مشخص نشده است')
+        operation_report = data.get('operation_report')
+        if not operation_report:
+            error_message.append('گزارش انجام عملیات مشخص نشده است')
+        operation_result = data.get('operation_result')
+        if operation_result not in [True, False]:
+            error_message.append('نتیجه عملیات نامعتبر است')
+
+        # اگر مجری باشد، فیلدهای زیر را هم باید تکمیل کند
+        if step == 'EXECUT':
+            changing_duration_actual_hour = data.get('changing_duration_actual_hour')
+            if changing_duration_actual_hour is None or not isinstance(changing_duration_actual_hour, int):
+                error_message.append('مدت زمان واقعی تغییر نامعتبر است')
+            changing_duration_actual_minute = data.get('changing_duration_actual_minute')
+            if changing_duration_actual_minute is None or not isinstance(changing_duration_actual_minute, int) or changing_duration_actual_minute < 0 or changing_duration_actual_minute > 59:
+                error_message.append('دقیقه مدت زمان واقعی تغییر نامعتبر است')
+            downtime_duration_actual_hour = data.get('downtime_duration_actual_hour')
+            if downtime_duration_actual_hour is None or not isinstance(downtime_duration_actual_hour, int):
+                error_message.append('مدت زمان قطعی سیستم نامعتبر است')
+            downtime_duration_actual_minute = data.get('downtime_duration_actual_minute')
+            if downtime_duration_actual_minute is None or not isinstance(downtime_duration_actual_minute, int) or downtime_duration_actual_minute < 0 or downtime_duration_actual_minute > 59:
+                error_message.append('دقیقه مدت زمان قطعی سیستم نامعتبر است')
+    
+    return error_message
+
+def step_data_save(action: str, request: m.ConfigurationChangeRequest, status:str, data:dict ):
+    # به‌روزرسانی فیلدهای opinion و date بر اساس نقش و action
+    current_date = jdatetime.datetime.now()
+    current_time = current_date.strftime('%H:%M')
+    
+
+    if status == 'MANAGE':
+        request.manager_opinion = (action == 'CON')
+        request.manager_opinion_date = current_date.strftime('%Y/%m/%d')
+        request.manager_opinion_time = current_time
+    elif status == 'COMITE':
+        request.committee_opinion = (action == 'CON')
+        request.committee_opinion_date = current_date.strftime('%Y/%m/%d')
+        request.committee_opinion_time = current_time
+    elif status == 'EXECUT':
+        request.executor_report = (action == 'CON')
+        request.executor_report_date = current_date.strftime('%Y/%m/%d')
+        request.executor_report_time = current_time
+        operation_date = data.get('operation_date')
+        operation_date = data.get('operation_date')
+        operation_time = data.get('operation_time')
+        operation_report = data.get('operation_report')
+        operation_result = data.get('operation_result')
+
+        changing_duration_actual_hour = data.get('changing_duration_actual_hour')
+        changing_duration_actual_minute = data.get('changing_duration_actual_minute')
+        downtime_duration_actual_hour = data.get('downtime_duration_actual_hour')
+        downtime_duration_actual_minute = data.get('downtime_duration_actual_minute')
+        
+    elif status == 'TESTER':
+        request.tester_report = (action == 'CON')
+        request.tester_report_date = current_date.strftime('%Y/%m/%d')
+        request.tester_report_time = current_time
+        operation_date = data.get('operation_date')
+        operation_date = data.get('operation_date')
+        operation_time = data.get('operation_time')
+        operation_report = data.get('operation_report')
+        operation_result = data.get('operation_result')        
+    
+    request.save()
 def get_previous_status(current_status):
     # تابعی برای دریافت وضعیت قبلی بر اساس وضعیت فعلی
     status_order = ['DRAFTD', 'MANAGE', 'COMITE', 'EXECUT', 'TESTER', 'FINISH']
@@ -789,7 +855,8 @@ def get_selected_items(team_corp: str, request):
 def load_form_data(request_id:int, user_nationalcode:str):
     form_data = {}
     # مشخص می کنیم که وضعیت فعلی فرم چیست؟
-    status_code = check_form_status(request_id, user_nationalcode) 
+    status_code = check_form_status(user_nationalcode=user_nationalcode,
+                                    request_id=request_id) 
     form_data['status'] = status_code    
     
     # اگر کاربر مربوطه مجاز به مشاهده اطلاعات نباشد
@@ -802,10 +869,20 @@ def load_form_data(request_id:int, user_nationalcode:str):
         # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
         request_data = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         if request_data:
-            form_data['request_data'] = request_data  # اضافه کردن اطلاعات درخواست به data
-
+            form_data['request'] = request_data
+        
+        # اضافه کردن اطلاعات درخواست به data
+        extra_info = m.RequestExtraInformation.objects.filter(request_id=request_id)
+        form_data['extra_info'] = extra_info
+        # اطلاعات تیم های مرتبط
+        teams = m.RequestTeam.objects.filter(request_id=request_id)
+        form_data['request_teams'] = teams
+        # اطلاعات شرکت های مرتبط
+        corps = m.RequestCorp.objects.filter(request_id=request_id)
+        form_data['request_corps'] = corps
+        
     # اگر در حالت ویرایش و یا درج باشیم بایستی اطلاعات تکمیلی را هم اضافه کنیم
-    if status_code in ['UPDATE','INSERT']:
+    if status_code in ['INSERT']:
 
         
         # فیلتر کردن رکوردهای مربوط به طبقه بندی

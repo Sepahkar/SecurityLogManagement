@@ -25,19 +25,30 @@ def next_step(request, request_id:int, action:str):
     """
     # erfan
     # در این قسمت کاربر جاری را دریافت می کنیم
-    current_user_nationalcode = '3333333333'
-    current_user_nationalcode = '2222222222'
     current_user_nationalcode = '1280419180'
-    try:
-        return_json = b.next_step(request_id, current_user_nationalcode, action)
-        return JsonResponse(return_json)
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
+    # current_user_nationalcode = '1379150728'
+    # current_user_nationalcode = '1280419180'
+    if request.method == 'POST':
+        form_data = {}  # دیکشنری برای ذخیره داده‌های فرم
+        form_data['reject_reason'] = request.POST.get('reject_reason') 
+    
+        try:
+            return_json = b.next_step(request_id, current_user_nationalcode, action, form_data)
+            return JsonResponse(return_json)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+        
+    return  JsonResponse({'success': False, 'errors': 'خطا در نحوه ارسال اطلاعات'})
 
 def view_request(request, request_id:int):
     # erfan
     current_user = '1280419180'
+    manager_user = '1379150728'
+    # current_user = manager_user
     form_data = b.load_form_data(request_id=request_id, user_nationalcode=current_user )
+    # اگر در مرحله تست و یا اجرا باشد، باید اطلاعات تکمیلی نیز نمایش داده شود
+    if form_data['request'].status_code in ['EXECUT','TESTER']:
+        return render(request, 'ConfigurationChangeRequest/request-other-step.html', form_data)
     
     return render(request, 'ConfigurationChangeRequest/request-readonly.html', form_data)
 def submit_request(request, request_id:int):
@@ -185,8 +196,5 @@ def submit_request(request, request_id:int):
             # در صورت بروز خطا، پیام خطا را به JsonResponse اضافه کنید
             return JsonResponse({'success': False, 'errors': str(e)})
 
-
-        # برگرداندن موفقیت‌آمیز بودن عملیات
-        return JsonResponse({'success': True, 'request_id': request_id})
 
     return  JsonResponse({'success': False, 'errors': 'خطا در نحوه ارسال اطلاعات'})
