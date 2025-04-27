@@ -1,54 +1,56 @@
 {% extends 'ConfigurationChangeRequest/request-readonly.html' %}
 {% block other_step%}
-<div class='other-step-information'>
-        <div class="form-group">
-            <label>نتیجه عملیات:</label><br>
-            <label>
-                <input type="radio" name="operation_result" value=true required> موفقیت آمیز
-            </label>
-            <label>
-                <input type="radio" name="operation_result" value=false> ناموفق
-            </label>
-        </div>
-
-        <div class="form-group">
-            <label for="operation_date">تاریخ انجام عملیات:</label>
-            <input type="text" id="operation_date" name="operation_date" class="form-control" placeholder="YYYY/MM/DD" required>
-        </div>
-
-        <div class="form-group">
-            <label for="operation_time">زمان انجام عملیات:</label>
-            <input type="text" id="operation_time" name="operation_time" class="form-control" placeholder="HH:MM" required>
-        </div>
-
-        <div class="form-group">
-            <label for="operation_report">گزارش انجام:</label>
-            <textarea id="operation_report" name="operation_report" class="form-control" rows="4" required></textarea>
-        </div>
-
-
-
-        <div class="form-group">
-            <label>مدت زمان انجام عملیات:</label>
-            <div class="row">
-                <div class="col">
-                    <input type="number" name="changing_duration_actual_hour" class="form-control" placeholder="ساعت" min="0" required>
+<div class='container other-step-information'>
+    <div class='panel-row col-12'>
+        <div class='col-12 fieldBox'>
+            <div class="title">گزارش کار</div>
+            <hr/>        
+            <div class="row"> 
+                <div class="form-group col-4">
+                    <label class='title-text'>نتیجه عملیات:</label>
+                    <label>
+                        <input type="radio" name="operation_result" value=true required> موفقیت آمیز
+                    </label>
+                    <label>
+                        <input type="radio" name="operation_result" value=false> ناموفق
+                    </label>
                 </div>
-                <div class="col">
-                    <input type="number" name="changing_duration_actual_minute" class="form-control" placeholder="دقیقه" min="0" max="59" required>
+
+                <div class="form-group col-4">
+                    <label class="title-text" for="operation_date">تاریخ انجام عملیات:</label>
+                    <input type="text" id="operation_date" name="operation_date" class="form-control" placeholder="YYYY/MM/DD" required>
+                </div>
+
+                <div class="form-group col-4">
+                    <label class="title-text" for="operation_time">زمان انجام عملیات:</label>
+                    <input type="text" id="operation_time" name="operation_time" class="form-control" placeholder="HH:MM" required>
                 </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label>مدت زمان قطعی سیستم:</label>
+            {% if request.status_code == 'EXECUT' %}
             <div class="row">
-                <div class="col">
-                    <input type="number" name="downtime_duration_actual_hour" class="form-control" placeholder="ساعت" min="0" required>
+                <div class="form-group col-6">
+                    <label class="title-text">مدت زمان انجام عملیات:</label>
+                    <span class="subtitle-text hours">ساعت:</span>
+                    <input type="number" name="changing_duration_actual_hour" class="hours time" placeholder="ساعت" min="0" required>
+                    <span class="subtitle-text minutes">دقیقه:</span>
+                    <input type="number" name="changing_duration_actual_minute" class="minutes time" placeholder="دقیقه" min="0" max="59" required>
                 </div>
-                <div class="col">
-                    <input type="number" name="downtime_duration_actual_minute" class="form-control" placeholder="دقیقه" min="0" max="59" required>
+                <div class="form-group col-6">
+                    <label class="title-text">مدت زمان قطعی سیستم:</label>
+                    <span class="subtitle-text hours">ساعت:</span>
+                    <input type="number" name="downtime_duration_actual_hour" class="hours time"  placeholder="ساعت" min="0" required>
+                    <span class="subtitle-text minutes">دقیقه:</span>
+                    <input type="number" name="downtime_duration_actual_minute" class="minutes time" placeholder="دقیقه" min="0" max="59" required>
                 </div>
+    
             </div>
+            {% endif %}
+            <div class="form-group">
+                <label class="title-text" for="operation_report">گزارش انجام:</label>
+                <textarea id="operation_report" name="operation_report" class="operation_report form-control" rows="4" required></textarea>
+            </div>
+
         </div>
+    </div>
 </div>
 {% endblock %}

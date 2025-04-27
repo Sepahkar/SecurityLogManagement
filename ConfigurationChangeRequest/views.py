@@ -11,6 +11,7 @@ def insert_request(request):
 
     return render(request, 'ConfigurationChangeRequest/request.html', data)
 
+
 def next_step(request, request_id:int, action:str):
     """
     این تابع برای پیشبرد مرحله درخواست استفاده می‌شود.
@@ -25,13 +26,26 @@ def next_step(request, request_id:int, action:str):
     """
     # erfan
     # در این قسمت کاربر جاری را دریافت می کنیم
-    current_user_nationalcode = '1280419180'
+    current_user = '1280419180'
+    manager_user = '1379150728'
+    committee_user = '3333333333'    
     # current_user_nationalcode = '1379150728'
-    # current_user_nationalcode = '1280419180'
+    current_user_nationalcode = committee_user
     if request.method == 'POST':
         form_data = {}  # دیکشنری برای ذخیره داده‌های فرم
         form_data['reject_reason'] = request.POST.get('reject_reason') 
-    
+        form_data['operation_result'] = request.POST.get('operation_result')
+        form_data['operation_date'] = request.POST.get('operation_date')
+        form_data['operation_time'] = request.POST.get('operation_time')
+        form_data['operation_report'] = request.POST.get('operation_report')
+        form_data['operation_result'] = request.POST.get('operation_result')
+        
+        form_data['changing_duration_actual_hour'] = request.POST.get('changing_duration_actual_hour')
+        form_data['changing_duration_actual_minute'] = request.POST.get('changing_duration_actual_minute')
+        form_data['downtime_duration_actual_hour'] = request.POST.get('downtime_duration_actual_hour')
+        form_data['downtime_duration_actual_minute'] = request.POST.get('downtime_duration_actual_minute')
+
+        # اعتبارسنجی و ذخیره مقادیر عددی
         try:
             return_json = b.next_step(request_id, current_user_nationalcode, action, form_data)
             return JsonResponse(return_json)
@@ -44,13 +58,19 @@ def view_request(request, request_id:int):
     # erfan
     current_user = '1280419180'
     manager_user = '1379150728'
-    # current_user = manager_user
+    tester_user= '0063425750'
+    committee_user = '3333333333'
+    current_user = committee_user
     form_data = b.load_form_data(request_id=request_id, user_nationalcode=current_user )
-    # اگر در مرحله تست و یا اجرا باشد، باید اطلاعات تکمیلی نیز نمایش داده شود
-    if form_data['request'].status_code in ['EXECUT','TESTER']:
-        return render(request, 'ConfigurationChangeRequest/request-other-step.html', form_data)
+    if not form_data['message']: 
+        # اگر در مرحله تست و یا اجرا باشد، باید اطلاعات تکمیلی نیز نمایش داده شود
+        if form_data['request'].status_code in ['EXECUT','TESTER'] and form_data['status'] != 'READONLY':
+            return render(request, 'ConfigurationChangeRequest/request-other-step.html', form_data)
     
-    return render(request, 'ConfigurationChangeRequest/request-readonly.html', form_data)
+        return render(request, 'ConfigurationChangeRequest/request-readonly.html', form_data)
+    else:
+        return render(request, 'ConfigurationChangeRequest/request.html', form_data)
+        
 def submit_request(request, request_id:int):
 
     

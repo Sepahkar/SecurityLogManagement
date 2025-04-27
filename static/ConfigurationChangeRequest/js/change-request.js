@@ -398,14 +398,87 @@ function SetTeamCorp(list, TeamCorp)
 }
 function form_validation_committee()
 {
-    errors.push("لطفاً طرح بازگشت را تکمیل کنید.")
-}
-function form_validation_executor()
-{
 
+}
+function form_validation_executor() {
+    var errors = [];
+
+    // دریافت مقادیر از المان‌ها
+    var operationResult = $('input[name="operation_result"]:checked').val();
+    var operationDate = $('#operation_date').val();
+    var operationTime = $('#operation_time').val();
+    var operationReport = $('#operation_report').val();
+    var changingDurationHour = $('input[name="changing_duration_actual_hour"]').val();
+    var changingDurationMinute = $('input[name="changing_duration_actual_minute"]').val();
+    var downtimeDurationHour = $('input[name="downtime_duration_actual_hour"]').val();
+    var downtimeDurationMinute = $('input[name="downtime_duration_actual_minute"]').val();
+
+    // بررسی المان‌های اجباری
+    if (!operationResult) {
+        errors.push("لطفاً نتیجه انجام تغییرات را انتخاب کنید.");
+    }
+    if (!operationDate) {
+        errors.push("لطفاً تاریخ انجام تغییرات را وارد کنید.");
+    } 
+    // else if (!IsValidPersianDate(operationDate)) {
+    //     errors.push("تاریخ وارد شده باید در فرمت YYYY/MM/DD باشد.");
+    // }
+    if (!operationTime) {
+        errors.push("لطفاً زمان انجام تغییرات را وارد کنید.");
+    } else if (!IsValidTime(operationTime)) {
+        errors.push("زمان وارد شده باید در فرمت HH:MM باشد.");
+    }
+    if (!operationReport) {
+        errors.push("لطفاً گزارش انجام تغییرات را وارد کنید.");
+    }
+
+    // بررسی المان‌های عددی
+    if (!changingDurationHour || isNaN(changingDurationHour) || changingDurationHour < 0) {
+        errors.push("لطفاً مدت زمان انجام تغییرات (ساعت) را وارد کنید.");
+    }
+    if (!changingDurationMinute || isNaN(changingDurationMinute) || changingDurationMinute < 0 || changingDurationMinute > 59) {
+        errors.push("لطفاً مدت زمان انجام تغییرات (دقیقه) را وارد کنید.");
+    }
+    if (!downtimeDurationHour || isNaN(downtimeDurationHour) || downtimeDurationHour < 0) {
+        errors.push("لطفاً مدت زمان قطعی سیستم (ساعت) را وارد کنید.");
+    }
+    if (!downtimeDurationMinute || isNaN(downtimeDurationMinute) || downtimeDurationMinute < 0 || downtimeDurationMinute > 59) {
+        errors.push("لطفاً مدت زمان قطعی سیستم (دقیقه) را وارد کنید.");
+    }
+
+    return errors; // بازگشت آرایه خطاها
 }
 function form_validation_tester()
 {
+    var errors = [];
+
+    // دریافت مقادیر از المان‌ها
+    var operationResult = $('input[name="operation_result"]:checked').val();
+    var operationDate = $('#operation_date').val();
+    var operationTime = $('#operation_time').val();
+    var operationReport = $('#operation_report').val();
+
+    // بررسی المان‌های اجباری
+    if (!operationResult) {
+        errors.push("لطفاً نتیجه تست را انتخاب کنید.");
+    }
+    if (!operationDate) {
+        errors.push("لطفاً تاریخ انجام تست را وارد کنید.");
+    } 
+    // else if (!IsValidPersianDate(operationDate)) {
+    //     errors.push("تاریخ وارد شده باید در فرمت YYYY/MM/DD باشد.");
+    // }
+    if (!operationTime) {
+        errors.push("لطفاً زمان انجام تست را وارد کنید.");
+    } else if (!IsValidTime(operationTime)) {
+        errors.push("زمان وارد شده باید در فرمت HH:MM باشد.");
+    }
+    if (!operationReport) {
+        errors.push("لطفاً گزارش تست را وارد کنید.");
+    }
+
+    return errors; // بازگشت آرایه خطاها
+
 
 }
 function confirm(request_status) {
@@ -414,12 +487,12 @@ function confirm(request_status) {
     var error_message = []
     //اگر مدیر باشد نیازی به ورود اطلاعات ندارد
     //اگر کاربر کمیته باشد باید فیلدهای کاربر کمیته بررسی شوند
-    if (request_status == 'COMITE')
-    {
-        error_message = form_validation_committee()
-    }
+    // if (request_status == 'COMITE')
+    // {
+    //     error_message = form_validation_committee()
+    // }
     //اگر کاربر مجری باشد، باید فیلدهای کاربر مجری بررسی شوند
-    else if (request_status == 'EXECUT')
+    if (request_status == 'EXECUT')
     {
         error_message = form_validation_executor()
     }
@@ -434,8 +507,12 @@ function confirm(request_status) {
     if (error_message.length > 0) {
         $.alert({
             title: 'خطا',
-            content: errors.join('<br>'),
+            content: error_message.join('<br>'),
         });
+        $('html, body').animate({
+            scrollTop: $(document).height()
+        }, 1000);
+        on_failure()
         return; // جلوگیری از ادامه
     }
     

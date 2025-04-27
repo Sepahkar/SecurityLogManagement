@@ -92,6 +92,7 @@ def next_step(request_id: int,user_nationalcode:int ,action: str, form_data: dic
     
     # ابتدا باید کنترل کنیم که آیا کاربر جاری مجاز به انجام عملیات بر روی فرم هست یا خیر؟
     form_status = check_form_status(user_nationalcode, request_id)
+    form_data['form_status'] = form_status
     
     # اگر کاربر جزو کاربران مجاز این درخواست نباشد
     if form_status == 'INVALID':
@@ -122,8 +123,9 @@ def next_step(request_id: int,user_nationalcode:int ,action: str, form_data: dic
     else:
         return {'success':False, 'message':'نوع عملیات درخواستی معتبر نمی باشد'}
 
+    # اعتبارسنجی انجام می شود
+    validation_error = step_data_validation(action=action,step=current_status,data=form_data)
     # اگر اعتبارسنجی با خطا مواجه شده باشد
-    validation_error = step_data_validation(action=action,step=current_status)
     if validation_error:
         return  {'success':False, 'message':'<br>'.join(validation_error)}
 
@@ -181,6 +183,14 @@ def get_next_status(current_status):
     status_order = ['DRAFTD', 'MANAGE', 'COMITE', 'EXECUT', 'TESTER', 'FINISH']
     return status_order[status_order.index(current_status) + 1]
 
+def is_valid_integer(value):
+    """بررسی می‌کند که آیا مقدار یک عدد صحیح معتبر است."""
+    try:
+        int_value = int(value)  # تبدیل به عدد صحیح
+        return True, int_value  # اگر معتبر بود، True و مقدار عددی را برمی‌گرداند
+    except ValueError:
+        return False, None  # اگر نامعتبر بود، False و None را برمی‌گرداند
+
 # این تابع بر اساس مرحله و عملیات، داده های ارسالی را صحت سنجی می کند
 def step_data_validation(action:str, step:str, data:dict)->list[str]:
     # اگر عملیات رد مدرک باشد، فقط باید کنترل کنیم که دلیل رد مدرک ارسال شده است
@@ -200,23 +210,44 @@ def step_data_validation(action:str, step:str, data:dict)->list[str]:
         if not operation_report:
             error_message.append('گزارش انجام عملیات مشخص نشده است')
         operation_result = data.get('operation_result')
-        if operation_result not in [True, False]:
+        if operation_result.lower() not in ['true', 'false']:
             error_message.append('نتیجه عملیات نامعتبر است')
+        else:
+            if data.get('operation_result') == 'true':
+                data['operation_result'] = True
+            else:
+                data['operation_result'] = False
 
         # اگر مجری باشد، فیلدهای زیر را هم باید تکمیل کند
         if step == 'EXECUT':
-            changing_duration_actual_hour = data.get('changing_duration_actual_hour')
-            if changing_duration_actual_hour is None or not isinstance(changing_duration_actual_hour, int):
-                error_message.append('مدت زمان واقعی تغییر نامعتبر است')
-            changing_duration_actual_minute = data.get('changing_duration_actual_minute')
-            if changing_duration_actual_minute is None or not isinstance(changing_duration_actual_minute, int) or changing_duration_actual_minute < 0 or changing_duration_actual_minute > 59:
-                error_message.append('دقیقه مدت زمان واقعی تغییر نامعتبر است')
-            downtime_duration_actual_hour = data.get('downtime_duration_actual_hour')
-            if downtime_duration_actual_hour is None or not isinstance(downtime_duration_actual_hour, int):
-                error_message.append('مدت زمان قطعی سیستم نامعتبر است')
-            downtime_duration_actual_minute = data.get('downtime_duration_actual_minute')
-            if downtime_duration_actual_minute is None or not isinstance(downtime_duration_actual_minute, int) or downtime_duration_actual_minute < 0 or downtime_duration_actual_minute > 59:
-                error_message.append('دقیقه مدت زمان قطعی سیستم نامعتبر است')
+
+            fields_to_check = {
+                'changing_duration_actual_hour': ('ساعت مدت زمان انجام تغییرات', data.get('changing_duration_actual_hour')),
+                'changing_duration_actual_minute': ('دقیقه مدت زمان انجام تغییرات', data.get('changing_duration_actual_minute')),
+                'downtime_duration_actual_hour': ('ساعت مدت زمان قطعی سیستم', data.get('downtime_duration_actual_hour')),
+                'downtime_duration_actual_minute': ('دقیقه مدت زمان قطعی سیستم', data.get('downtime_duration_actual_minute')),
+            }
+
+            for field, (persian_title, value) in fields_to_check.items():
+                is_valid, int_value = is_valid_integer(value)
+                if is_valid:
+                    data[field] = int_value  # ذخیره مقدار عددی معتبر
+                else:
+                    error_message.append( f"مقدار برای '{persian_title}' باید یک عدد صحیح معتبر باشد.")
+                
+            
+            # changing_duration_actual_hour = data.get('changing_duration_actual_hour')
+            # if changing_duration_actual_hour is None or not isinstance(changing_duration_actual_hour, int):
+            #     error_message.append('مدت زمان واقعی تغییر نامعتبر است')
+            # changing_duration_actual_minute = data.get('changing_duration_actual_minute')
+            # if changing_duration_actual_minute is None or not isinstance(changing_duration_actual_minute, int) or changing_duration_actual_minute < 0 or changing_duration_actual_minute > 59:
+            #     error_message.append('دقیقه مدت زمان واقعی تغییر نامعتبر است')
+            # downtime_duration_actual_hour = data.get('downtime_duration_actual_hour')
+            # if downtime_duration_actual_hour is None or not isinstance(downtime_duration_actual_hour, int):
+            #     error_message.append('مدت زمان قطعی سیستم نامعتبر است')
+            # downtime_duration_actual_minute = data.get('downtime_duration_actual_minute')
+            # if downtime_duration_actual_minute is None or not isinstance(downtime_duration_actual_minute, int) or downtime_duration_actual_minute < 0 or downtime_duration_actual_minute > 59:
+            #     error_message.append('دقیقه مدت زمان قطعی سیستم نامعتبر است')
     
     return error_message
 
@@ -238,26 +269,26 @@ def step_data_save(action: str, request: m.ConfigurationChangeRequest, status:st
         request.executor_report = (action == 'CON')
         request.executor_report_date = current_date.strftime('%Y/%m/%d')
         request.executor_report_time = current_time
-        operation_date = data.get('operation_date')
-        operation_date = data.get('operation_date')
-        operation_time = data.get('operation_time')
-        operation_report = data.get('operation_report')
-        operation_result = data.get('operation_result')
+        
+        request.execution_description = data.get('operation_report')
+        request.changing_date_actual = data.get('operation_date')
+        request.changing_time_actual = data.get('operation_time')
+        request.executor_report = data.get('operation_result')
 
-        changing_duration_actual_hour = data.get('changing_duration_actual_hour')
-        changing_duration_actual_minute = data.get('changing_duration_actual_minute')
-        downtime_duration_actual_hour = data.get('downtime_duration_actual_hour')
-        downtime_duration_actual_minute = data.get('downtime_duration_actual_minute')
+        changing_duration_actual_hour = int(data.get('changing_duration_actual_hour'))
+        changing_duration_actual_minute = int(data.get('changing_duration_actual_minute'))
+        request.changing_duration_actual = changing_duration_actual_hour * 60 + changing_duration_actual_minute
+        
+        downtime_duration_actual_hour = int(data.get('downtime_duration_actual_hour'))
+        downtime_duration_actual_minute = int(data.get('downtime_duration_actual_minute'))
+        request.downtime_duration = downtime_duration_actual_hour * 60 + downtime_duration_actual_minute
         
     elif status == 'TESTER':
         request.tester_report = (action == 'CON')
         request.tester_report_date = current_date.strftime('%Y/%m/%d')
         request.tester_report_time = current_time
-        operation_date = data.get('operation_date')
-        operation_date = data.get('operation_date')
-        operation_time = data.get('operation_time')
-        operation_report = data.get('operation_report')
-        operation_result = data.get('operation_result')        
+        request.test_report_description = data.get('operation_report')
+        request.tester_report = data.get('operation_result')
     
     request.save()
 def get_previous_status(current_status):
@@ -853,7 +884,7 @@ def get_selected_items(team_corp: str, request):
     return selected_items
 
 def load_form_data(request_id:int, user_nationalcode:str):
-    form_data = {}
+    form_data = {'message':''}
     # مشخص می کنیم که وضعیت فعلی فرم چیست؟
     status_code = check_form_status(user_nationalcode=user_nationalcode,
                                     request_id=request_id) 

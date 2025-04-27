@@ -644,3 +644,38 @@ input[type="text"], textarea
   opacity: 0.2;
 }
 /*************Readonly end******************/
+
+/*************other step information end******************/
+.other-step-information .panel-row
+{
+  display: flex;
+}
+.other-step-information .panel-row .form-group
+{
+  display: flex;
+}
+.other-step-information .operation_report
+{
+  height: 100px;
+}
+.other-step-information label
+{
+  margin:0;
+  align-content: center;
+  padding-left:5px;
+}
+.other-step-information .time 
+{
+  height: 30px;
+  width: 50px;  
+  font-weight: lighter;
+  font-style: italic;
+  color: #595959;
+  font-family: Defined-Salamat;  
+  margin-left: 20px;
+}
+.other-step-information .row 
+{
+  margin-bottom: 20px;
+}
+/*************other step information end******************/
