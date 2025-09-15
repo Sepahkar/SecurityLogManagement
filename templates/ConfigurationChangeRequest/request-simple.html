@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}فرم درخواست ساده{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'ConfigurationChangeRequest/css/request-simple.css' %}" />
+{% endblock %}
+
+{% block content %}
+<!-- Meta tags برای انتقال پیام‌های context به JavaScript -->
+{% if message %}
+    <meta name="context-message" content="{{ message }}">
+    {% if success == False %}
+        <meta name="context-success" content="false">
+    {% else %}
+        <meta name="context-success" content="true">
+    {% endif %}
+{% endif %}
+
+{% if success_message %}
+    <meta name="context-success-message" content="{{ success_message }}">
+{% endif %}
+
+{% if warning_message %}
+    <meta name="context-warning-message" content="{{ warning_message }}">
+{% endif %}
+
+<div class="container mt-4">
+    <h2>فرم درخواست تغییرات</h2>
+    
+    
+    <form method="post" id="requestForm" class="{% if mode == 'READONLY' %}readonly-form{% endif %}">
+        {% csrf_token %}
+        {% if request.id %}
+        <input type="hidden" id="current_request_id" value="{{ request.id }}">
+        {% endif %}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="change_title">عنوان درخواست *</label>
+                    {% if mode == 'READONLY' %}
+                        <div class="form-control-plaintext">{{ request.change_title|default:'' }}</div>
+                    {% else %}
+                        <input type="text" class="form-control" id="change_title" name="change_title" 
+                               value="{{ request.change_title|default:'' }}" required>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="change_type">نوع تغییر *</label>
+                    {% if mode == 'READONLY' %}
+                        <div class="form-control-plaintext">{{ request.change_type.change_type_title|default:'' }}</div>
+                    {% else %}
+                        <select class="form-control" id="change_type" name="change_type" required>
+                            <option value="">انتخاب کنید</option>
+                            {% for ct in change_type %}
+                            <option value="{{ ct.id }}" {% if request.change_type.id == ct.id %}selected{% endif %}>
+                                {{ ct.change_type_title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="change_description">توضیحات درخواست *</label>
+                    {% if mode == 'READONLY' %}
+                        <div class="form-control-plaintext" style="min-height: 100px; white-space: pre-wrap;">{{ request.change_description|default:'' }}</div>
+                    {% else %}
+                        <textarea class="form-control" id="change_description" name="change_description" rows="4" required>{{ request.change_description|default:'' }}</textarea>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if current_user.team_roles|length > 1 %}
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="user_team_role">تیم و سمت *</label>
+                    {% if mode == 'READONLY' %}
+                        <div class="form-control-plaintext">
+                            {% for role in current_user.team_roles %}
+                                {% if role.team_code == request.requestor_team_code.team_code and role.role_id == request.requestor_role_id.role_id %}
+                                    {{ role.team_name }} - {{ role.role_title }}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <select class="form-control" id="user_team_role" name="user_team_role" required>
+                            <option value="">انتخاب کنید</option>
+                            {% for role in current_user.team_roles %}
+                            <option value="{{ role.team_code }}-{{ role.role_id }}" 
+                                    {% if request.requestor_team_code.team_code == role.team_code and request.requestor_role_id.role_id == role.role_id %}selected{% endif %}>
+                                {{ role.team_name }} - {{ role.role_title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                {% if mode == 'UPDATE' %}
+                    <button type="submit" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'approve')">تایید</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'reject')">رد</button>
+                    <button type="button" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'back')">بازگشت</button>
+                {% elif mode != 'READONLY' %}
+                    <button type="submit" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')">شروع فرآیند</button>
+                    <button type="button" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'back')">بازگشت</button>
+                {% else %}
+                    <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'ConfigurationChangeRequest/js/request-simple.js' %}"></script>
+{% endblock %} 

@@ -61,9 +61,36 @@ class Command(BaseCommand):
         # وضعیت
         status_parent = create_if_not_exists('وضعیت', 'Status')
         create_if_not_exists('پیش نویس', 'Status_DRAFTD', status_parent)
-        create_if_not_exists('بررسی مدیر', 'Status_MANAGE', status_parent)
+        create_if_not_exists('بررسی مدیر مستقیم', 'Status_DIRMAN', status_parent)
+        create_if_not_exists('بررسی مدیر مربوطه', 'Status_RELMAN', status_parent)
         create_if_not_exists('بررسی کمیته', 'Status_COMITE', status_parent)
-        create_if_not_exists('گزارش مجری', 'Status_EXECUT', status_parent)
-        create_if_not_exists('گزارش تستر', 'Status_TESTER', status_parent)
+        create_if_not_exists('اجرای تسک ها', 'Status_EXESEL', status_parent)
+        create_if_not_exists('خاتمه یافته', 'Status_FINISH', status_parent)
+        create_if_not_exists('خاتمه ناموفقیت آمیز', 'Status_FAILED', status_parent)
+        create_if_not_exists('خاتمه با خطا', 'Status_ERRORF', status_parent)
+
+        # سمت
+        role_parent = create_if_not_exists('سمت', 'Role')
+        create_if_not_exists('تکمیل کننده', ' Role_Requestor',  role_parent)
+        create_if_not_exists('مدیر مستقیم', ' Role_DirectManager',  role_parent)
+        create_if_not_exists('مدیر مربوطه', ' Role_RelatedManager',  role_parent)
+        create_if_not_exists('دبیر کمیته', ' Role_Committe',  role_parent)
+        create_if_not_exists('مجری', ' Role_Executor',  role_parent)
+        create_if_not_exists('تستر', ' Role_Tester',  role_parent)
+
+        # وضعیت تسک ها
+        status_parent = create_if_not_exists('وضعیت', 'TaskStatus')
+        create_if_not_exists('تعریف', 'TaskStatus_DEFINE', status_parent)
+        create_if_not_exists('آماده انتخاب مجری', 'TaskStatus_EXERED', status_parent)
+        create_if_not_exists('انتخاب شده مجری', 'TaskStatus_EXESEL', status_parent)
+        create_if_not_exists('اجرای موفق', 'TaskStatus_EXEFIN', status_parent)
+        create_if_not_exists('اجرای ناموفق', 'TaskStatus_EXEFAL', status_parent)
+        create_if_not_exists('آماده انتخاب تستر', 'TaskStatus_TESRED', status_parent)
+        create_if_not_exists('انتخاب شده تستر', 'TaskStatus_TESSEL', status_parent)
+        create_if_not_exists('تست موفق', 'TaskStatus_TESFIN', status_parent)
+        create_if_not_exists('تست ناموفق', 'TaskStatus_TESFAL', status_parent)
+        create_if_not_exists('خاتمه موفق', 'TaskStatus_FINISH', status_parent)
+        create_if_not_exists('خاتمه ناموفق', 'TaskStatus_FAILED', status_parent)
+
 
         self.stdout.write(self.style.SUCCESS('Default const values inserted successfully.'))

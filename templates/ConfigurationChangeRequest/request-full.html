@@ -1,0 +1,411 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}درخواست تغییرات - بررسی مدیر مربوطه{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'ConfigurationChangeRequest/css/request-full.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="request-full-container">
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Left Column -->
+        <div class="content-left">
+            <!-- Requestor Information -->
+            <div class="info-section requestor-section">
+                <div class="requestor-info">
+                    <div class="requestor-avatar">
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.requestor_nationalcode.username|split:'@' }}.jpg" 
+                             alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}"
+                             onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}'">
+                    </div>
+                    <div class="requestor-details">
+                        <div class="detail-item">
+                            <label>نام درخواست دهنده:</label>
+                            <span>{{ request.requestor_nationalcode.fullname }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>سمت و تیم درخواست دهنده:</label>
+                            <span>{{ request.requestor_role_id.role_title }} {{ request.requestor_team_code.team_name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Information -->
+            <div class="info-section change-info-section">
+                <div class="change-details">
+                    <div class="detail-item">
+                        <label>نوع تغییر:</label>
+                        <span>{{ request.change_type.change_type_title }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>عنوان تغییر:</label>
+                        <span>{{ request.change_title }}</span>
+                    </div>
+                    <div class="detail-item full-width">
+                        <label>شرح درخواست:</label>
+                        <div class="description-text">
+                            {{ request.change_description }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Characteristics -->
+            <div class="info-section characteristics-section">
+                <div class="characteristics-grid">
+                    <!-- Risk Level -->
+                    <div class="characteristic-box risk-level">
+                        <h4>سطح ریسک تغییر</h4>
+                        <div class="radio-list col-9">
+                            {% for value in risk_level_values %}
+                                <div class='radio-box {% if risk_level_default == value.Code %}active{%else%}inactive{%endif%}'>
+                                    <div class='radio-button'>
+                                        <input type="radio" name="risk_level" value="{{ value.id }}"  {%if risk_level_default == value.Code %}checked="checked"{%endif%} >
+                                    </div>
+                                    <div class='radio-info'>
+                                        <div class='radio-image'>
+                                            <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if risk_level_default != value.Code %}_Gray{%endif%}.png" 
+                                            title="{{ value.Caption }}" alt="{{ value.Caption }}" class="icon">
+                                        </div>
+                                        <div class='radio-caption'>
+                                            {{ value.Caption }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}                                    
+                        </div>
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="characteristic-box priority">
+                        <h4>اولویت تغییر</h4>
+                        <div class="option-list">
+                            <div class="option-item {% if request.priority.Code == 'EMERGENCY' %}active{% endif %}">
+                                <div class="option-icon emergency">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <span>اضطراری</span>
+                            </div>
+                            <div class="option-item {% if request.priority.Code == 'STANDARD' %}active{% endif %}">
+                                <div class="option-icon standard">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <span>استاندارد</span>
+                            </div>
+                            <div class="option-item {% if request.priority.Code == 'NORMAL' %}active{% endif %}">
+                                <div class="option-icon normal">
+                                    <i class="fas fa-circle"></i>
+                                </div>
+                                <span>عادی</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scope -->
+                    <div class="characteristic-box scope">
+                        <h4>دامنه تغییر</h4>
+                        <div class="option-list">
+                            <div class="option-item {% if request.change_level.Code == 'MACRO' %}active{% endif %}">
+                                <div class="option-icon macro">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <span>کلان</span>
+                            </div>
+                            <div class="option-item {% if request.change_level.Code == 'PARTIAL' %}active{% endif %}">
+                                <div class="option-icon partial">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <span>بخشی</span>
+                            </div>
+                            <div class="option-item {% if request.change_level.Code == 'MINOR' %}active{% endif %}">
+                                <div class="option-icon minor">
+                                    <i class="fas fa-dot-circle"></i>
+                                </div>
+                                <span>جزئی</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Classification -->
+                    <div class="characteristic-box classification">
+                        <h4>طبقه بندی تغییر</h4>
+                        <div class="option-list">
+                            <div class="option-item {% if request.classification.Code == 'CONFIDENTIAL' %}active{% endif %}">
+                                <div class="option-icon confidential">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <span>محرمانه</span>
+                            </div>
+                            <div class="option-item {% if request.classification.Code == 'NORMAL' %}active{% endif %}">
+                                <div class="option-icon normal-class">
+                                    <i class="fas fa-thumbs-up"></i>
+                                </div>
+                                <span>عادی</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other field -->
+                {% if request.change_location_other_description %}
+                <div class="other-field">
+                    <div class="other-input">
+                        <i class="fas fa-pencil-alt"></i>
+                        <input type="text" value="{{ request.change_location_other_description }}" readonly />
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Affected Systems -->
+            <div class="info-section affected-systems-section">
+                <div class="system-options">
+                    <div class="system-option {% if request.change_location_other %}active{% endif %}">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>سایر</span>
+                    </div>
+                    <div class="system-option {% if request.change_location_systems %}active{% endif %}">
+                        <i class="fas fa-desktop"></i>
+                        <span>سیستم ها، سامانه ها، سرویس ها</span>
+                    </div>
+                    <div class="system-option {% if request.change_location_data_center %}active{% endif %}">
+                        <i class="fas fa-building"></i>
+                        <span>مرکز داده</span>
+                    </div>
+                    <div class="system-option {% if request.change_location_database %}active{% endif %}">
+                        <i class="fas fa-database"></i>
+                        <span>پایگاه داده</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Scope -->
+            <div class="info-section change-scope-section">
+                <div class="selected-choices">
+                    <h4>انتخاب های شما</h4>
+                    <div class="choice-icons">
+                        {% if request.change_location_data_center %}
+                        <i class="fas fa-building" title="مرکز داده"></i>
+                        {% endif %}
+                        {% if request.change_location_database %}
+                        <i class="fas fa-database" title="پایگاه داده"></i>
+                        {% endif %}
+                        {% if request.change_location_systems %}
+                        <i class="fas fa-desktop" title="سیستم‌ها"></i>
+                        {% endif %}
+                        {% if request.change_location_other %}
+                        <i class="fas fa-ellipsis-h" title="سایر"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="scope-options">
+                    <div class="scope-option {% if request.change_domain.Code == 'INTERNAL' %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        <span>درون سازمانی</span>
+                    </div>
+                    <div class="scope-option {% if request.change_domain.Code == 'INTER_ORG' %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        <span>بین سازمانی</span>
+                    </div>
+                    <div class="scope-option {% if request.change_domain.Code == 'EXTERNAL' %}active{% endif %}">
+                        <i class="fas fa-user"></i>
+                        <span>برون سازمانی</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Impact Section -->
+            <div class="info-section impact-section">
+                <div class="impact-items">
+                    {% if request.stop_critical_service %}
+                    <div class="impact-item">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>منجر به قطعی سرویس حیاتی میشود. قطع سرویس مشتریان و تاثیر منفی بر وجهه شرکت</span>
+                    </div>
+                    {% endif %}
+                    {% if request.reason_regulatory %}
+                    <div class="impact-item">
+                        <i class="fas fa-gavel"></i>
+                        <span>رگولاتوری</span>
+                    </div>
+                    {% endif %}
+                    {% if not request.has_role_back_plan %}
+                    <div class="impact-item">
+                        <i class="fas fa-undo"></i>
+                        <span>امکان بازگشت ندارد</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Task Assignment -->
+            <div class="info-section task-assignment-section">
+                <div class="task-table">
+                    <h4>تقسیم وظایف</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>نام وظیفه</th>
+                                <th>مجریان</th>
+                                <th>تسترها</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request_task in request.requesttask_set.all %}
+                            <tr>
+                                <td>{{ request_task.task.title }}</td>
+                                <td>
+                                    {% for task_user in request_task.requesttaskuser_set.all %}
+                                        {% if task_user.user_role_code == 'E' %}
+                                            {{ task_user.user_nationalcode.fullname }}{% if not forloop.last %}، {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for task_user in request_task.requesttaskuser_set.all %}
+                                        {% if task_user.user_role_code == 'T' %}
+                                            {{ task_user.user_nationalcode.fullname }}{% if not forloop.last %}، {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: #6c757d;">هیچ وظیفه‌ای تعریف نشده است</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="content-right">
+            <div class="sidebar">
+                <div class="sidebar-item active">
+                    <i class="fas fa-list"></i>
+                    <span>8 جزئیات</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>اطلاعات شرح</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-th"></i>
+                    <span>ویژگی های تغییر</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-cog"></i>
+                    <span>محل تغییر</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>حوزه و ارتباطات تغییر</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-bolt"></i>
+                    <span>حوزه اثر گذاری</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-th"></i>
+                    <span>الزام به تغییر</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-undo"></i>
+                    <span>بازگشت به قبل تغییر</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fas fa-table"></i>
+                    <span>جدول تسک ها</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="submit-section">
+        <button type="button" class="submit-btn">
+            <i class="fas fa-edit"></i>
+            اصلاح فرم
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'ConfigurationChangeRequest/js/request-full.js' %}"></script>
+<script>
+// Pass request data to JavaScript
+window.requestData = {
+    risk_level: {
+        Code: '{{ request.risk_level.Code|default:"" }}',
+        Caption: '{{ request.risk_level.Caption|default:"" }}'
+    },
+    priority: {
+        Code: '{{ request.priority.Code|default:"" }}',
+        Caption: '{{ request.priority.Caption|default:"" }}'
+    },
+    change_level: {
+        Code: '{{ request.change_level.Code|default:"" }}',
+        Caption: '{{ request.change_level.Caption|default:"" }}'
+    },
+    classification: {
+        Code: '{{ request.classification.Code|default:"" }}',
+        Caption: '{{ request.classification.Caption|default:"" }}'
+    },
+    change_domain: {
+        Code: '{{ request.change_domain.Code|default:"" }}',
+        Caption: '{{ request.change_domain.Caption|default:"" }}'
+    },
+    change_location_data_center: {{ request.change_location_data_center|yesno:"true,false" }},
+    change_location_database: {{ request.change_location_database|yesno:"true,false" }},
+    change_location_systems: {{ request.change_location_systems|yesno:"true,false" }},
+    change_location_other: {{ request.change_location_other|yesno:"true,false" }},
+    change_location_other_description: '{{ request.change_location_other_description|default:"" }}',
+    stop_critical_service: {{ request.stop_critical_service|yesno:"true,false" }},
+    reason_regulatory: {{ request.reason_regulatory|yesno:"true,false" }},
+    has_role_back_plan: {{ request.has_role_back_plan|yesno:"true,false" }},
+    tasks: [
+        {% for request_task in request.requesttask_set.all %}
+        {
+            id: {{ request_task.id }},
+            title: '{{ request_task.task.title }}',
+            status: '{{ request_task.status_code }}',
+            executors: [
+                {% for task_user in request_task.requesttaskuser_set.all %}
+                    {% if task_user.user_role_code == 'E' %}
+                    {
+                        id: '{{ task_user.user_nationalcode.national_code }}',
+                        name: '{{ task_user.user_nationalcode.fullname }}',
+                        role: '{{ task_user.user_role_id.role_title }}',
+                        team: '{{ task_user.user_team_code.team_name }}'
+                    }{% if not forloop.last %},{% endif %}
+                    {% endif %}
+                {% endfor %}
+            ],
+            testers: [
+                {% for task_user in request_task.requesttaskuser_set.all %}
+                    {% if task_user.user_role_code == 'T' %}
+                    {
+                        id: '{{ task_user.user_nationalcode.national_code }}',
+                        name: '{{ task_user.user_nationalcode.fullname }}',
+                        role: '{{ task_user.user_role_id.role_title }}',
+                        team: '{{ task_user.user_team_code.team_name }}'
+                    }{% if not forloop.last %},{% endif %}
+                    {% endif %}
+                {% endfor %}
+            ]
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+};
+</script>
+{% endblock %}

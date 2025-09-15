@@ -1,3 +1,8 @@
+import json
+
+from django.db.transaction import commit
+
+# from ConfigurationChangeRequest.views import commitee
 from . import models as m
 import jdatetime
 from . import validator
@@ -5,1021 +10,4060 @@ from django.core.exceptions import ValidationError
 from datetime import datetime
 from Utility.APIManager.Portal.register_document import v2 as register_document
 from Utility.APIManager.Portal.send_document import ver2 as send_document
-from Utility.APIManager.Portal.update_document_state_code import v1 as update_document_state_code
+from Utility.APIManager.Portal.update_document_state_code import (
+    v1 as update_document_state_code,
+)
 from Utility.APIManager.Portal.terminate_flow import v1 as terminate_flow
 from Utility.APIManager.Portal.finish_flow import v1 as finish_flow
 from Config import settings
+from typing import List, Optional, Any
+from django.db.models import QuerySet
 
 APP_CODE = settings.APPCODE
 
-def get_user_information(request_id:int, status_code:str)->str:
-    user_info = None
-    operation_info = None
-    team_info = None
-    role_info = None
-    request_instance = m.ConfigurationChangeRequest.objects.get(id=request_id)
-    if status_code == 'TESTER':
-        user_info = request_instance.tester_nationalcode
-        team_info = request_instance.tester_team_code.team_name
-        role_info = request_instance.tester_role_id.role_title
-        operation_info = "انجام تست"
-    elif status_code == 'MANAGE':
-        user_info = request_instance.manager_nationalcode
-        operation_info = "بررسی و اعلام نظر"
-    elif status_code == 'COMITE':
-        user_info = request_instance.committee_user_nationalcode
-        operation_info = "اعلام نظر کمیته"
-    elif status_code == 'DRAFTD':
-        user_info = request_instance.requestor_nationalcode
-        team_info = request_instance.requestor_team_code
-        role_info = request_instance.requestor_role_id.role_title
-        operation_info = "تکمیل اطلاعات فرم"
-    elif status_code == 'EXECUT':
-        user_info = request_instance.executor_nationalcode
-        team_info = request_instance.executor_team_code.team_name
-        role_info = request_instance.executor_role_id.role_title
-        operation_info = "اجرای تغییرات"
 
-    # در صورتی که برای فردی ارسال شده باشد، مشخصات وی بازگشت داده می شود
-    if user_info and operation_info:
-        salutation = "آقای" if user_info.gender or user_info.gender is None else "خانم"
-        role_info = role_info if role_info is not None else ""
-        if team_info:
-            return f"{salutation} {user_info.first_name} {user_info.last_name} {role_info} تیم {team_info} جهت {operation_info}"
-        else:
-            return f"{salutation} {user_info.first_name} {user_info.last_name} {role_info} جهت {operation_info}"
-    else:
-        return "-1"
-# این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم فرم برای این کاربر باید به چه صورتی نمایش داده شود؟
-def check_form_status(user_nationalcode: str, request_id: int) -> str:
-    # بررسی اعتبار request_id
-    if request_id is None:
-        return 'INSERT'
-    
-    try:
-        # دریافت درخواست بر اساس request_id
-        request_instance = m.ConfigurationChangeRequest.objects.get(id=request_id)
-    except m.ConfigurationChangeRequest.DoesNotExist:
-        return 'INSERT'
-    
-    # بررسی وضعیت و تطابق با کاربر جاری
-    if (
-        (request_instance.status_code == 'DRAFTD' and user_nationalcode == request_instance.requestor_nationalcode.national_code) or
-        (request_instance.status_code == 'MANAGE' and user_nationalcode == request_instance.manager_nationalcode.national_code) or
-        (request_instance.status_code == 'COMITE' and user_nationalcode == request_instance.committee_user_nationalcode.national_code) or
-        (request_instance.status_code == 'EXECUT' and user_nationalcode == request_instance.executor_nationalcode.national_code) or
-        (request_instance.status_code == 'TESTER' and user_nationalcode == request_instance.tester_nationalcode.national_code)
+class Cartable:
+    doc_id: int
+    app_code: str
+    doc_state: str
+
+    def __init__(self) -> None:
+        self.app_code = settings.APPCODE
+        self.doc_id = -1
+
+    def create_doc(
+        self,
+        doc_title: str,
+        request_id: int,
+        document_owner_national_code: str,
+        priority: str = "NORMAL",
     ):
-        return 'UPDATE'
-    
-    # بررسی وضعیت فقط خواندنی
-    if user_nationalcode in [
-        request_instance.requestor_nationalcode.national_code,
-        request_instance.manager_nationalcode.national_code,
-        request_instance.committee_user_nationalcode.national_code,
-        request_instance.executor_nationalcode.national_code,
-        request_instance.tester_nationalcode.national_code
-    ]:
-        return 'READONLY'
-    
-    # در غیر این صورت وضعیت نامعتبر
-    return 'INVALID'
+        """
+        این تابع برای ایجاد یک سند استفاده می شود.
 
-# این تابع با توجه به مرحله فعلی، به مرحله بعدی می رود
-def next_step(request_id: int,user_nationalcode:int ,action: str, form_data: dict)->str:
-    # دریافت درخواست بر اساس request_id
-    request_instance = m.ConfigurationChangeRequest.objects.get(id=request_id)
-    
-    # ابتدا باید کنترل کنیم که آیا کاربر جاری مجاز به انجام عملیات بر روی فرم هست یا خیر؟
-    form_status = check_form_status(user_nationalcode, request_id)
-    form_data['form_status'] = form_status
-    
-    # اگر کاربر جزو کاربران مجاز این درخواست نباشد
-    if form_status == 'INVALID':
-        return {'success':False,'message':"شما مجوز دسترسی به این درخواست را ندارید"}
-    
-    # اگر کاربر مجاز باشد ولی در این مرحله امکان انجام عملیات نداشته باشد
-    if form_status == 'READONLY':
-        return {'success':False,'message':'شما در این مرحله امکان انجام عملیات را ندارید'}
-    
-    # وضعیت فعلی درخواست
-    current_status = request_instance.status_code
-    
-    # حالا مرحله بعدی را مشخص می کنیم
-    validation_error = ''
-    # تعیین وضعیت جدید بر اساس action
-    if action == "CON":
-        if current_status == 'EXECUT' and not request_instance.test_required:
-            new_status = 'FINISH'
-        elif current_status == 'MANAGE' and not request_instance.need_committee:
-            new_status = 'EXECUT'
-        else:
-            new_status = get_next_status(current_status)
-    elif action == "RET":
-        new_status = get_previous_status(current_status)
-    elif action == "REJ":
-        # اعتبارسنجی را انجام می دهیم
-        new_status = 'FAILED'
-    else:
-        return {'success':False, 'message':'نوع عملیات درخواستی معتبر نمی باشد'}
+        Args:
+            doc_title (str): عنوان سند مثلا : درخواست تغییرات سرورهای هورایزن
+            request_id (int): شناسه درخواست تغییرات
+            document_owner_national_code (str): کد ملی فرد درخواست دهنده
+            priority (str, optional): اولویت درخواست، به صورت پیش فرض عادی است. Defaults to 'NORMAL'.
+        """
+        self.doc_id = 1
 
-    # اعتبارسنجی انجام می شود
-    validation_error = step_data_validation(action=action,step=current_status,data=form_data)
-    # اگر اعتبارسنجی با خطا مواجه شده باشد
-    if validation_error:
-        return  {'success':False, 'message':'<br>'.join(validation_error)}
+    def update_priority(self, new_priority):
+        if not self.validate_doc():
+            return {
+                "success": False,
+                "message": "قبل از به روزرسانی اولویت، سند باید ایجاد شده باشد",
+            }
+        # ... (سایر منطق تابع در صورت نیاز)
+        return {"success": True, "message": "اولویت با موفقیت به‌روزرسانی شد"}
 
-    # با توجه به وضعیت فعلی اطلاعات کاربر مربوطه را به دست می آوریم
-    if new_status not in ('FAILED','FINISH' ):
-        user_info = get_user_information(request_id, new_status)
-        if user_info == '-1':
-            return {'success':False,'message':'امکان تعیین کاربر بعدی جهت ارسال وجود ندارد'}
-
-    # به‌روزرسانی وضعیت درخواست
-    request_instance.status_code = new_status
-    request_instance.save()
-    
-    # داده ها را ذخیره می کنیم
-    step_data_save(action=action, request=request_instance, status=current_status, data=form_data)
-
-
-    # فراخوانی توابع مربوطه بر اساس وضعیت جدید
-    if current_status == 'DRAFTD':
-        doc_response = register_document(
-            app_doc_id=request_instance.id,
-            priority=get_priority_title(request_instance.priority.id),
-            doc_state='پیش نویس',
-            document_title=request_instance.change_title,
-            app_code=APP_CODE,
-            owner_nationalcode=request_instance.requestor_nationalcode
-        )
-        request_instance.doc_id = doc_response['data']['id']
-        request_instance.save()
-    if new_status in ['MANAGE', 'EXECUT', 'COMITE', 'TESTER']:
-        send_document(
-            doc_id=request_instance.doc_id,
-            sender_national_code=user_nationalcode,
-            inbox_owners_national_code=get_inbox_owners_national_code(new_status, request_instance)
-        )
-    elif new_status == 'FINISH':
-        finish_flow(request_instance.doc_id, APP_CODE)
-    elif new_status == 'FAILED':
-        terminate_flow(request_instance.doc_id, APP_CODE)
-    
-    # به‌روزرسانی وضعیت سند
-    # erfan
-    update_document_state_code(request_instance.doc_id, APP_CODE, new_status)
-
-    # حالت هایی که فرآیند پایان می یابد
-    if new_status == 'FAILED':
-        message = 'با توجه به رد مدرک، فرآیند متوقف گردید'
-    elif new_status == 'FINISH':
-        message = 'فرآیند با موفقیت خاتمه پیدا کرد'
-    else:
-        message = f'فرم با موفقیت برای {user_info} ارسال شد'
-    return {'success':True,'message':message, 'request_id':request_id}
-def get_next_status(current_status):
-    # تابعی برای دریافت وضعیت بعدی بر اساس وضعیت فعلی
-    status_order = ['DRAFTD', 'MANAGE', 'COMITE', 'EXECUT', 'TESTER', 'FINISH']
-    return status_order[status_order.index(current_status) + 1]
-
-def is_valid_integer(value):
-    """بررسی می‌کند که آیا مقدار یک عدد صحیح معتبر است."""
-    try:
-        int_value = int(value)  # تبدیل به عدد صحیح
-        return True, int_value  # اگر معتبر بود، True و مقدار عددی را برمی‌گرداند
-    except ValueError:
-        return False, None  # اگر نامعتبر بود، False و None را برمی‌گرداند
-
-# این تابع بر اساس مرحله و عملیات، داده های ارسالی را صحت سنجی می کند
-def step_data_validation(action:str, step:str, data:dict)->list[str]:
-    # اگر عملیات رد مدرک باشد، فقط باید کنترل کنیم که دلیل رد مدرک ارسال شده است
-    error_message = []
-    if action == 'REJ':
-        if not data.get('reject_reason'):
-            return ['دلیل رد مدرک مشخص نشده است']
-    # اگر عملیات تایید و مرحله تستر یا مجری باشد باید فیلدهای مربوطه را کنترل کنیم
-    elif step in ['EXECUT','TESTER']:
-        operation_date = data.get('operation_date')
-        if not operation_date:
-            error_message.append('تاریخ انجام عملیات مشخص نشده است')
-        operation_time = data.get('operation_time')
-        if not operation_time:
-            error_message.append('زمان انجام عملیات مشخص نشده است')
-        operation_report = data.get('operation_report')
-        if not operation_report:
-            error_message.append('گزارش انجام عملیات مشخص نشده است')
-        operation_result = data.get('operation_result')
-        if operation_result.lower() not in ['true', 'false']:
-            error_message.append('نتیجه عملیات نامعتبر است')
-        else:
-            if data.get('operation_result') == 'true':
-                data['operation_result'] = True
-            else:
-                data['operation_result'] = False
-
-        # اگر مجری باشد، فیلدهای زیر را هم باید تکمیل کند
-        if step == 'EXECUT':
-
-            fields_to_check = {
-                'changing_duration_actual_hour': ('ساعت مدت زمان انجام تغییرات', data.get('changing_duration_actual_hour')),
-                'changing_duration_actual_minute': ('دقیقه مدت زمان انجام تغییرات', data.get('changing_duration_actual_minute')),
-                'downtime_duration_actual_hour': ('ساعت مدت زمان قطعی سیستم', data.get('downtime_duration_actual_hour')),
-                'downtime_duration_actual_minute': ('دقیقه مدت زمان قطعی سیستم', data.get('downtime_duration_actual_minute')),
+    def send_cartable(
+        self,
+        receiver: str,
+        sender: str,
+        new_doc_state: str = None,
+        due_date: str = None,
+    ):
+        # اگر سند وجود نداشته باشد پیام خطا می دهد
+        if not self.validate_doc():
+            return {
+                "success": False,
+                "message": "قبل از ارسال، سند باید ایجاد شده باشد",
             }
 
-            for field, (persian_title, value) in fields_to_check.items():
-                is_valid, int_value = is_valid_integer(value)
-                if is_valid:
-                    data[field] = int_value  # ذخیره مقدار عددی معتبر
-                else:
-                    error_message.append( f"مقدار برای '{persian_title}' باید یک عدد صحیح معتبر باشد.")
-                
-            
-            # changing_duration_actual_hour = data.get('changing_duration_actual_hour')
-            # if changing_duration_actual_hour is None or not isinstance(changing_duration_actual_hour, int):
-            #     error_message.append('مدت زمان واقعی تغییر نامعتبر است')
-            # changing_duration_actual_minute = data.get('changing_duration_actual_minute')
-            # if changing_duration_actual_minute is None or not isinstance(changing_duration_actual_minute, int) or changing_duration_actual_minute < 0 or changing_duration_actual_minute > 59:
-            #     error_message.append('دقیقه مدت زمان واقعی تغییر نامعتبر است')
-            # downtime_duration_actual_hour = data.get('downtime_duration_actual_hour')
-            # if downtime_duration_actual_hour is None or not isinstance(downtime_duration_actual_hour, int):
-            #     error_message.append('مدت زمان قطعی سیستم نامعتبر است')
-            # downtime_duration_actual_minute = data.get('downtime_duration_actual_minute')
-            # if downtime_duration_actual_minute is None or not isinstance(downtime_duration_actual_minute, int) or downtime_duration_actual_minute < 0 or downtime_duration_actual_minute > 59:
-            #     error_message.append('دقیقه مدت زمان قطعی سیستم نامعتبر است')
-    
-    return error_message
+        # ... (سایر منطق تابع در صورت نیاز)
+        return {"success": True, "message": "سند با موفقیت ارسال شد"}
 
-def step_data_save(action: str, request: m.ConfigurationChangeRequest, status:str, data:dict ):
-    # به‌روزرسانی فیلدهای opinion و date بر اساس نقش و action
-    current_date = jdatetime.datetime.now()
-    current_time = current_date.strftime('%H:%M')
-    
+    def send_cartables(
+        self, sender_receivers: [{}], new_doc_state: str = None, due_date: str = None
+    ):
+        # اگر سند وجود نداشته باشد پیام خطا می دهد
+        if not self.validate_doc():
+            return {
+                "success": False,
+                "message": "قبل از ارسال، سند باید ایجاد شده باشد",
+            }
 
-    if status == 'MANAGE':
-        request.manager_opinion = (action == 'CON')
-        request.manager_opinion_date = current_date.strftime('%Y/%m/%d')
-        request.manager_opinion_time = current_time
-    elif status == 'COMITE':
-        request.committee_opinion = (action == 'CON')
-        request.committee_opinion_date = current_date.strftime('%Y/%m/%d')
-        request.committee_opinion_time = current_time
-    elif status == 'EXECUT':
-        request.executor_report = (action == 'CON')
-        request.executor_report_date = current_date.strftime('%Y/%m/%d')
-        request.executor_report_time = current_time
-        
-        request.execution_description = data.get('operation_report')
-        request.changing_date_actual = data.get('operation_date')
-        request.changing_time_actual = data.get('operation_time')
-        request.executor_report = data.get('operation_result')
+        results = []
+        for item in sender_receivers:
+            receiver = item.get("receiver")
+            sender = item.get("sender")
+            result = self.send_cartable(receiver, sender, new_doc_state, due_date)
+            results.append(result)
 
-        changing_duration_actual_hour = int(data.get('changing_duration_actual_hour'))
-        changing_duration_actual_minute = int(data.get('changing_duration_actual_minute'))
-        request.changing_duration_actual = changing_duration_actual_hour * 60 + changing_duration_actual_minute
-        
-        downtime_duration_actual_hour = int(data.get('downtime_duration_actual_hour'))
-        downtime_duration_actual_minute = int(data.get('downtime_duration_actual_minute'))
-        request.downtime_duration = downtime_duration_actual_hour * 60 + downtime_duration_actual_minute
-        
-    elif status == 'TESTER':
-        request.tester_report = (action == 'CON')
-        request.tester_report_date = current_date.strftime('%Y/%m/%d')
-        request.tester_report_time = current_time
-        request.test_report_description = data.get('operation_report')
-        request.tester_report = data.get('operation_result')
-    
-    request.save()
-def get_previous_status(current_status):
-    # تابعی برای دریافت وضعیت قبلی بر اساس وضعیت فعلی
-    status_order = ['DRAFTD', 'MANAGE', 'COMITE', 'EXECUT', 'TESTER', 'FINISH']
-    return status_order[status_order.index(current_status) - 1]
+        # اگر حتی یکی از ارسال‌ها موفق نباشد، پیام خطا بازگردانده می‌شود
+        if not all(r.get("success") for r in results):
+            failed_messages = [
+                r.get("message") for r in results if not r.get("success")
+            ]
+            return {
+                "success": False,
+                "message": "برخی از ارسال‌ها با خطا مواجه شدند: "
+                + "; ".join(failed_messages),
+            }
 
-def get_priority_title(priority_id):
-    # تابعی برای دریافت عنوان اولویت بر اساس شناسه اولویت
-    priority_instance = m.ConstValue.objects.get(id=priority_id)
-    return priority_instance.Caption
+        return {"success": True, "message": "سندها با موفقیت ارسال شدند"}
 
-def get_inbox_owners_national_code(status:str, request_instance: m.ConfigurationChangeRequest)->str:
-    # تابعی برای دریافت کد ملی دریافت‌کنندگان بر اساس وضعیت
-    if status == 'MANAGE':
-        return request_instance.manager_nationalcode.national_code
-    elif status == 'EXECUT':
-        return request_instance.executor_nationalcode.national_code
-    elif status == 'COMITE':
-        return request_instance.committee_user_nationalcode.national_code
-    elif status == 'TESTER':
-        return request_instance.tester_nationalcode.national_code
+    def exit_from_cartable(
+        self,
+    ):
+        # اگر سند وجود نداشته باشد پیام خطا می دهد
+        if not self.validate_doc():
+            return {
+                "success": False,
+                "message": "قبل از خارج کردن سند از کارتابل باید ایجاد شده باشد",
+            }
+        # ... (سایر منطق تابع در صورت نیاز)
+        return {"success": True, "message": "سند با موفقیت از کارتابل خارج شد"}
 
-# این تابع کد تیم و سمت را از متغییر ورودی جدا کرده و بازگشت می دهد
-def get_team_role(team_role:str, value:str):
-    if '-' in value:
-        if team_role == 'T':
-            return value.split('-')[0]
-        elif team_role == 'R':
-            return value.split('-')[1]
-    else:
+    def exit_from_all_cartables(
+        self,
+    ):
+        # اگر سند وجود نداشته باشد پیام خطا می دهد
+        if not self.validate_doc():
+            return {
+                "success": False,
+                "message": "قبل از خارج کردن سند از کارتابل باید ایجاد شده باشد",
+            }
+        # ... (سایر منطق تابع در صورت نیاز)
+        return {"success": True, "message": "سند با موفقیت از همه کارتابل‌ها خارج شد"}
+
+    def validate_doc(self) -> bool:
+        """
+        این تابع بررسی می کند که آیا شناسه سند معتبر است یا خیر
+
+        Returns:
+            bool: در صورتی که شناسه سند وجود نداشته باشد یا معتبر نباشد، مقدار False و در غیر این صورت مقدار True بازگشت می دهد
+        """
+        # اگر هنوز سند ایجاد نشده باشد
+        if not self.doc_id:
+            return False
+        # باید با فراخوانی یک API کنترل کنیم که سند وجود دارد
+
+
+class FormManager:
+    """
+    این کلاس دربردارنده توابع عمومی برای مدیریت اطلاعات فرم هامی باشد
+
+    Returns:
+        FormManager obj: یک شی از کلاس مربوطه بازگشت می دهد
+    """
+
+    request_obj: Any = None
+    error_message: str = None
+    request_id: int = -1
+
+    def __init__(self, request_id: int = -1):
+        if request_id > 0:
+            self.request_obj = Request(request_id=request_id)
+            self.error_message = self.request_obj.error_message
+            self.request_id = request_id
+
+    def __get_team_role(self, team_role: str, value: str):
+        """
+        این تابع کد سمت و تیم را که به صورت یک رشته جدا شده با - است را دریافت کرده و سمت و یا تیم مربوطه را بازگشت می دهد
+
+        Args:
+            team_role (str): در صورتی که هدف گرفتن تیم باشد باید کارکتر T و در صورتی که می خواهیم سمت را بازگشت دهیم کارکتر R را ارسال می کنیم
+            value (str): این رشته شامل کد تیم - شناسه سمت است
+
+        Returns:
+            str: در صورت معتبر بودن مقادیر شناسه سمت و یا کد تیم را بازگشت می دهد در غیر این صورت مقدار None بازگشت می دهد
+        """
+        if "-" in value:
+            if team_role == "T":
+                return value.split("-")[0]
+            elif team_role == "R":
+                return int(value.split("-")[1])
+        else:
+            return None
+
         return None
 
-    return None
+    def __is_valid_string(self, s: str) -> bool:
+        # حذف فاصله‌های اول و آخر و فاصله‌های وسط
+        cleaned = s.strip()
 
-# این تابع درصورتی که کد درخواستی وجود داشته باشد، اطلاعات آن را به روز می کند و اگر وجود نداشته باشد آن را ایجاد می کند
-def save_form(form_data) -> int:
-    # بررسی وجود شناسه درخواست
-    request_id = form_data.get('request_id')
-    
-    
-    # کلیدهای خارجی را باید به معادل آن تبدیل کنیم چون برای مقداردهی به نمونه مربوطه احتیاج دارد و مقدار کلید را قبول نمی کند
-    executor_nationalcode = form_data.get('executor_user_nationalcode')
-    if executor_nationalcode:
-        executor_nationalcode = m.User.objects.get(national_code=executor_nationalcode)
+        # شرط 1: حداقل طول 5 کاراکتر
+        if len(cleaned) < 5:
+            return False
 
-    tester_nationalcode = form_data.get('tester_user_nationalcode')
-    if tester_nationalcode:
-        tester_nationalcode = m.User.objects.get(national_code=tester_nationalcode)
+        # شرط 2: همه کاراکترها نباید تکراری باشند
+        if len(set(cleaned)) == 1:
+            return False
 
-    requestor_nationalcode = form_data.get('requestor_user_nationalcode')
-    if requestor_nationalcode:
-        requestor_nationalcode = m.User.objects.get(national_code=requestor_nationalcode)
+        return True
 
-    executor_role = None
-    executor_role_id = form_data.get('executor_user_role')
-    if executor_role_id:
+    def __is_valid_integer(self, value):
+        """بررسی می‌کند که آیا مقدار یک عدد صحیح معتبر است."""
         try:
-            executor_role = m.Role.objects.get(role_id=executor_role_id)
-        except m.Role.DoesNotExist:
-            executor_role = None
+            int_value = int(value)  # تبدیل به عدد صحیح
+            return True, int_value  # اگر معتبر بود، True و مقدار عددی را برمی‌گرداند
+        except ValueError:
+            return False, None  # اگر نامعتبر بود، False و None را برمی‌گرداند
 
-    tester_role = None
-    tester_role_id = form_data.get('tester_user_role')
-    if tester_role_id:
-        try:
-            tester_role = m.Role.objects.get(role_id=tester_role_id)
-        except m.Role.DoesNotExist:
-            tester_role = None
-
-    requestor_role = None
-    requestor_role_id = form_data.get('requestor_user_role')
-    if requestor_role_id:
-        try:
-            requestor_role = m.Role.objects.get(role_id=requestor_role_id)
-        except m.Role.DoesNotExist:
-            requestor_role = None
-
-    executor_team_code = form_data.get('executor_user_team')
-    if executor_team_code:
-        executor_team = m.Team.objects.get(team_code=executor_team_code)
-
-    tester_team_code = form_data.get('tester_user_team')
-    if tester_team_code:
-        tester_team = m.Team.objects.get(team_code=tester_team_code)
-
-    requestor_team_code = form_data.get('requestor_user_team')
-    if requestor_team_code:
-        requestor_team = m.Team.objects.get(team_code=requestor_team_code)
-
-
-    committee_user_nationalcode = form_data.get('committee_user_nationalcode')
-    if committee_user_nationalcode:
-        committee_user_nationalcode = m.User.objects.get(national_code=committee_user_nationalcode)
-
-    manager_nationalcode = form_data.get('manager_nationalcode')
-    if manager_nationalcode:
-        manager_nationalcode = m.User.objects.get(national_code=manager_nationalcode)
-    
-
-    if request_id:
-        # به‌روزرسانی اطلاعات درخواست موجود
-        request = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
-        if request:
-            # نقش های درگیر
-            request.executor_nationalcode = executor_nationalcode
-            request.tester_nationalcode = tester_nationalcode
-            request.requestor_nationalcode = requestor_nationalcode
-
-            request.executor_team_code = executor_team
-            request.tester_team_code = tester_team
-            request.requestor_team_code = requestor_team
-            
-            request.executor_role_id = executor_role
-            request.tester_role_id = tester_role
-            request.requestor_role_id = requestor_role
-            
-            request.committee_user_nationalcode = committee_user_nationalcode
-
-            committee_id = form_data.get('committee')
-            if committee_id:
-                request.committee_id = committee_id
-
-            request.need_committee = form_data.get('need_committee')
-
-            request.manager_nationalcode = manager_nationalcode
-
-            request.test_required = form_data.get('need_test')
-            
-            # ویژگی های تغییر
-            request.change_level_id = form_data.get('change_level')
-            request.classification_id = form_data.get('classification')
-            request.priority_id = form_data.get('priority')
-            request.risk_level_id = form_data.get('risk_level')
-
-            # اطلاعات تغییر
-            request.change_title = form_data.get('change_title')
-            request.change_description = form_data.get('change_description')
-            request.change_type_id = form_data.get('change_type')
-
-            # محل تغییر
-            request.change_location_data_center_id = form_data.get('change_location_data_center')
-            request.change_location_database_id = form_data.get('change_location_database')
-            request.change_location_systems_id = form_data.get('change_location_systems')
-            request.change_location_other_id = form_data.get('change_location_other')
-            request.change_location_other_description_id = form_data.get('change_location_other_description')
-
-            # حوزه تغییر
-            request.change_domain_id = form_data.get('change_domain')
-
-            # زمانبندی تغییرات
-            request.changing_date = form_data.get('change_date')
-            request.changing_time = form_data.get('change_time')
-            request.changing_date_actual = form_data.get('changing_date_actual')
-            request.changing_duration = form_data.get('changing_duration')
-            request.changing_duration_actual = form_data.get('changing_duration_actual')
-            request.downtime_duration = form_data.get('downtime_duration')
-            request.downtime_duration_worstcase = form_data.get('downtime_duration_worstcase')
-            request.downtime_duration_actual = form_data.get('downtime_duration_actual')
-
-            # اثر گذاری تغییر
-            request.stop_critical_service = form_data.get('stop_critical_service')
-            request.critical_service_title = form_data.get('critical_service_title')
-            request.stop_sensitive_service = form_data.get('stop_sensitive_service')
-            request.stop_service_title = form_data.get('stop_service_title')
-            request.not_stop_any_service = form_data.get('not_stop_any_service')
-
-            # طرح بازگشت
-            request.has_role_back_plan = form_data.get('has_role_back_plan')
-            request.role_back_plan_description = form_data.get('role_back_plan_description')
-
-            # الزامات تغییر
-            request.reason_regulatory = form_data.get('reason_regulatory')
-            request.reason_technical = form_data.get('reason_technical')
-            request.reason_security = form_data.get('reason_security')
-            request.reason_business = form_data.get('reason_business')
-            request.reason_other = form_data.get('reason_other')
-            request.reason_other_description = form_data.get('reason_other_description')
-
-            # اطلاعات تکمیلی سایر مراحل
-            # نظر مدیر
-            request.manager_opinion = form_data.get('manager_opinion')
-            request.manager_opinion_date = form_data.get('manager_opinion_date')
-            request.manager_reject_description = form_data.get('manager_reject_description')
-            
-            # نظر کمیته
-            request.committee_opinion = form_data.get('committee_opinion')
-            request.committee_opinion_date = form_data.get('committee_opinion_date')
-            request.committee_reject_description = form_data.get('committee_reject_description')
-
-            # گزارش اجرا
-            request.executor_report = form_data.get('executor_report')
-            request.executor_report_date = form_data.get('executor_report_date')
-            request.execution_description = form_data.get('execution_description')
-            
-            # گزارش تست
-            request.test_date = form_data.get('test_date')
-            request.tester_report = form_data.get('tester_report')
-            request.tester_report_date = form_data.get('tester_report_date')
-            request.test_report_description = form_data.get('test_report_description')
-
-            request.save()
-    else:
-        # ایجاد درخواست جدید
-        request = m.ConfigurationChangeRequest.objects.create(
-            # نقش های درگیر
-
-            executor_nationalcode = executor_nationalcode
-            ,tester_nationalcode = tester_nationalcode
-            ,requestor_nationalcode = requestor_nationalcode
-
-            ,executor_team_code = executor_team
-            ,tester_team_code = tester_team
-            ,requestor_team_code = requestor_team
-            
-            ,executor_role_id = executor_role
-            ,tester_role_id = tester_role
-            ,requestor_role_id = requestor_role
-            
-            ,committee_user_nationalcode = committee_user_nationalcode
-            ,committee_id = form_data.get('committee')
-            ,need_committee = form_data.get('need_committee')
-
-            ,manager_nationalcode = manager_nationalcode
-            ,test_required = form_data.get('need_test')
-            
-            # ویژگی های تغییر
-            ,change_level_id = form_data.get('change_level')
-            ,classification_id = form_data.get('classification')
-            ,priority_id = form_data.get('priority')
-            ,risk_level_id = form_data.get('risk_level')
-
-            # اطلاعات تغییر
-            ,change_title = form_data.get('change_title')
-            ,change_description = form_data.get('change_description')
-            ,change_type_id = form_data.get('change_type')
-
-            # محل تغییر
-            ,change_location_data_center = form_data.get('change_location_data_center')
-            ,change_location_database = form_data.get('change_location_database')
-            ,change_location_systems = form_data.get('change_location_systems')
-            ,change_location_other = form_data.get('change_location_other')
-            ,change_location_other_description = form_data.get('change_location_other_description')
-
-            # حوزه تغییر
-            ,change_domain_id = form_data.get('change_domain')
-
-            # زمانبندی تغییرات
-            ,changing_date = form_data.get('change_date')
-            ,changing_time = form_data.get('change_time')
-            ,changing_duration = form_data.get('changing_duration')
-            ,downtime_duration = form_data.get('downtime_duration')
-            ,downtime_duration_worstcase = form_data.get('downtime_duration_worstcase')
-
-            # اثر گذاری تغییر
-            ,stop_critical_service = form_data.get('stop_critical_service')
-            ,critical_service_title = form_data.get('critical_service_title')
-            ,stop_sensitive_service = form_data.get('stop_sensitive_service')
-            ,stop_service_title = form_data.get('stop_service_title')
-            ,not_stop_any_service = form_data.get('not_stop_any_service')
-
-            # طرح بازگشت
-            ,has_role_back_plan = form_data.get('has_role_back_plan')
-            ,role_back_plan_description = form_data.get('role_back_plan_description')
-
-            # الزامات تغییر
-            ,reason_regulatory = form_data.get('reason_regulatory')
-            ,reason_technical = form_data.get('reason_technical')
-            ,reason_security = form_data.get('reason_security')
-            ,reason_business = form_data.get('reason_business')
-            ,reason_other = form_data.get('reason_other')
-            ,reason_other_description = form_data.get('reason_other_description')
-        )
-
-    # حذف رکوردهای موجود و درج رکوردهای جدید
-    # تیم‌ها
-    # مواردی که هم اکنون در دیتابیس وجود دارد را استخراج می کنیم
-    existing_teams = m.RequestTeam.objects.filter(request=request)
-    for team_code in form_data.get('teams', []):
-        if team_code not in existing_teams:
-            # اگر موردی در لیست باشد که در دیتابیس وجود نداشته باشد آن را اضافه می کنیم
-            m.RequestTeam.objects.create(request=request, team_code_id=team_code)
-    # مواردی که در لیست نیستند ولی در دیتابیس هستند را حذف می کنیم
-    existing_teams.exclude(team_code_id__in=form_data.get('teams', [])).delete()
-
-    # شرکت‌ها
-    # مواردی که هم اکنون در دیتابیس وجود دارد را استخراج می کنیم
-    existing_corps = m.RequestCorp.objects.filter(request=request)
-    for corp_code in form_data.get('corps', []):
-        if corp_code not in existing_corps:
-            # اگر موردی در لیست باشد که در دیتابیس وجود نداشته باشد آن را اضافه می کنیم
-            m.RequestCorp.objects.create(request=request, corp_code_id=corp_code)
-    # مواردی که در لیست نیستند ولی در دیتابیس هستند را حذف می کنیم
-    existing_corps.exclude(corp_code_id__in=form_data.get('corps', [])).delete()
-
-    # اطلاعات تکمیلی
-    # مواردی که هم اکنون در دیتابیس وجود دارد را استخراج می کنیم
-    existing_extra_info = m.RequestExtraInformation.objects.filter(request=request)
-    for extra_info_id in form_data.get('extra_information', []):
-        if extra_info_id not in existing_extra_info:
-            # اگر موردی در لیست باشد که در دیتابیس وجود نداشته باشد آن را اضافه می کنیم
-            m.RequestExtraInformation.objects.create(request=request, extra_info_id=extra_info_id)
-    # مواردی که در لیست نیستند ولی در دیتابیس هستند را حذف می کنیم
-    existing_extra_info.exclude(extra_info_id__in=form_data.get('extra_information', [])).delete()
-
-    return request.id
-
-# این تابع صحت سنجی فرم را انجام می دهد در صورتی که خطا داشته باشد مقدار بازگشتی برابر با پیام های خطا خواهد بود
-def form_validation(form_data):
-    errors = []
-
-    # اعتبارسنجی فیلدهای الزامی
-    required_fields = {
-        'requestor_user_nationalcode': "کد ملی درخواست دهنده الزامی است.",
-        'requestor_user_role': "سمت درخواست‌دهنده الزامی است.",
-        'requestor_user_team': "تیم درخواست‌دهنده الزامی است.",
-        'executor_user_nationalcode': "کد ملی مجری الزامی است.",
-        'executor_user_role': "سمت مجری الزامی است.",
-        'executor_user_team': "تیم مجری الزامی است.",
-        'tester_user_nationalcode': "کد ملی تستر الزامی است.",
-        'tester_user_role': "سمت تستر الزامی است.",
-        'tester_user_team': "تیم تستر الزامی است.",
-        'change_title': "عنوان تغییر الزامی است.",
-        'change_description': "توضیحات تغییر الزامی است.",
-        'change_type': "نوع تغییر الزامی است.",
-    }
-
-    # اگر تست نیازی ندارد، نباید شناسه آن وجود داشته باشد
-    if form_data.get('need_test') == 0:
-        form_data.pop('tester_user_nationalcode', None)
-    else:
-        required_fields['tester_user_nationalcode'] = 'انتخاب تستر الزامی است.' 
-        
-    # اگر نیاز به کمیته ندارد، باید شناسه مربوطه حذف شود
-    if form_data.get('need_committee') == 0:
-        form_data.pop('committee', None)
-    else:
-        required_fields['committee'] = 'انتخاب کمیته الزامی است.' 
-    
-    # بررسی فیلدهای الزامی
-    for field, error_message in required_fields.items():
-        if not form_data.get(field):
-            errors.append(error_message)
-
-    # فیلدهای تاریخ
-    date_fields = [
-        ('change_date','تاریخ تغییرات'),
-        ('change_date_actual','تاریخ واقعی انجام تغییرات'),
-        ('test_date', 'تاریخ انجام تست'),
-        ('tester_report_date','تاریخ گزارش تست'),
-        ('manager_opinion_date','تاریخ اظهار نظر مدیر مستقیم'),
-        ('committee_opinion_date','تاریخ اظهار نظر کمیته'),
-    ]
-    
-
-    for field, description in date_fields:
-        date = form_data.get(field)
-        if date:
-            try:
-                # بررسی اینکه آیا ورودی از نوع رشته است
-                if isinstance(date, str):
-                    # تبدیل به تاریخ شمسی
-                    date = jdatetime.datetime.strptime(date, '%Y/%m/%d')
-                else:
-                    errors.append(f"فرمت تاریخ برای '{description}' نامعتبر است.")
-            except ValueError:
-                errors.append(f"'{description}' باید در فرمت 'YYYY-MM-DD' باشد.")
-
-    time_fields = [
-        ('change_time','ساعت تغییرات'),
-        ('change_time_actual','ساعت واقعی انجام تغییرات'),
-        ('test_time', 'ساعت انجام تست'),
-        ('tester_report_time','ساعت گزارش تست'),
-        ('manager_opinion_time','ساعت اظهار نظر مدیر مستقیم'),
-        ('committee_opinion_time','ساعت اظهار نظر کمیته'),
-    ]
-    
-    for field, description in time_fields:
-        time = form_data.get(field)
-        if time:
-            try:
-                # بررسی اینکه آیا ورودی از نوع رشته است
-                if isinstance(time, str):
-                    # بررسی اینکه آیا فرمت زمان صحیح است
-                    hours, minutes = map(int, time.split(':'))
-                    if 0 <= hours <= 24 and 0 <= minutes <= 59:
-                        pass
-                    else:
-                        errors.append(f"فرمت ساعت برای '{description}' نامعتبر است. ساعت باید بین 00:00 تا 23:59 باشد.")
-                else:
-                    errors.append(f"فرمت ساعت برای '{description}' نامعتبر است.")
-            except ValueError:
-                errors.append(f"'{description}' باید در فرمت 'HH:MM' باشد.")
-
-
-
-    # کد ملی درخواست کننده
-    if form_data.get('requestor_user_nationalcode') and not m.User.objects.filter(national_code=form_data['requestor_user_nationalcode']).exists():
-        errors.append("کد ملی درخواست کننده نامعتبر است.")
-
-    # تیم درخواست‌دهنده
-    if form_data.get('requestor_user_team') and not m.Team.objects.filter(team_code=form_data['requestor_user_team']).exists():
-        errors.append("تیم درخواست‌دهنده نامعتبر است.")
-
-    # کد ملی مجری
-    if form_data.get('executor_user_nationalcode') and not m.User.objects.filter(national_code=form_data['executor_user_nationalcode']).exists():
-        errors.append("کد ملی مجری نامعتبر است.")
-
-    # تیم مجری
-    if form_data.get('executor_user_team') and not m.Team.objects.filter(team_code=form_data['executor_user_team']).exists():
-        errors.append("تیم مجری نامعتبر است.")
-
-    # کد ملی تستر
-    if form_data.get('tester_user_nationalcode') and not m.User.objects.filter(national_code=form_data['tester_user_nationalcode']).exists():
-        errors.append("کد ملی تستر نامعتبر است.")
-
-    # تیم تستر
-    if form_data.get('tester_user_team') and not m.Team.objects.filter(team_code=form_data['tester_user_team']).exists():
-        errors.append("تیم تستر نامعتبر است.")
-
-    # کد ملی مدیر
-    if not form_data.get('manager_nationalcode'):
-        manager_nationalcode = m.UserTeamRole.objects.filter(team_code=form_data['requestor_user_team'], role_id=form_data['requestor_user_role']).values('manager_national_code').first()
-        if manager_nationalcode:
-            form_data['manager_nationalcode'] = manager_nationalcode['manager_national_code']
-        # حالتی است که مدیر کاربر پیدا نشده است
+    def get_user_team_role(self, user_team_role):
+        # استخراج تیم و سمت کاربر
+        data = {"success": True, "message":""}
+        user_team_role 
+        if user_team_role:
+            team_code = self.__get_team_role(
+                "T", user_team_role
+            )
+            role_id = self.__get_team_role(
+                "R", user_team_role
+            )
         else:
-            errors.append("امکان تشخیص دادن مدیر کاربر درخواست دهنده وجود ندارد")
-    elif not m.User.objects.filter(national_code=form_data['manager_nationalcode']).exists():
-        errors.append("کد ملی مدیر نامعتبر است.")
+            return {"success": False, "message": "کاربر تیم و سمت معتبری ندارد"}
 
+        # تبدیل به انواع مناسب
+        if team_code:
+            team_code = str(team_code)  # team_code باید string باشد
+        if role_id:
+            role_id = int(role_id)  # role_id باید integer باشد        
 
-    # شناسه کمیته
-    if form_data.get('committee') and not m.Committee.objects.filter(id=form_data['committee']).exists():
-        errors.append("شناسه کمیته نامعتبر است.")
-
-    # کد ملی کاربر کمیته
-    if form_data.get('committee_user_nationalcode') and not m.User.objects.filter(national_code=form_data['committee_user_nationalcode']).exists():
-        errors.append("کد ملی کاربر کمیته نامعتبر است.")
-
-    if not form_data.get('committee_user_nationalcode'):
-        committee_user_nationalcode = m.Committee.objects.filter(id=form_data['committee']).values('administrator_nationalCode').first()
-        if committee_user_nationalcode:
-            form_data['committee_user_nationalcode'] = committee_user_nationalcode['administrator_nationalCode']
-        # حالتی است که مدیر کاربر پیدا نشده است
-        else:
-            errors.append("امکان تشخیص دادن کاربر کمیته وجود ندارد")
-    elif not m.User.objects.filter(national_code=form_data['committee_user_nationalcode']).exists():
-        errors.append("کد ملی کاربر کمیته نامعتبر است.")
-
-
-    # گستردگی تغییرات
-    if form_data.get('change_level') and not m.ConstValue.objects.filter(id=form_data['change_level']).exists():
-        errors.append("گستردگی تغییرات نامعتبر است.")
-
-    # طبقه‌بندی
-    if form_data.get('classification') and not m.ConstValue.objects.filter(id=form_data['classification']).exists():
-        errors.append("طبقه‌بندی نامعتبر است.")
-
-    # اولویت
-    if form_data.get('priority') and not m.ConstValue.objects.filter(id=form_data['priority']).exists():
-        errors.append("اولویت نامعتبر است.")
-
-    # سطح ریسک
-    if form_data.get('risk_level') and not m.ConstValue.objects.filter(id=form_data['risk_level']).exists():
-        errors.append("سطح ریسک نامعتبر است.")
-
-    # دامنه تغییر
-    if form_data.get('change_domain') and not m.ConstValue.objects.filter(id=form_data['change_domain']).exists():
-        errors.append("دامنه تغییر نامعتبر است.")
-
-
-    # نوع تغییر
-    if form_data.get('change_type') and not m.ChangeType.objects.filter(id=form_data['change_type']).exists():
-        errors.append("نوع تغییر نامعتبر است.")
-
-
-    # اعتبارسنجی محل تغییر: سایر
-    try:
-        validator.Validator.validate_change_location_other(
-            form_data.get('change_location_other'),
-            form_data.get('change_location_other_description')
+        data.update(
+            {
+                "team_code":team_code,
+                "role_id":role_id
+            }
         )
-    except ValidationError as e:
-        errors.append(str(e))
+        return data
 
-    # اعتبارسنجی توقف خدمات بحرانی و حساس
-    try:
-        validator.Validator.validate_critical_service(
-            form_data.get('stop_critical_service'),
-            form_data.get('critical_service_title')
+    def load_form_data(self, request_id: int, user_nationalcode: str):
+        form_data = {"message": "", "success": True}
+
+        # مشخص می کنیم که وضعیت فعلی فرم چیست؟
+        form_status = self.check_form_status(
+            user_nationalcode=user_nationalcode,
+            request_id=request_id,
+            request_task_id=-1,
         )
-    except ValidationError as e:
-        errors.append(str(e))
+        form_data["mode"] = form_status["mode"]
+        form_data["form"] = form_status["form"]
 
-    try:
-        validator.Validator.validate_sensitive_service(
-            form_data.get('stop_sensitive_service'),
-            form_data.get('stop_service_title')
-        )
-    except ValidationError as e:
-        errors.append(str(e))
+        # اگر کاربر مربوطه مجاز به مشاهده اطلاعات نباشد
+        if form_status["mode"] == "INVALID":
+            form_data["message"] = "شما مجاز به مشاهده این فرم نیستید"
+            return form_data
 
-    # اعتبارسنجی سایر الزامات
-    try:
-        validator.Validator.validate_reason_other(
-            form_data.get('reason_other'),
-            form_data.get('reason_other_description')
-        )
-    except ValidationError as e:
-        errors.append(str(e))
+        # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
+        if form_status["mode"] in ["READONLY", "UPDATE"]:
 
-    # اعتبارسنجی نظر مدیر
-    try:
-        validator.Validator.validate_manager_opinion(
-            form_data.get('manager_opinion'),
-            form_data.get('manager_reject_description')
-        )
-    except ValidationError as e:
-        errors.append(str(e))
+            # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
+            result = self.request_obj.get_request_data()
 
-    # اعتبارسنجی فیلدهای کمیته
-    try:
-        validator.Validator.validate_committee_fields(
-            form_data.get('need_committee'),
-            form_data.get('committee_user_nationalcode'),
-            form_data.get('committee_opinion_date'),
-            form_data.get('committee_opinion'),
-            form_data.get('committee_reject_description')
-        )
-    except ValidationError as e:
-        errors.append(str(e))
+            # اگر به هر دلیل امکان بارگذاری اطلاعات درخواست وجود نداشته باشد پیام خطا بازگشت داده می شود
+            if not result.get("success", False):
+                return result
 
-    # اعتبارسنجی تاریخ تست و گزارش تست
-    try:
-        validator.Validator.validate_test_date(
-            form_data.get('test_date'),
-            form_data.get('changing_date_actual')
-        )
-    except ValidationError as e:
-        errors.append(str(e))
+            form_data.update(result)
 
-    try:
-        validator.Validator.validate_tester_report_date(
-            form_data.get('tester_report_date'),
-            form_data.get('test_date')
-        )
-    except ValidationError as e:
-        errors.append(str(e))
+        # اگر در حالت ویرایش و یا درج باشیم بایستی اطلاعات تکمیلی را هم اضافه کنیم
+        if form_status["mode"] in ["INSERT", "UPDATE"]:
 
-    # اعتبارسنجی کلیدهای خارجی برای تیم‌ها
-    for team_code in form_data.get('teams', []):
-        if not m.Team.objects.filter(team_code=team_code).exists():
-            errors.append(f"کد تیم '{team_code}' نامعتبر است.")
+            # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
+            result = self.get_form_data()
+            # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
+            if not result.get("success", False):
+                return result
 
-    # اعتبارسنجی کلیدهای خارجی برای شرکت‌ها
-    for corp_code in form_data.get('corps', []):
-        if not m.Corp.objects.filter(corp_code=corp_code).exists():
-            errors.append(f"کد شرکت '{corp_code}' نامعتبر است.")
+            form_data.update(result)
 
-    # اعتبارسنجی مقادیر اطلاعات تکمیلی
-    for extra_info_id in form_data.get('extra_information', []):
-        if not m.ConstValue.objects.filter(id=extra_info_id).exists():
-            errors.append(f"مقدار اطلاعات تکمیلی با شناسه '{extra_info_id}' نامعتبر است.")
+            # اطلاعات کاربران را دریافت می کنیم
+            result = self.get_user_data()
+            # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
+            if not result.get("success", False):
+                return result
 
-    return errors
+            form_data.update(result)
 
-def get_dynamic_checkbox(type:str, request):
-    # دریافت چک باکس‌های داینامیک برای 
-    values = m.ConstValue.objects.filter(Code__startswith=type+'_', IsActive=True)
-    
-    extra_information = []
-    for value in values:
-        if (request.POST.get(value.Code) == value.Code):  # ذخیره وضعیت چک باکس
-            extra_information.append(value.id)
-    
-    return extra_information
+            # سایر اطلاعات مربوط به فرم را دریافت می کنیم
+            request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
 
-def get_selected_items(team_corp: str, request):
-    # تعیین مدل بر اساس نوع (تیم یا شرکت)
-    if team_corp == 't':
-        items = m.Team.objects.all()
-    elif team_corp == 'c':
-        items = m.Corp.objects.all()
-    else:
-        return []
+            form_data.update(
+                {
+                    "request_number": request_id,
+                    "request_date": request_date,
+                }
+            )
 
-    selected_items = []
-    for item in items:
-        if request.POST.get(item.team_code if team_corp == 't' else item.corp_code):
-            selected_items.append(item.team_code if team_corp == 't' else item.corp_code)
-
-    return selected_items
-
-def load_form_data(request_id:int, user_nationalcode:str):
-    form_data = {'message':''}
-    # مشخص می کنیم که وضعیت فعلی فرم چیست؟
-    status_code = check_form_status(user_nationalcode=user_nationalcode,
-                                    request_id=request_id) 
-    form_data['status'] = status_code    
-    
-    # اگر کاربر مربوطه مجاز به مشاهده اطلاعات نباشد
-    if status_code == 'INVALID':
-        form_data['message'] = 'شما مجاز به مشاهده این فرم نیستید'
         return form_data
-    
-    # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
-    if status_code in ['READONLY','UPDATE']:
-        # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
-        request_data = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
+
+    # این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
+    def check_form_status(
+        self, user_nationalcode: str, request_id: int = -1, request_task_id: int = -1
+    ) -> dict:
+        """
+        این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
+
+        Args:
+            user_nationalcode (str): کد ملی کاربر جاری
+            request_id (int): شناسه درخواست
+
+        Returns:
+            _type_: دو مقدار را بازگشت می دهد، اولی کد وضعیت و دومی فرمی که باید باز شود قالب مقدار بازگشتی به این صورت است
+            {'mode':'form_mode','form':'form_name'}
+            mode:
+                INSERT: فرم در حالت درج است
+                READONLY: فرم در حالت فقط خواندنی است و امکان تغییر ندارد
+                UPDATE: فرم در حالت به روزرسانی است
+                INVALID: فرم معتیر نیست یا کاربر جاری اجازه مشاهده این درخواست را ندارد
+            form:
+                RequestSimple: فرم درخواست ساده، این فرم توسط درخواست دهنده و مدیر مستقیم قابل مشاهده است
+                RequestFull: این فرم شامل همه اطلاعات بوده و توسط مدیر مربوطه و کاربر کمیته قابل مشاهده است
+                TaskSelect: در این مرحله تستر و یا مجری تسک را انتخاب می کنند
+                TaskReport: در این مرحله تستر و یا مجری تسک گزارش خود را وارد می کنند
+
+        """
+
+        # اگر شناسه درخواست نامعتبر باشد  در حالت درج باید باز شود
+        if not self.request_obj or not self.request_obj.request_instance:
+            return {"mode": "INSERT", "form": "RequestSimple"}
+
+        # بررسی اعتبار request_id
+        request_instance = self.request_obj.request_instance
+
+        # مقادیر پیش فرض
+        mode = "READONLY"
+        form = "RequestSimple"
+
+        # اینجا نوع فرم را بر اساس وضعیت فرم و کاربر جاری به دست می آوریم
+        # موضوع این است که وقتی مثلا درخواست کننده با مدیر مربوطه یکسان باشد، قدری پیچیده می شود
+        # در چنین مواردی اینکه تشخیص بدهیم که آیا باید فرم Simple را نشان بدهیم یا Full را
+        # دشوار است
+        
+        # در چه صورتی فرم ساده باید نمایش داده شود؟
+        # در صورتی که کاربر جاری درخواست دهنده و یا مدیر مستقیم باشد
+        if (user_nationalcode in 
+            (request_instance.requestor_nationalcode.national_code, 
+             request_instance.direct_manager_nationalcode.national_code)):
+            form = "RequestSimple"
+
+        # اگر کاربر جاری درخواست دهنده باشد و فرم در وضعیت پیش نویس باشد
+        if  (user_nationalcode == request_instance.requestor_nationalcode.national_code 
+            and request_instance.status_code == "DRAFTD"):
+            mode = "UPDATE"
+
+        # اگر کاربر جاری مدیر مستقیم باشد و فرم در وضعیت مدیر مستقیم باشد
+        if (user_nationalcode == request_instance.direct_manager_nationalcode.national_code
+            and request_instance.status_code == "DIRMAN"):
+            mode = "UPDATE"
+
+        # اگر کاربر جاری مدیر مربوطه باشد و فرم در وضعیت مدیر مربوطه باشد
+        if (user_nationalcode == request_instance.related_manager_nationalcode.national_code
+            and request_instance.status_code == "RELMAN"):
+            form = "RequestFull"
+            mode = "UPDATE"
+
+        # اگر کاربر جاری دبیر کمیته باشد و فرم در وضعیت بررسی کمیته باشد
+        if (user_nationalcode == request_instance.committee_user_nationalcode.national_code
+            and request_instance.status_code == "COMITE"):
+            form = "RequestFull"
+            mode = "UPDATE"
+        
+        if (request_instance.status_code == ''):
+
+            # به دست آوردن لیست مجریان
+            executor_list = task_user_list(request_id, -1, "E", False)
+            # به دست آوردن لیست تسترها
+            tester_list = task_user_list(request_id, -1, "T", False)
+            if user_nationalcode in executor_list + tester_list:
+                form = "TaskSelect"
+                if request_instance.mode_code == "DOTASK":
+                    # اگر شماره تسک مشخص شده باشد
+                    if request_task_id > 0:
+                        # تسک مربوطه را به دست می آوریم
+                        request_task = m.RequestTask.objects.filter(
+                            id=request_task_id
+                        ).first()
+                        request_task_user = m.TaskUserSelected.objects.filter(
+                            request_task=request_task_id
+                        )
+                        if request_task:
+                            # اگر وضعیت تسک انتخاب شده باشد
+                            if (
+                                request_task.mode_code == "EXESEL"
+                                and request_task_user.filter()
+                            ):
+                                ...
+                        # در صورتی که شناسه تسک درخواست نامعتبر باشد
+                        else:
+                            mode = "INVALID"
+                        mode = "UPDATE"
+
+            elif user_nationalcode in tester_list:
+                form = "TaskSelect"
+                if request_instance.mode_code == "TESREP":
+                    mode = "UPDATE"
+
+            # به دست آوردن لیست مجریان منتخب
+            executor_list = task_user_list(request_id, -1, "E", True)
+            # به دست آوردن لیست تسترهای منتخب
+            tester_list = task_user_list(request_id, -1, "T", True)
+            if user_nationalcode in executor_list:
+                form = "TaskReport"
+                if request_instance.mode_code == "EXEREP":
+                    mode = "UPDATE"
+            elif user_nationalcode in tester_list:
+                form = "TaskReport"
+                if request_instance.mode_code == "TESREP":
+                    mode = "UPDATE"
+
+        return {"mode": mode, "form": form}
+
+    def load_task_data(self, request_id: int, task_id: int, user_nationalcode: str):
+        """
+        بارگذاری داده‌های تسک
+        """
+        form_data = {"message": ""}
+
+        # دریافت اطلاعات درخواست
+        request_data = m.ConfigurationChangeRequest.objects.filter(
+            id=request_id
+        ).first()
         if request_data:
-            form_data['request'] = request_data
-        
-        # اضافه کردن اطلاعات درخواست به data
-        extra_info = m.RequestExtraInformation.objects.filter(request_id=request_id)
-        form_data['extra_info'] = extra_info
-        # اطلاعات تیم های مرتبط
-        teams = m.RequestTeam.objects.filter(request_id=request_id)
-        form_data['request_teams'] = teams
-        # اطلاعات شرکت های مرتبط
-        corps = m.RequestCorp.objects.filter(request_id=request_id)
-        form_data['request_corps'] = corps
-        
-    # اگر در حالت ویرایش و یا درج باشیم بایستی اطلاعات تکمیلی را هم اضافه کنیم
-    if status_code in ['INSERT']:
+            form_data["request"] = request_data
 
-        
-        # فیلتر کردن رکوردهای مربوط به طبقه بندی
-        classification_values = m.ConstValue.objects.filter(Code__startswith='Classification_', IsActive=True)
-        classification_default = 'Classification_Normal'
-        
-        # فیلتر کردن رکوردهای مربوط به دامنه تغییرات
-        change_level_values = m.ConstValue.objects.filter(Code__startswith='ChangeLevel_', IsActive=True)
-        change_level_default = 'ChangeLevel_Minor'
-        
-        # فیلتر کردن رکوردهای مربوط به اولویت تغییر
-        priority_values = m.ConstValue.objects.filter(Code__startswith='Priority_', IsActive=True)
-        priority_default = 'Priority_Standard'
-        
-        # فیلتر کردن رکوردهای مربوط به سطح ریسک تغییر
-        risk_level_values = m.ConstValue.objects.filter(Code__startswith='RiskLevel_', IsActive=True)
-        risk_level_default = 'RiskLevel_Low'
-        
-        # فیلتر کردن رکوردهای مربوط به تغییرات مرکز داده
-        data_center_values = m.ConstValue.objects.filter(Code__startswith='DataCenter_', IsActive=True)
-        
-        # فیلتر کردن رکوردهای مربوط به سیستم ها و سرویس ها
-        systems_services_values = m.ConstValue.objects.filter(Code__startswith='SystemsServices_', IsActive=True)
-        
-        # فیلتر کردن رکوردهای مربوط به محدوده تغییر
-        domain_values = m.ConstValue.objects.filter(Code__startswith='Domain_', IsActive=True)
-        
-        # فیلتر کردن رکوردهای مربوط به نوع پیوست
-        attachment_type_values = m.ConstValue.objects.filter(Code__startswith='AttachmentType_', IsActive=True)
-        
-        # فیلتر کردن رکوردهای مربوط به وضعیت
-        status_values = m.ConstValue.objects.filter(Code__startswith='Status_', IsActive=True)
+        # دریافت اطلاعات تسک
+        task_data = m.RequestTask.objects.filter(id=task_id).first()
+        if task_data:
+            form_data["task"] = task_data
 
-        committee = m.Committee.objects.filter(is_active=True)
+        # دریافت اطلاعات کاربران تسک
+        task_users = m.TaskUser.objects.filter(task=task_data.task)
+        form_data["task_users"] = task_users
 
-        corps = m.Corp.objects.all()
-        teams = m.Team.objects.all()
-        
-        # نوع تغییر را از جدول مربوطه می گیریم
-        change_type = m.ChangeType.objects.all()
-        
-        # شرکت های مربوط به انواع تغییر
-        change_type_request_corp = m.RequestCorp_ChangeType.objects.all()
-        # تیم های مربوط به انواع تغییر
-        change_type_request_team = m.RequestTeam_ChangeType.objects.all()
-        
-        change_type_data_center_list = m.RequestExtraInformation_ChangeType.objects.filter(extra_info__Code__startswith='DataCenter_')
-        change_type_database_list = m.RequestExtraInformation_ChangeType.objects.filter(extra_info__Code__startswith='Database_')
-        change_type_systems_list = m.RequestExtraInformation_ChangeType.objects.filter(extra_info__Code__startswith='SystemsServices_')
-        
-        
-        # این قسمت از کد باید با توجه به مکانیزم جدید احراز هویت جایگزین شود
+        # دریافت اطلاعات کاربر جاری
+        current_user = self.get_current_user_info(user_nationalcode)
+        form_data["current_user"] = current_user
+
+        return form_data
+
+    def validate_task_report(self, form_data: dict) -> dict:
+        """
+        اعتبارسنجی گزارش تسک
+        """
+        errors = []
+
+        # فیلدهای الزامی
+        required_fields = [
+            ("operation_date", "تاریخ انجام عملیات"),
+            ("operation_time", "زمان انجام عملیات"),
+            ("operation_report", "گزارش انجام عملیات"),
+            ("operation_result", "نتیجه عملیات"),
+        ]
+
+        for field, description in required_fields:
+            if not form_data.get(field):
+                errors.append(f"{description} الزامی است")
+
+        if errors:
+            return {"success": False, "message": "<br>".join(errors)}
+        else:
+            return {"success": True, "message": ""}
+
+    def get_current_user_info(self, user_nationalcode: str) -> dict:
+        """
+        دریافت اطلاعات کاربر جاری
+        """
+        try:
+            user = m.User.objects.get(national_code=user_nationalcode)
+            user_team_roles = m.UserTeamRole.objects.filter(
+                national_code=user_nationalcode
+            )
+
+            team_roles = []
+            for utr in user_team_roles:
+                team_roles.append(
+                    {
+                        "role_title": utr.role_title,
+                        "role_id": utr.role_id,
+                        "team_name": utr.team_code.team_name if utr.team_code else "",
+                        "team_code": utr.team_code.team_code if utr.team_code else "",
+                        "manager_national_code": (
+                            utr.manager_national_code.national_code
+                            if utr.manager_national_code
+                            else ""
+                        ),
+                    }
+                )
+
+            return {
+                "fullname": f"{user.first_name} {user.last_name}",
+                "username": user.username,
+                "national_code": user.national_code,
+                "gender": user.gender,
+                "is_active": True,
+                "team_roles": team_roles,
+            }
+        except:
+            return {}
+
+    def get_all_users_info(self) -> list:
+        """
+        دریافت اطلاعات همه کاربران
+        """
+        try:
+            users = m.User.objects.all()[:10]  # محدود کردن به 10 کاربر
+            all_users = []
+
+            for user in users:
+                user_team_roles = m.UserTeamRole.objects.filter(
+                    national_code=user.national_code
+                )
+                team_roles = []
+
+                for utr in user_team_roles:
+                    team_roles.append(
+                        {
+                            "role_title": utr.role_title,
+                            "role_id": utr.role_id,
+                            "team_name": (
+                                utr.team_code.team_name if utr.team_code else ""
+                            ),
+                            "team_code": (
+                                utr.team_code.team_code if utr.team_code else ""
+                            ),
+                            "manager_national_code": (
+                                utr.manager_national_code.national_code
+                                if utr.manager_national_code
+                                else ""
+                            ),
+                        }
+                    )
+
+                all_users.append(
+                    {
+                        "fullname": f"{user.first_name} {user.last_name}",
+                        "username": user.username,
+                        "national_code": user.national_code,
+                        "gender": user.gender,
+                        "is_active": True,
+                        "team_roles": team_roles,
+                    }
+                )
+
+            return all_users
+        except:
+            return []
+
+    def form_validation(self, form_data: json) -> json:
+        """
+        این تابع بر مبنای داده های ورودی، صحت سنجی اطلاعات فرم را انجام می دهد
+
+        Args:
+            form_data (json): این متغییر دربردارنده اطلاعات فرم است
+
+        Returns:
+            json: خروجی در قالب زیر است
+            {'success':False, 'message':''}
+        """
+        user_nationalcode = form_data.get("user_nationalcode", -1)
+        request_id = form_data.get("request_id", -1)
+        request_task_id = form_data.get("request_task_id", -1)
+
+        # وضعیت جاری فرم را به دست می آوریم
+        form_status = self.check_form_status(
+            user_nationalcode=user_nationalcode,
+            request_id=request_id,
+            request_task_id=request_task_id,
+        )
+        form_mode = form_status["mode"]
+        form_name = form_status["form"]
+
+        error_message = ""
+
+        # اگر کاربر مجاز به دیدن این فرم نباشد
+        if form_mode == "INVALID":
+            return {
+                "success": False,
+                "message": "متاسفانه شما مجاز به باز کردن این فرم نمی باشید",
+            }
+
+        # اگر فرم در حالت فقط خواندنی باشد، اعتبارسنجی معنی ندارد
+        if form_mode == "READONLY":
+            return {"success": True, "message": ""}
+
+        # فیلدهای اجباری
+        required_fields = [
+            ("change_type", "نوع تغییر اجباری است"),
+            ("change_title", "عنوان تغییرات اجباری است"),
+            ("change_description", "توضیحات تغییرات را وارد کنید"),
+            ("user_national_code", "کد ملی درخواست دهنده اجباری است"),
+            ("requestor_role_id", "سمت درخواست دهنده اجباری است"),
+            ("requestor_team_code", "تیم درخواست دهنده اجباری است"),
+        ]
+
+        # تیم و سمت درخواست کننده صرفا در زمان درج کنترل می شود
+        if form_mode == "INSERT":
+            # تیم و سمت کاربر را به دست می آوریم
+            # در صورتی که کاربر جاری یک سمت دارد فرقی ندارد
+            # اما وقتی کاربر چند سمت داشته باشد، می تواند سمت و تیم خود را انتخاب کند
+            # این موضوع به این دلیل اهمیت دارد که ما برای مدیر مستقیم تیم و سمتی که انتخاب کرده است ارسال می کنیم
+            user_team_role = form_data.get("user_team_role")
+
+            user_team_code = self.__get_team_role("T", user_team_role)
+            if not user_team_code:
+                error_message += "تیم کاربر به درستی انتخاب نشده است.\\n"
+
+            user_role_id = self.__get_team_role("R", user_team_role)
+            if not user_role_id:
+                error_message += "سمت کاربر به درستی انتخاب نشده است.\\n"
+
+        if form_mode in ("INSERT", "UPDATE"):
+            # حالا کنترل می کنیم که عنوان درخواست به درستی ثبت شده باشد
+            request_title = form_data.get("change_title")
+            # طول عنوان درخواست باید حداقل 5 کارکتر بدون فاصله باشد
+            if not self.__is_valid_string(request_title):
+                error_message += "لطفا عنوان مناسبی برای درخواست وارد نمایید.\\n"
+
+            # حالا کنترل می کنیم که شرح درخواست به درستی ثبت شده باشد
+            request_description = form_data.get("change_description")
+            if not self.__is_valid_string(request_description):
+                error_message += "لطفا عنوان مناسبی برای شرح درخواست وارد نمایید.\\n"
+
+            # حالا کنترل می کنیم که نوع درخواست را انتخاب کرده باشد
+            request_type = form_data.get("change_type")
+            valid, request_type = self.__is_valid_integer(request_type)
+            if not valid or request_type <= 0:
+                error_message += "لطفا نوع تغییر را انتخاب کنید.\\n"
+
+        # اگر فرم اطلاعات کامل باشد، باید اعتبارسنجی برای تمامی فیلدها صورت بگیرد
+        if form_name == "RequestFull":
+            errors = []
+
+            # اگر نیاز به کمیته ندارد، باید شناسه مربوطه حذف شود
+            if form_data.get("need_committee") == 0:
+                form_data.pop("committee", None)
+            else:
+                required_fields["committee"] = "انتخاب کمیته الزامی است."
+
+            # بررسی فیلدهای الزامی
+            for field, error_message in required_fields.items():
+                if not form_data.get(field):
+                    errors.append(error_message)
+
+            # فیلدهای تاریخ
+            date_fields = [
+                ("change_date", "تاریخ تغییرات"),
+                ("change_date_actual", "تاریخ واقعی انجام تغییرات"),
+                ("test_date", "تاریخ انجام تست"),
+                ("tester_report_date", "تاریخ گزارش تست"),
+                ("manager_opinion_date", "تاریخ اظهار نظر مدیر مستقیم"),
+                ("committee_opinion_date", "تاریخ اظهار نظر کمیته"),
+            ]
+
+            for field, description in date_fields:
+                date = form_data.get(field)
+                if date:
+                    try:
+                        # بررسی اینکه آیا ورودی از نوع رشته است
+                        if isinstance(date, str):
+                            # تبدیل به تاریخ شمسی
+                            date = jdatetime.datetime.strptime(date, "%Y/%m/%d")
+                        else:
+                            errors.append(
+                                f"فرمت تاریخ برای '{description}' نامعتبر است."
+                            )
+                    except ValueError:
+                        errors.append(
+                            f"'{description}' باید در فرمت 'YYYY-MM-DD' باشد."
+                        )
+
+            time_fields = [
+                ("change_time", "ساعت تغییرات"),
+                ("change_time_actual", "ساعت واقعی انجام تغییرات"),
+                ("test_time", "ساعت انجام تست"),
+                ("tester_report_time", "ساعت گزارش تست"),
+                ("manager_opinion_time", "ساعت اظهار نظر مدیر مستقیم"),
+                ("committee_opinion_time", "ساعت اظهار نظر کمیته"),
+            ]
+
+            for field, description in time_fields:
+                time = form_data.get(field)
+                if time:
+                    try:
+                        # بررسی اینکه آیا ورودی از نوع رشته است
+                        if isinstance(time, str):
+                            # بررسی اینکه آیا فرمت زمان صحیح است
+                            hours, minutes = map(int, time.split(":"))
+                            if 0 <= hours <= 24 and 0 <= minutes <= 59:
+                                pass
+                            else:
+                                errors.append(
+                                    f"فرمت ساعت برای '{description}' نامعتبر است. ساعت باید بین 00:00 تا 23:59 باشد."
+                                )
+                        else:
+                            errors.append(
+                                f"فرمت ساعت برای '{description}' نامعتبر است."
+                            )
+                    except ValueError:
+                        errors.append(f"'{description}' باید در فرمت 'HH:MM' باشد.")
+
+            # کد ملی درخواست کننده
+            if (
+                form_data.get("user_nationalcode")
+                and not m.User.objects.filter(
+                    national_code=form_data["user_nationalcode"]
+                ).exists()
+            ):
+                errors.append("کد ملی درخواست کننده نامعتبر است.")
+                
+            # به دست آوردن تیم و سمت کاربر درخواست دهنده
+            result = self.__get_user_team_role(form_data.get('user_team_role'))
+
+            # اگر در استخراج داده ها با خطایی مواجه شده باشیم
+            if not result.get('success', False):
+                errors.append(result.get('message'), 'امکان تشخصیص تیم و سمت کاربر وجود ندارد')
+            else:
+                form_data['requestor_team_code'] = result.get('team_code')
+                form_data['requestor_role_id'] = result.get('role_id')
+
+            # تیم درخواست‌دهنده
+            if (not m.Team.objects.filter(
+                    team_code=form_data["requestor_team_code"]
+                ).exists()
+            ):
+                errors.append("تیم درخواست‌دهنده نامعتبر است.")
+
+
+            # کد ملی مدیر
+            if not form_data.get("manager_nationalcode"):
+                manager_nationalcode = (
+                    m.UserTeamRole.objects.filter(
+                        team_code=form_data["requestor_team_code"],
+                        role_id=form_data["requestor_role_id"],
+                    )
+                    .values("manager_national_code")
+                    .first()
+                )
+                if manager_nationalcode:
+                    form_data["manager_nationalcode"] = manager_nationalcode[
+                        "manager_national_code"
+                    ]
+                # حالتی است که مدیر کاربر پیدا نشده است
+                else:
+                    errors.append(
+                        "امکان تشخیص دادن مدیر کاربر درخواست دهنده وجود ندارد"
+                    )
+            elif not m.User.objects.filter(
+                national_code=form_data["manager_nationalcode"]
+            ).exists():
+                errors.append("کد ملی مدیر نامعتبر است.")
+
+            # شناسه کمیته
+            if (
+                form_data.get("committee")
+                and not m.Committee.objects.filter(id=form_data["committee"]).exists()
+            ):
+                errors.append("شناسه کمیته نامعتبر است.")
+
+            # کد ملی کاربر کمیته
+            if (
+                form_data.get("committee_user_nationalcode")
+                and not m.User.objects.filter(
+                    national_code=form_data["committee_user_nationalcode"]
+                ).exists()
+            ):
+                errors.append("کد ملی کاربر کمیته نامعتبر است.")
+
+            if not form_data.get("committee_user_nationalcode"):
+                committee_user_nationalcode = (
+                    m.Committee.objects.filter(id=form_data["committee"])
+                    .values("administrator_nationalCode")
+                    .first()
+                )
+                if committee_user_nationalcode:
+                    form_data["committee_user_nationalcode"] = (
+                        committee_user_nationalcode["administrator_nationalCode"]
+                    )
+                # حالتی است که مدیر کاربر پیدا نشده است
+                else:
+                    errors.append("امکان تشخیص دادن کاربر کمیته وجود ندارد")
+            elif not m.User.objects.filter(
+                national_code=form_data["committee_user_nationalcode"]
+            ).exists():
+                errors.append("کد ملی کاربر کمیته نامعتبر است.")
+
+            # گستردگی تغییرات
+            if (
+                form_data.get("change_level")
+                and not m.ConstValue.objects.filter(
+                    id=form_data["change_level"]
+                ).exists()
+            ):
+                errors.append("گستردگی تغییرات نامعتبر است.")
+
+            # طبقه‌بندی
+            if (
+                form_data.get("classification")
+                and not m.ConstValue.objects.filter(
+                    id=form_data["classification"]
+                ).exists()
+            ):
+                errors.append("طبقه‌بندی نامعتبر است.")
+
+            # اولویت
+            if (
+                form_data.get("priority")
+                and not m.ConstValue.objects.filter(id=form_data["priority"]).exists()
+            ):
+                errors.append("اولویت نامعتبر است.")
+
+            # سطح ریسک
+            if (
+                form_data.get("risk_level")
+                and not m.ConstValue.objects.filter(id=form_data["risk_level"]).exists()
+            ):
+                errors.append("سطح ریسک نامعتبر است.")
+
+            # دامنه تغییر
+            if (
+                form_data.get("change_domain")
+                and not m.ConstValue.objects.filter(
+                    id=form_data["change_domain"]
+                ).exists()
+            ):
+                errors.append("دامنه تغییر نامعتبر است.")
+
+            # نوع تغییر
+            if (
+                form_data.get("change_type")
+                and not m.ChangeType.objects.filter(
+                    id=form_data["change_type"]
+                ).exists()
+            ):
+                errors.append("نوع تغییر نامعتبر است.")
+
+            # اعتبارسنجی محل تغییر: سایر
+            try:
+                validator.Validator.validate_change_location_other(
+                    form_data.get("change_location_other"),
+                    form_data.get("change_location_other_description"),
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            # اعتبارسنجی توقف خدمات بحرانی و حساس
+            try:
+                validator.Validator.validate_critical_service(
+                    form_data.get("stop_critical_service"),
+                    form_data.get("critical_service_title"),
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            try:
+                validator.Validator.validate_sensitive_service(
+                    form_data.get("stop_sensitive_service"),
+                    form_data.get("stop_service_title"),
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            # اعتبارسنجی سایر الزامات
+            try:
+                validator.Validator.validate_reason_other(
+                    form_data.get("reason_other"),
+                    form_data.get("reason_other_description"),
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            # اعتبارسنجی نظر مدیر
+            try:
+                validator.Validator.validate_manager_opinion(
+                    form_data.get("manager_opinion"),
+                    form_data.get("manager_reject_description"),
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            # اعتبارسنجی فیلدهای کمیته
+            try:
+                validator.Validator.validate_committee_fields(
+                    form_data.get("need_committee"),
+                    form_data.get("committee_user_nationalcode"),
+                    form_data.get("committee_opinion_date"),
+                    form_data.get("committee_opinion"),
+                    form_data.get("committee_reject_description"),
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            # اعتبارسنجی تاریخ تست و گزارش تست
+            try:
+                validator.Validator.validate_test_date(
+                    form_data.get("test_date"), form_data.get("changing_date_actual")
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            try:
+                validator.Validator.validate_tester_report_date(
+                    form_data.get("tester_report_date"), form_data.get("test_date")
+                )
+            except ValidationError as e:
+                errors.append(str(e))
+
+            # اعتبارسنجی کلیدهای خارجی برای تیم‌ها
+            for team_code in form_data.get("teams", []):
+                if not m.Team.objects.filter(team_code=team_code).exists():
+                    errors.append(f"کد تیم '{team_code}' نامعتبر است.")
+
+            # اعتبارسنجی کلیدهای خارجی برای شرکت‌ها
+            for corp_code in form_data.get("corps", []):
+                if not m.Corp.objects.filter(corp_code=corp_code).exists():
+                    errors.append(f"کد شرکت '{corp_code}' نامعتبر است.")
+
+            # اعتبارسنجی مقادیر اطلاعات تکمیلی
+            for extra_info_id in form_data.get("extra_information", []):
+                if not m.ConstValue.objects.filter(id=extra_info_id).exists():
+                    errors.append(
+                        f"مقدار اطلاعات تکمیلی با شناسه '{extra_info_id}' نامعتبر است."
+                    )
+
+            return errors
+
+        # اگر اعتبارسنجی با خطا مواجه شده باشد
+        if error_message:
+            return {"success": False, "message": "<br>".join(error_message)}
+        else:
+            return {"success": True, "message": ""}
+
+    def next_step_request(
+        self, request_id: int, user_nationalcode: int, action: str, form_data: dict
+    ) -> dict:
+        # دریافت درخواست بر اساس request_id
+        request_instance = get_request_instance(request_id)
+        if not request_instance:
+            return {"success": False, "message": "شناسه درخواست نامعتبر است"}
+
+    def next_step_task(
+        self, request_task_id: int, user_nationalcode: int, action: str, form_data: dict
+    ) -> dict:
+        # دریافت درخواست بر اساس request_id
+        request_instance = get_request_instance(request_task_id)
+        if not request_instance:
+            return {"success": False, "message": "شناسه درخواست نامعتبر است"}
+
+    # این تابع با توجه به مرحله فعلی، به مرحله بعدی می رود
+    def next_step(
+        self,
+        request_id: int,
+        user_nationalcode: int,
+        task_id: int,
+        action: str,
+        form_data: dict,
+    ) -> dict:
+        # دریافت درخواست بر اساس request_id
+        request_instance = get_request_instance(request_id)
+        if not request_instance:
+            return {"success": False, "message": "شناسه درخواست نامعتبر است"}
+
+        # ابتدا باید کنترل کنیم که آیا کاربر جاری مجاز به انجام عملیات بر روی فرم هست یا خیر؟
+        form_status = check_form_status(user_nationalcode, request_id)
+        form_data["form_status"] = form_status["status"]
+
+        # اگر کاربر جزو کاربران مجاز این درخواست نباشد
+        if form_status == "INVALID":
+            return {
+                "success": False,
+                "message": "شما مجوز دسترسی به این درخواست را ندارید",
+            }
+
+        # اگر کاربر مجاز باشد ولی در این مرحله امکان انجام عملیات نداشته باشد
+        if form_status == "READONLY":
+            return {
+                "success": False,
+                "message": "شما در این مرحله امکان انجام عملیات را ندارید",
+            }
+
+        # وضعیت فعلی درخواست
+        current_status = request_instance.status_code
+
+        # حالا مرحله بعدی را مشخص می کنیم
+        validation_error = ""
+        # تعیین وضعیت جدید بر اساس action
+        if action == "CON":
+            new_status = get_next_status(current_status)
+        elif action == "RET":
+            new_status = get_previous_status(current_status)
+        elif action == "REJ":
+            # اعتبارسنجی را انجام می دهیم
+            new_status = "FAILED"
+        else:
+            return {"success": False, "message": "نوع عملیات درخواستی معتبر نمی باشد"}
+
+        # اعتبارسنجی انجام می شود
+        validation_error = step_data_validation(
+            action=action, step=current_status, data=form_data
+        )
+        # اگر اعتبارسنجی با خطا مواجه شده باشد
+        if validation_error:
+            return {"success": False, "message": "<br>".join(validation_error)}
+
+        # با توجه به وضعیت فعلی اطلاعات کاربر مربوطه را به دست می آوریم
+        if new_status not in ("FAILED", "FINISH"):
+            user_info = get_user_information(request_id, new_status)
+            if user_info == "-1":
+                return {
+                    "success": False,
+                    "message": "امکان تعیین کاربر بعدی جهت ارسال وجود ندارد",
+                }
+
+        # به‌روزرسانی وضعیت درخواست
+        request_instance.status_code = new_status
+        request_instance.save()
+
+        # داده ها را ذخیره می کنیم
+        step_data_save(
+            action=action,
+            request=request_instance,
+            status=current_status,
+            data=form_data,
+        )
+
+        # فراخوانی توابع مربوطه بر اساس وضعیت جدید
+        if current_status == "DRAFTD":
+            doc_response = register_document(
+                app_doc_id=request_instance.id,
+                priority=get_priority_title(request_instance.priority.id),
+                doc_state="پیش نویس",
+                document_title=request_instance.change_title,
+                app_code=APP_CODE,
+                owner_nationalcode=request_instance.requestor_nationalcode,
+            )
+            request_instance.doc_id = doc_response["data"]["id"]
+            request_instance.save()
+        if new_status in ["MANAGE", "EXECUT", "COMITE", "TESTER"]:
+            send_document(
+                doc_id=request_instance.doc_id,
+                sender_national_code=user_nationalcode,
+                inbox_owners_national_code=get_inbox_owners_national_code(
+                    new_status, request_instance
+                ),
+            )
+        elif new_status == "FINISH":
+            finish_flow(request_instance.doc_id, APP_CODE)
+        elif new_status == "FAILED":
+            terminate_flow(request_instance.doc_id, APP_CODE)
+
+        # به‌روزرسانی وضعیت سند
         # erfan
-        current_user = {'fullname': 'محمد سپه کار', "username":"m.sepahkar", "national_code": "1280419180", "gender": "M","is_active":True,
-                        'team_roles':[{"role_title":"برنامه نویس","role_id":132,"team_name":"خودرو", "team_code":"MIS", 
-                                    "manager_national_code":"0063967782", "Level_id":4, "level_title":"", "is_suprior":True,
-                                    "start_date":"", "end_date":""},
-                                    {"role_title":"پشتیبان","role_id":121,"team_name":"عمر", "team_code":"EVA", "manager_national_code":"0029893003"}]}
+        update_document_state_code(request_instance.doc_id, APP_CODE, new_status)
+
+        # حالت هایی که فرآیند پایان می یابد
+        if new_status == "FAILED":
+            message = "با توجه به رد مدرک، فرآیند متوقف گردید"
+        elif new_status == "FINISH":
+            message = "فرآیند با موفقیت خاتمه پیدا کرد"
+        else:
+            message = f"فرم با موفقیت برای {user_info} ارسال شد"
+        return {"success": True, "message": message, "request_id": request_id}
+
+    def get_next_status(current_status):
+        # تابعی برای دریافت وضعیت بعدی بر اساس وضعیت فعلی
+        status_order = ["DRAFTD", "MANAGE", "COMITE", "EXECUT", "TESTER", "FINISH"]
+        return status_order[status_order.index(current_status) + 1]
+
+    # این تابع بر اساس مرحله و عملیات، داده های ارسالی را صحت سنجی می کند
+    def step_data_validation(self, action: str, step: str, data: dict) -> list[str]:
+        # اگر عملیات رد مدرک باشد، فقط باید کنترل کنیم که دلیل رد مدرک ارسال شده است
+        error_message = []
+        if action == "REJ":
+            if not data.get("reject_reason"):
+                return ["دلیل رد مدرک مشخص نشده است"]
+        # اگر عملیات تایید و مرحله تستر یا مجری باشد باید فیلدهای مربوطه را کنترل کنیم
+        elif step in ["EXECUT", "TESTER"]:
+            operation_date = data.get("operation_date")
+            if not operation_date:
+                error_message.append("تاریخ انجام عملیات مشخص نشده است")
+            operation_time = data.get("operation_time")
+            if not operation_time:
+                error_message.append("زمان انجام عملیات مشخص نشده است")
+            operation_report = data.get("operation_report")
+            if not operation_report:
+                error_message.append("گزارش انجام عملیات مشخص نشده است")
+            operation_result = data.get("operation_result")
+            if operation_result.lower() not in ["true", "false"]:
+                error_message.append("نتیجه عملیات نامعتبر است")
+            else:
+                if data.get("operation_result") == "true":
+                    data["operation_result"] = True
+                else:
+                    data["operation_result"] = False
+
+            # اگر مجری باشد، فیلدهای زیر را هم باید تکمیل کند
+            if step == "EXECUT":
+
+                fields_to_check = {
+                    "changing_duration_actual_hour": (
+                        "ساعت مدت زمان انجام تغییرات",
+                        data.get("changing_duration_actual_hour"),
+                    ),
+                    "changing_duration_actual_minute": (
+                        "دقیقه مدت زمان انجام تغییرات",
+                        data.get("changing_duration_actual_minute"),
+                    ),
+                    "downtime_duration_actual_hour": (
+                        "ساعت مدت زمان قطعی سیستم",
+                        data.get("downtime_duration_actual_hour"),
+                    ),
+                    "downtime_duration_actual_minute": (
+                        "دقیقه مدت زمان قطعی سیستم",
+                        data.get("downtime_duration_actual_minute"),
+                    ),
+                }
+
+                for field, (persian_title, value) in fields_to_check.items():
+                    is_valid, int_value = is_valid_integer(value)
+                    if is_valid:
+                        data[field] = int_value  # ذخیره مقدار عددی معتبر
+                    else:
+                        error_message.append(
+                            f"مقدار برای '{persian_title}' باید یک عدد صحیح معتبر باشد."
+                        )
+
+                # changing_duration_actual_hour = data.get('changing_duration_actual_hour')
+                # if changing_duration_actual_hour is None or not isinstance(changing_duration_actual_hour, int):
+                #     error_message.append('مدت زمان واقعی تغییر نامعتبر است')
+                # changing_duration_actual_minute = data.get('changing_duration_actual_minute')
+                # if changing_duration_actual_minute is None or not isinstance(changing_duration_actual_minute, int) or changing_duration_actual_minute < 0 or changing_duration_actual_minute > 59:
+                #     error_message.append('دقیقه مدت زمان واقعی تغییر نامعتبر است')
+                # downtime_duration_actual_hour = data.get('downtime_duration_actual_hour')
+                # if downtime_duration_actual_hour is None or not isinstance(downtime_duration_actual_hour, int):
+                #     error_message.append('مدت زمان قطعی سیستم نامعتبر است')
+                # downtime_duration_actual_minute = data.get('downtime_duration_actual_minute')
+                # if downtime_duration_actual_minute is None or not isinstance(downtime_duration_actual_minute, int) or downtime_duration_actual_minute < 0 or downtime_duration_actual_minute > 59:
+                #     error_message.append('دقیقه مدت زمان قطعی سیستم نامعتبر است')
+
+        return error_message
+
+    def step_data_save(
+        self,
+        action: str,
+        request: m.ConfigurationChangeRequest,
+        status: str,
+        data: dict,
+    ):
+        # به‌روزرسانی فیلدهای opinion و date بر اساس نقش و action
+        current_date = jdatetime.datetime.now()
+        current_time = current_date.strftime("%H:%M")
+
+        if status == "MANAGE":
+            request.manager_opinion = action == "CON"
+            request.manager_opinion_date = current_date.strftime("%Y/%m/%d")
+            request.manager_opinion_time = current_time
+        elif status == "COMITE":
+            request.committee_opinion = action == "CON"
+            request.committee_opinion_date = current_date.strftime("%Y/%m/%d")
+            request.committee_opinion_time = current_time
+        elif status == "EXECUT":
+            request.executor_report = action == "CON"
+            request.executor_report_date = current_date.strftime("%Y/%m/%d")
+            request.executor_report_time = current_time
+
+            request.execution_description = data.get("operation_report")
+            request.changing_date_actual = data.get("operation_date")
+            request.changing_time_actual = data.get("operation_time")
+            request.executor_report = data.get("operation_result")
+
+            changing_duration_actual_hour = int(
+                data.get("changing_duration_actual_hour")
+            )
+            changing_duration_actual_minute = int(
+                data.get("changing_duration_actual_minute")
+            )
+            request.changing_duration_actual = (
+                changing_duration_actual_hour * 60 + changing_duration_actual_minute
+            )
+
+            downtime_duration_actual_hour = int(
+                data.get("downtime_duration_actual_hour")
+            )
+            downtime_duration_actual_minute = int(
+                data.get("downtime_duration_actual_minute")
+            )
+            request.downtime_duration = (
+                downtime_duration_actual_hour * 60 + downtime_duration_actual_minute
+            )
+
+        elif status == "TESTER":
+            request.tester_report = action == "CON"
+            request.tester_report_date = current_date.strftime("%Y/%m/%d")
+            request.tester_report_time = current_time
+            request.test_report_description = data.get("operation_report")
+            request.tester_report = data.get("operation_result")
+
+        request.save()
+
+    def get_previous_status(self, current_status):
+        # تابعی برای دریافت وضعیت قبلی بر اساس وضعیت فعلی
+        status_order = ["DRAFTD", "MANAGE", "COMITE", "EXECUT", "TESTER", "FINISH"]
+        return status_order[status_order.index(current_status) - 1]
+
+    def get_priority_title(self, priority_id):
+        # تابعی برای دریافت عنوان اولویت بر اساس شناسه اولویت
+        priority_instance = m.ConstValue.objects.get(id=priority_id)
+        return priority_instance.Caption
+
+    def get_form_data(self):
+        """
+        این تابع اطلاعات ثابت مربوط به درخواست ها، یعنی مقادیر کومبوها و ... را بازگشت می دهد
+        """
+        data = {"success": True, "message": ""}
+
+        try:
+            # فیلتر کردن رکوردهای مربوط به طبقه بندی
+            classification_values = m.ConstValue.objects.filter(
+                Code__startswith="Classification_", IsActive=True
+            )
+            classification_default = "Classification_Normal"
+            data["classification_values"] = classification_values
+            data["classification_default"] = classification_default
+
+            # فیلتر کردن رکوردهای مربوط به دامنه تغییرات
+            change_level_values = m.ConstValue.objects.filter(
+                Code__startswith="ChangeLevel_", IsActive=True
+            )
+            change_level_default = "ChangeLevel_Minor"
+            data["change_level_values"] = change_level_values
+            data["change_level_default"] = change_level_default
+
+            # فیلتر کردن رکوردهای مربوط به اولویت تغییر
+            priority_values = m.ConstValue.objects.filter(
+                Code__startswith="Priority_", IsActive=True
+            )
+            priority_default = "Priority_Standard"
+            data["priority_values"] = priority_values
+            data["priority_default"] = priority_default
+
+            # فیلتر کردن رکوردهای مربوط به سطح ریسک تغییر
+            risk_level_values = m.ConstValue.objects.filter(
+                Code__startswith="RiskLevel_", IsActive=True
+            )
+            risk_level_default = "RiskLevel_Low"
+            data["risk_level_values"] = risk_level_values
+            data["risk_level_default"] = risk_level_default
+
+            # فیلتر کردن رکوردهای مربوط به تغییرات مرکز داده
+            data_center_values = m.ConstValue.objects.filter(
+                Code__startswith="DataCenter_", IsActive=True
+            )
+            data["data_center_values"] = data_center_values
+
+            # فیلتر کردن رکوردهای مربوط به سیستم ها و سرویس ها
+            systems_services_values = m.ConstValue.objects.filter(
+                Code__startswith="SystemsServices_", IsActive=True
+            )
+            data["systems_services_values"] = systems_services_values
+
+            # فیلتر کردن رکوردهای مربوط به محدوده تغییر
+            domain_values = m.ConstValue.objects.filter(
+                Code__startswith="Domain_", IsActive=True
+            )
+            data["domain_values"] = domain_values
+
+            # فیلتر کردن رکوردهای مربوط به نوع پیوست
+            attachment_type_values = m.ConstValue.objects.filter(
+                Code__startswith="AttachmentType_", IsActive=True
+            )
+            data["attachment_type_values"] = attachment_type_values
+
+            # فیلتر کردن رکوردهای مربوط به وضعیت
+            status_values = m.ConstValue.objects.filter(
+                Code__startswith="Status_", IsActive=True
+            )
+            data["status_values"] = status_values
+
+            committee = m.Committee.objects.filter(is_active=True)
+            data["committee"] = committee
+
+            corps = m.Corp.objects.all()
+            teams = m.Team.objects.all()
+            data["corps"] = corps
+            data["teams"] = teams
+
+            # نوع تغییر را از جدول مربوطه می گیریم
+            change_type = m.ChangeType.objects.all()
+            data["change_type"] = change_type
+
+            # شرکت های مربوط به انواع تغییر
+            change_type_request_corp = m.RequestCorp_ChangeType.objects.all()
+            data["change_type_request_corp"] = change_type_request_corp
+
+            # تیم های مربوط به انواع تغییر
+            change_type_request_team = m.RequestTeam_ChangeType.objects.all()
+            data["change_type_request_team"] = change_type_request_team
+
+            change_type_data_center_list = (
+                m.RequestExtraInformation_ChangeType.objects.filter(
+                    extra_info__Code__startswith="DataCenter_"
+                )
+            )
+            data["change_type_data_center_list"] = change_type_data_center_list
+
+            change_type_database_list = (
+                m.RequestExtraInformation_ChangeType.objects.filter(
+                    extra_info__Code__startswith="Database_"
+                )
+            )
+            data["change_type_database_list"] = change_type_database_list
+
+            change_type_systems_list = (
+                m.RequestExtraInformation_ChangeType.objects.filter(
+                    extra_info__Code__startswith="SystemsServices_"
+                )
+            )
+            data["change_type_systems_list"] = change_type_systems_list
+
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+        return data
+
+    def get_user_data(self):
+        """
+        این تابع اطلاعات کاربر جاری و سایر کاربران مرتبط را بازگشت می دهد
+        """
+        data = {"success": True, "message": ""}
+
+        try:
+            current_user = {
+                "fullname": "محمد سپه کار",
+                "username": "m.sepahkar",
+                "national_code": "1280419180",
+                "gender": "M",
+                "is_active": True,
+                "team_roles": [
+                    {
+                        "role_title": "برنامه نویس",
+                        "role_id": 132,
+                        "team_name": "خودرو",
+                        "team_code": "MIS",
+                        "manager_national_code": "0063967782",
+                        "Level_id": 4,
+                        "level_title": "",
+                        "is_suprior": True,
+                        "start_date": "",
+                        "end_date": "",
+                    },
+                    {
+                        "role_title": "پشتیبان",
+                        "role_id": 121,
+                        "team_name": "عمر",
+                        "team_code": "EVA",
+                        "manager_national_code": "0029893003",
+                    },
+                ],
+            }
+            data["current_user"] = current_user
+
+            all_users = [
+                {
+                    "fullname": "مجید خاکور",
+                    "username": "m.khakvar@eit",
+                    "national_code": "0017901030",
+                    "gender": "M",
+                    "team_roles": [
+                        {
+                            "role_title": "مدیر عامل",
+                            "role_id": 98,
+                            "team_name": "مدیریت عامل",
+                            "team_code": "CTO",
+                            "manager_national_code": "",
+                        }
+                    ],
+                },
+                {
+                    "fullname": "مریم سلطانی",
+                    "username": "m.soltani@eit",
+                    "national_code": "6309920952",
+                    "gender": "F",
+                    "team_roles": [
+                        {
+                            "role_title": "پشتیبان",
+                            "role_id": 53,
+                            "team_name": "عمر",
+                            "team_code": "LIF",
+                            "manager_national_code": "0029893003",
+                        }
+                    ],
+                },
+                {
+                    "fullname": "امید مشعشعی",
+                    "username": "o.moshashai@eit",
+                    "national_code": "0010748148",
+                    "gender": "M",
+                    "team_roles": [
+                        {
+                            "role_title": "مدیر ادمین",
+                            "role_id": 63,
+                            "team_name": "ادمین",
+                            "team_code": "ADM",
+                            "manager_national_code": "0029893003",
+                        },
+                        {
+                            "role_title": "مدیر نسخه",
+                            "role_id": 53,
+                            "team_name": "نسخه",
+                            "team_code": "VER",
+                            "manager_national_code": "0029893003",
+                        },
+                        {
+                            "role_title": "معاون عملیات",
+                            "role_id": 53,
+                            "team_name": "معاونت عملیات",
+                            "team_code": "OAS",
+                            "manager_national_code": "0029893003",
+                        },
+                    ],
+                },
+                {
+                    "fullname": "مینا ضیائی",
+                    "username": "m.ziyaei@eit",
+                    "national_code": "0063425750",
+                    "gender": "F",
+                    "team_roles": [
+                        {
+                            "role_title": "تستر",
+                            "role_id": 53,
+                            "team_name": "عمر",
+                            "team_code": "LIF",
+                            "manager_national_code": "0029893003",
+                        }
+                    ],
+                },
+                {
+                    "fullname": "سعید فیضی",
+                    "username": "s.feizi@eit",
+                    "national_code": "3979843076",
+                    "gender": "M",
+                    "team_roles": [
+                        {
+                            "role_title": "برنامه نویس",
+                            "role_id": 63,
+                            "team_name": "خودرو",
+                            "team_code": "WEB",
+                            "manager_national_code": "0029893003",
+                        },
+                        {
+                            "role_title": "برنامه نویس",
+                            "role_id": 63,
+                            "team_name": "عمر",
+                            "team_code": "LIF",
+                            "manager_national_code": "0029893003",
+                        },
+                    ],
+                },
+            ]
+            data["all_users"] = all_users
+
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+        return data
+
+    def get_inbox_owners_national_code(
+        self, status: str, request_instance: m.ConfigurationChangeRequest
+    ) -> str:
+        # تابعی برای دریافت کد ملی دریافت‌کنندگان بر اساس وضعیت
+        if status == "MANAGE":
+            return request_instance.manager_nationalcode.national_code
+        elif status == "EXECUT":
+            return request_instance.executor_nationalcode.national_code
+        elif status == "COMITE":
+            return request_instance.committee_user_nationalcode.national_code
+        elif status == "TESTER":
+            return request_instance.tester_nationalcode.national_code
+
+
+    def get_dynamic_checkbox(type:str, request):
+        # دریافت چک باکس‌های داینامیک برای
+        values = m.ConstValue.objects.filter(Code__startswith=type+'_', IsActive=True)
+
+        extra_information = []
+        for value in values:
+            if (request.POST.get(value.Code) == value.Code):  # ذخیره وضعیت چک باکس
+                extra_information.append(value.id)
+
+        return extra_information
+
+    def get_selected_items(team_corp: str, request):
+        # تعیین مدل بر اساس نوع (تیم یا شرکت)
+        if team_corp == 't':
+            items = m.Team.objects.all()
+        elif team_corp == 'c':
+            items = m.Corp.objects.all()
+        else:
+            return []
+
+        selected_items = []
+        for item in items:
+            if request.POST.get(item.team_code if team_corp == 't' else item.corp_code):
+                selected_items.append(item.team_code if team_corp == 't' else item.corp_code)
+
+        return selected_items
+
+
+class Task:
+    task_id: int
+    task_instance: m.Task
+    request_task_id: int
+    task_status: str
+    request_task_instance: m.RequestTask
+    test_required: bool
+
+    # اطلاعات افراد درگیر در تسک
+    users: List[m.User]
+    executors: List[m.User]
+    selected_executor: m.User
+    testers: List[m.User]
+    selected_tester: m.User
+
+    def __int__(self, request_task_id):
+        try:
+            # دریافت درخواست بر اساس request_id
+            self.request_task_instance = m.RequestTaskUser.objects.get(
+                id=request_task_id
+            )
+            self.task_status = self.request_task_instance.status_code
+            self.task_instance = self.request_task_instance.task
+            self.task_id = self.task_instance.id
+            self.request_task_id = request_task_id
+            self.test_required = self.task_instance.test_required
+
+            # مقداردهی لیست ها
+            self.users = []
+            self.executors = []
+            self.testers = []
+
+        except m.ConfigurationChangeRequest.DoesNotExist:
+            return False
+        return True
+
+    def get_users_info(self):
+        task_id = self.task_id
+
+        # اطلاعات کلیه افراد مربوط به تسک
+        if not self.users:
+            task_user = m.TaskUser.objects.filter(task_id=task_id).values_list(
+                "user_nationalcode", flat=True
+            )
+            self.users = m.User.objects.filter(national_code__in=task_user)
+
+        # دریافت اطلاعات مجریان تسک
+        if not self.executors:
+            task_user = m.TaskUser.objects.filter(
+                task_id=task_id, user_role_code="E"
+            ).values_list("user_nationalcode", flat=True)
+            self.executors = m.User.objects.filter(national_code__in=task_user)
+
+        # دریافت اطلاعات تسترهای تسک
+        if not self.testers:
+            task_user = m.TaskUser.objects.filter(
+                task_id=task_id, user_role_code="T"
+            ).values_list("user_nationalcode", flat=True)
+            self.testers = m.User.objects.filter(national_code__in=task_user)
+
+        # دریافت اطلاعات مجری منتخب
+        if not self.selected_executor:
+            selected_user = m.TaskUserSelected.objects.filter(
+                request_task=self.request_task_instance, task_user__user_role_code="E"
+            ).first()
+            if selected_user is not None:
+                national_code = selected_user.task_user.user_nationalcode.national_code
+                self.selected_executor = m.User.objects.filter(
+                    national_code=national_code
+                ).first()
+
+        # دریافت اطلاعات تستر منتخب
+        if self.test_required and not self.selected_tester:
+            selected_user = m.TaskUserSelected.objects.filter(
+                request_task=self.request_task_instance, task_user__user_role_code="T"
+            ).first()
+            if selected_user is not None:
+                national_code = selected_user.task_user.user_nationalcode.national_code
+                self.selected_tester = m.User.objects.filter(
+                    national_code=national_code
+                ).first()
+
+    def next_step(self, action_code: str) -> dict:
+        """این تابع تسک را به مرحله بعدی می برد. انواع حالتهای ممکن شامل موارد زیر است:
+        ('DEFINE', 'تعریف'): CON->EXERED, RET->FAILED, REJ->FAILED
+        ('EXERED', 'آماده انتخاب مجری'): CON->EXESEL
+        ('EXESEL', 'مجری انتخاب شده'): CON->EXEFIN, RET->EXERED, REJ->FAILED
+        ('EXEFIN', 'اجرای موفق'): CON->(if test_required : TESRED else : FINISH), RET->EXERED, REJ->FAILED
+        ('TESRED', 'آماده انتخاب تستر'): CON->TESSEL
+        ('TESSEL', 'تستر انتخاب شده'): CON->FINISH, RET->TESRED, REJ->EXESEL
+        ('FINISH', 'انجام موفق'):
+        ('FAILED', 'انجام ناموفق'):
+
+        Args:
+            action_code (str): یک کد سه حرفی است که نوع عملیات انتخاب شده توسط کاربر را مشخص می کند و یکی از مقادیر زیر است:
+                CON: تایید
+                RET: بازگشت
+                REJ: رد
+        Returns:
+            dict: یک دیکشنری است که عضو اول موفقیت و یا عدم موفقیت و عضو دوم پیام مربوطه را شامل می شود
+        """
+
+        status_code = self.task_status
+        new_status = None
+
+        if action_code == "CON":
+            if status_code == "DEFINE":
+                new_status = "EXERED"
+            elif status_code == "EXERED":
+                new_status = "EXESEL"
+            elif status_code == "EXESEL":
+                new_status = "EXEFIN"
+            elif status_code == "EXEFIN":
+                new_status = "TESRED" if self.test_required else "FINISH"
+            elif status_code == "TESRED":
+                new_status = "TESSEL"
+            elif status_code == "TESSEL":
+                new_status = "FINISH"
+        elif action_code == "RET":
+            if status_code == "DEFINE":
+                new_status = "FAILED"
+            elif status_code == "EXESEL":
+                new_status = "EXERED"
+            elif status_code == "EXEFIN":
+                new_status = "EXERED"
+            elif status_code == "TESSEL":
+                new_status = "TESRED"
+        elif action_code == "REJ":
+            if status_code in ["DEFINE", "EXESEL", "EXEFIN"]:
+                new_status = "FAILED"
+            elif status_code == "TESSEL":
+                new_status = "EXESEL"
+        else:
+            return {"success": False, "message": "نوع عملیات درخواستی معتبر نمی‌باشد"}
+
+        if new_status:
+            self.task_status = new_status
+            return {
+                "success": True,
+                "message": f'وضعیت با موفقیت به "{new_status}" تغییر یافت',
+            }
+        else:
+            return {
+                "success": False,
+                "message": "تغییر وضعیت برای حالت فعلی امکان‌پذیر نیست",
+            }
+
+    def save(self, data: dict): ...
+
+    def validate(self, data: dict) -> bool: ...
+
+    def get_data(self) -> dict: ...
+
+
+class Request:
+    obj_form_manager: FormManager
+    obj_cartable: Cartable
+
+    error_message: str
+
+    request_id: int
+    request_instance: m.ConfigurationChangeRequest
+    change_type_instance: m.ChangeType
+    status_code: str
+    status_title: str
+    need_committee: bool
+
+    # اطلاعات افراد درگیر
+    user_requestor: m.User
+    user_requestor_team_code: m.Team
+    user_requestor_role_id: m.Role
+    user_direct_manager: m.User
+    user_related_manager: m.User
+    user_committee: m.User
+
+    # اطلاعات تسک ها
+    task_users: List[m.User]
+    task_executors: List[m.User]
+    task_selected_executors: List[m.User]
+    task_testers: List[m.User]
+    task_selected_testers: List[m.User]
+
+    # اطلاعات تسک ها
+    tasks = List[Task]
+    current_task: Task
+    has_any_task_left: bool
+
+    def __init__(self, request_id):
+        # یک نمونه از شی FormManager را ایجاد می کنیم
+        self.obj_form_manager = FormManager()
+        self.obj_cartable = Cartable()
+
+        self.error_message = None
+
+        # مقداردهی لیست ها
+        self.tasks = []
+        self.task_users = []
+        self.task_executors = []
+        self.task_selected_executors = []
+        self.task_testers = []
+        self.task_selected_testers = []
+
+        # در صورتی که تازه قصد ایجاد درخواست را داشته باشیم
+        if request_id == -1:
+            self.request_id = -1
+            self.request_instance = None
+            self.change_type_instance = None
+            self.status_code = None
+            self.need_committee = None
+            self.error_message = None
+        else:
+            # در صورتی که یک درخواست ایجاد شده را مدیریت می کنیم
+            try:
+
+                # دریافت درخواست بر اساس request_id
+                self.request_instance = m.ConfigurationChangeRequest.objects.get(
+                    id=request_id
+                )
+                self.change_type_instance = self.request_instance.change_type
+                self.request_id = request_id
+                self.status_code = self.request_instance.status_code
+                self.need_committee = self.request_instance.need_committee
+
+                # اطلاعات کاربران درگیر را به روزرسانی می کنیم
+
+                # مشخصات کاربر درخواست دهنده
+                self.user_requestor = self.request_instance.requestor_nationalcode
+                self.user_requestor_role_id = self.request_instance.requestor_role_id
+                self.user_requestor_team_code = (
+                    self.request_instance.requestor_team_code
+                )
+
+                # اطلاعات سایر افراد درگیر
+                self.user_direct_manager = (
+                    self.request_instance.direct_manager_nationalcode
+                )
+                self.user_related_manager = (
+                    self.request_instance.related_manager_nationalcode
+                )
+
+                # در شرایطی ممکن است کاربر کمیته تغییر کرده باشد، بایستی اطلاعات کاربر جدید کمیته را به روز کنیم
+                if self.need_committee:
+                    committee: m.Committee
+                    committee = (
+                        self.request_instance.committee
+                    )  # فرض بر این است که فیلد committee یک شیء است
+                    if committee and committee.is_active:
+                        self.request_instance.committee_user_nationalcode = (
+                            committee.administrator_nationalCode
+                        )
+                        self.request_instance.save()
+                        self.user_committee = committee.administrator_nationalCode
+                    else:
+                        self.user_committee = None
+                        # این تکه کد برای این است که اگر قبلا نیاز به کمیته داشته و الان حذف شده، کاربر مربوطه نیز حذف شود
+                        # یا اینکه کمیته ای انتخاب شده بوده و الان غیرفعال شده که باید حذف شود
+                        self.request_instance.committee = None
+                        self.request_instance.committee_user_nationalcode = None
+                        self.request_instance.save()
+
+                # لیست تسک ها را به دست می آوریم
+                # دریافت لیست تسک‌های مربوط به این درخواست
+                self.tasks = list(
+                    m.RequestTask.objects.filter(request=self.request_instance)
+                )
+
+                # دریافت لیست کاربران تسک‌ها
+                self.task_users = list(
+                    m.TaskUser.objects.filter(task_id__in=[t.id for t in self.tasks])
+                )
+
+                # مجریان (executors) تسک‌ها
+                self.task_executors = list(
+                    m.User.objects.filter(
+                        national_code__in=[
+                            tu.user_nationalcode.national_code
+                            for tu in self.task_users
+                            if tu.user_role_code == "E"
+                        ]
+                    )
+                )
+
+                # مجریان انتخاب شده (selected executors)
+                # ابتدا RequestTask های مربوط به این درخواست را پیدا می‌کنیم
+                request_tasks = m.RequestTask.objects.filter(request=self.request_instance)
+                
+                # سپس TaskUserSelected های مربوط به مجریان انتخاب شده را پیدا می‌کنیم
+                selected_executor_task_users = m.TaskUserSelected.objects.filter(
+                    request_task__in=request_tasks,
+                    task_user__user_role_code="E"
+                ).select_related('task_user__user_nationalcode')
+                
+                self.task_selected_executors = [
+                    tus.task_user.user_nationalcode 
+                    for tus in selected_executor_task_users
+                ]
+
+                # تسترهای تسک‌ها
+                self.task_testers = list(
+                    m.User.objects.filter(
+                        national_code__in=[
+                            tu.user_nationalcode.national_code
+                            for tu in self.task_users
+                            if tu.user_role_code == "T"
+                        ]
+                    )
+                )
+
+                # تسترهای انتخاب شده (selected testers)
+                # TaskUserSelected های مربوط به تسترهای انتخاب شده را پیدا می‌کنیم
+                selected_tester_task_users = m.TaskUserSelected.objects.filter(
+                    request_task__in=request_tasks,
+                    task_user__user_role_code="T"
+                ).select_related('task_user__user_nationalcode')
+                
+                self.task_selected_testers = [
+                    tus.task_user.user_nationalcode 
+                    for tus in selected_tester_task_users
+                ]
+
+                # اگر تسک جاری وجود داشته باشد، آن را تنظیم کن
+                self.current_task = self.tasks[0] if self.tasks else None
+
+                # آیا هیچ تسکی باقی مانده است؟
+                self.has_any_task_left = any(
+                    t.status_code != "FINISH" for t in self.tasks
+                )
+
+            except m.ConfigurationChangeRequest.DoesNotExist as e:
+                self.request_instance = None
+                self.request_id = None
+                self.status_code = None
+                self.need_committee = None
+                self.error_type = "NotFound"
+                self.error_message = "درخواست مورد نظر یافت نشد."
+            except Exception as e:
+                self.request_instance = None
+                self.status_code = None
+                self.need_committee = None
+                self.error_type = "UnknownError"
+                self.error_message = f"خطای غیرمنتظره: {str(e)}"
+
+    def get_record_data(self, form_data:json):
+        """
+        در این تابع اطلاعات تکمیلی رکورد درخواست برای عملیات درج و یا به روزرسانی آورده می شود
+        این اطلاعات شامل برخی موارد مانند مدیر درخواست دهنده و یا موارد دیگری که بر اساس نوع تغییر
+        باید مقدار بگیرند (مانند اطلاعات تسک ها) می شود
+        البته مهم است که در چه مرحله ای هستیم، مثلا اگر مرحله مدیر به بعد هستیم
+        اطلاعات مدیر درخواست دهنده (هر چند در واقعیت عوض شده باشد) نباید تغییر کند
+        """
+        form_data['success'] = True
         
-        all_users = [{'fullname': 'مجید خاکور',"username":"m.khakvar@eit", "national_code": "0017901030", "gender": "M",
-                    'team_roles':[{"role_title":"مدیر عامل","role_id":98,"team_name":"مدیریت عامل", "team_code":"CTO", "manager_national_code":""}]}, 
-                    {'fullname': 'مریم سلطانی',"username":"m.soltani@eit", "national_code": "6309920952", "gender": "F",
-                        'team_roles':[{"role_title":"پشتیبان","role_id":53,"team_name":"عمر", "team_code":"LIF", "manager_national_code":"0029893003"}]},
-                        {'fullname': 'امید مشعشعی',"username":"o.moshashai@eit", "national_code": "0010748148", "gender": "M",
-                        'team_roles':[{"role_title":"مدیر ادمین","role_id":63,"team_name":"ادمین", "team_code":"ADM", "manager_national_code":"0029893003"},
-                                    {"role_title":"مدیر نسخه","role_id":53,"team_name":"نسخه", "team_code":"VER", "manager_national_code":"0029893003"},
-                                    {"role_title":"معاون عملیات","role_id":53,"team_name":"معاونت عملیات", "team_code":"OAS", "manager_national_code":"0029893003"}]},
-                        {'fullname': 'مینا ضیائی',"username":"m.ziyaei@eit", "national_code": "0063425750", "gender": "F",
-                        'team_roles':[{"role_title":"تستر","role_id":53,"team_name":"عمر", "team_code":"LIF", "manager_national_code":"0029893003"}]},
-                        {'fullname': 'سعید فیضی',"username":"s.feizi@eit", "national_code": "3979843076", "gender": "M",
-                        'team_roles':[{"role_title":"برنامه نویس","role_id":63,"team_name":"خودرو", "team_code":"WEB", "manager_national_code":"0029893003"},
-                                    {"role_title":"برنامه نویس","role_id":63,"team_name":"عمر", "team_code":"LIF", "manager_national_code":"0029893003"}]}]
+        # استخراج تیم و سمت کاربر
+        result = self.obj_form_manager.get_user_team_role(form_data.get('user_team_role'))
+        if not result.get('success'):
+            return result
+            
+        form_data['requestor_team_code'] = result['team_code']
+        form_data['requestor_role_id'] = int(result['role_id'])
         
-        request_date = request_date = jdatetime.datetime.now().strftime('%Y/%m/%d')
-        breadcrumbs = [{'name':'اطلاعات درخواست','order':1, 'default':True},
-                    {'name':'اطلاعات اجرا','order':2, 'default':False}]
-    
-        form_data.update({
-            'classification_values': classification_values,
-            'classification_default': classification_default,
-            'change_level_values': change_level_values,
-            'change_level_default': change_level_default,
-            'priority_values': priority_values,
-            'priority_default': priority_default,
-            'risk_level_values': risk_level_values,
-            'risk_level_default': risk_level_default,
-            'data_center_values': data_center_values,
-            'systems_services_values': systems_services_values,
-            'domain_values': domain_values,
-            'attachment_type_values': attachment_type_values,
-            'status_values': status_values,
-            'committee': committee,
-            'corps': corps,
-            'teams': teams,
-            'request_number':'-',
-            'request_date': request_date,
-            'breadcrumbs':breadcrumbs,
-            'current_user': current_user,
-            'all_users': all_users,
-            'change_type': change_type,
-            'change_type_data_center_list':change_type_data_center_list,
-            'change_type_systems_list':change_type_systems_list,
-            'change_type_request_corp':change_type_request_corp,
-            'change_type_database_list':change_type_database_list,
-            'change_type_request_team':change_type_request_team
-        })
+        team_code = result['team_code']
+        role_id =  int(result['role_id'])
+        
+        # در صورتی که کاربر جاری درخواست دهنده نباشد، از کاربر جاری استفاده می کنیم
+        # این اتفاق زمانی رخ می دهد که کاربر جاری مدیر مستقیم، مدیر مربوطه یا کاربر کمیته و ... باشد
+        user_requestor = self.user_requestor.national_code if self.user_requestor else form_data.get("user_nationalcode", "")
+        
+        # پیدا کردن مدیر مستقیم
+        manager_obj = m.UserTeamRole.objects.filter(
+            national_code=user_requestor,
+            team_code=team_code,
+            role_id=role_id,
+        ).first()
+
+        if not manager_obj or not manager_obj.manager_national_code:
+            return {"success": False, "message": "مدیر مستقیم کاربر پیدا نشد"}
+        form_data['direct_manager_nationalcode'] = manager_obj.manager_national_code
         
 
-    return form_data
+        # پیدا کردن نوع تغییر
+        change_type_id = int(form_data.get("change_type", -1))
+        change_type_obj: m.ChangeType
+        change_type_obj = m.ChangeType.objects.filter(
+            id=change_type_id
+        ).first()
+        # اگر نوع تغییر معتبر نباشد
+        if not change_type_obj:
+            return {"success": False, "message": "نوع درخواست معتبر نیست"}
+        form_data['change_type'] = change_type_obj
+        form_data['change_type_id'] = change_type_id
+        # داده ها را بازگشت می دهیم
+        return form_data
+
+
+    def get_change_type_data(self, change_type_id:int=None):
+        """
+        این تابع اطلاعات مربوط به نوع تغییر را دریافت کرده بازگشت می دهد
+        این اطلاعات تقریبا شامل تمامی اقلام اطلاعاتی فرم می شود
+        
+        Args:
+            change_type_id (int): شناسه نوع تغییر
+        """
+        form_data = {'success': True}
+        
+        # اگر نوع تغییر مقدار نداشته باشد
+        if not self.change_type_instance:
+            #  بررسی می کنیم که آیا چنین رکوردی در جدول نوع تغییرات وجود دارد یا خیر
+            change_type_obj = m.ChangeType.objects.filter(id=change_type_id).first() 
+            self.change_type_instance = change_type_obj
+        else:
+            change_type_obj = self.change_type_instance
+            
+        # اگر نوع تغییر معتبر نباشد
+        if not change_type_obj:
+            return {"success": False, "message": "نوع درخواست معتبر نیست"}
+        
+        
+        # این فیلدها بر اساس نوع تغییر تکمیل می شوند
+        # در تمامی موارد اگر مقدار در نوع تغییر مشخص نشده باشد، مقدار پیش فرض جدول در نظر گرفته می شود
+        try:
+            form_data['related_manager_nationalcode'] = (  # مدیر مربوطه
+                change_type_obj.related_manager
+                if change_type_obj.related_manager is not None
+                else m.ConfigurationChangeRequest._meta.get_field(
+                    "related_manager_nationalcode"
+                ).get_default()
+            )
+            if 'change_location_data_center' not in form_data:
+                form_data['change_location_data_center'] = (  # محل تغییر: دیتاسنتر
+                    change_type_obj.change_location_data_center
+                    if change_type_obj.change_location_data_center is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "change_location_data_center"
+                    ).get_default()
+                )
+            if 'change_location_database' not in form_data:
+                form_data['change_location_database'] = (  # محل تغییر: پایگاه داده
+                    change_type_obj.change_location_database
+                    if change_type_obj.change_location_database is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "change_location_database"
+                    ).get_default()
+                )
+            if 'change_location_systems' not in form_data:
+                form_data['change_location_systems'] = (  # محل تغییر: سامانه‌ها
+                    change_type_obj.change_location_systems
+                    if change_type_obj.change_location_systems is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "change_location_systems"
+                    ).get_default()
+                )
+            if 'change_location_other' not in form_data:
+                form_data['change_location_other'] = (  # محل تغییر: سایر
+                    change_type_obj.change_location_other
+                    if change_type_obj.change_location_other is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "change_location_other"
+                    ).get_default()
+                )
+            if 'change_location_other_description' not in form_data:
+                form_data['change_location_other_description'] = (  # توضیحات محل تغییر: سایر
+                    change_type_obj.change_location_other_description
+                    if change_type_obj.change_location_other_description is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "change_location_other_description"
+                    ).get_default()
+                )
+            if 'need_committee' not in form_data:
+                form_data['need_committee'] = (  # نیاز به کمیته
+                    change_type_obj.need_committee
+                    if change_type_obj.need_committee is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "need_committee"
+                    ).get_default()
+                )
+            if 'committee' not in form_data:
+                form_data['committee'] = (  # کمیته
+                    change_type_obj.committee
+                    if change_type_obj.committee is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "committee"
+                    ).get_default()
+                )
+            if 'committee_user_nationalcode' not in form_data:
+                form_data['committee_user_nationalcode'] = (  # کد ملی کاربر کمیته
+                    change_type_obj.committee.administrator_nationalCode
+                    if change_type_obj.committee is not None
+                    else None
+                )
+            if 'change_level' not in form_data:
+                form_data['change_level'] = (  # سطح تغییر
+                    change_type_obj.change_level
+                    if change_type_obj.change_level is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "change_level"
+                    ).get_default()
+                )
+            if 'classification' not in form_data:
+                form_data['classification'] = (  # طبقه‌بندی
+                    change_type_obj.classification
+                    if change_type_obj.classification is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "classification"
+                    ).get_default()
+                )
+            if 'priority' not in form_data:
+                form_data['priority'] = (  # اولویت
+                    change_type_obj.priority
+                    if change_type_obj.priority is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "priority"
+                    ).get_default()
+                )
+            if 'risk_level' not in form_data:
+                form_data['risk_level'] = (  # سطح ریسک
+                    change_type_obj.risk_level
+                    if change_type_obj.risk_level is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "risk_level"
+                    ).get_default()
+                )
+            if 'change_domain' not in form_data:
+                form_data['change_domain'] = (  # حوزه تغییر
+                    change_type_obj.change_domain
+                    if change_type_obj.change_domain is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "change_domain"
+                    ).get_default()
+                )
+            if 'stop_critical_service' not in form_data:
+                form_data['stop_critical_service'] = (  # توقف خدمات بحرانی
+                    change_type_obj.stop_critical_service
+                    if change_type_obj.stop_critical_service is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "stop_critical_service"
+                    ).get_default()
+                )
+            if 'critical_service_title' not in form_data:
+                form_data['critical_service_title'] = (  # عنوان خدمت بحرانی
+                    change_type_obj.critical_service_title
+                    if change_type_obj.critical_service_title is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "critical_service_title"
+                    ).get_default()
+                )
+            if 'stop_sensitive_service' not in form_data:
+                form_data['stop_sensitive_service'] = (  # توقف خدمات حساس
+                    change_type_obj.stop_sensitive_service
+                    if change_type_obj.stop_sensitive_service is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "stop_sensitive_service"
+                    ).get_default()
+                )
+            if 'stop_service_title' not in form_data:
+                form_data['stop_service_title'] = (  # عنوان خدمت حساس
+                    change_type_obj.stop_service_title
+                    if change_type_obj.stop_service_title is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "stop_service_title"
+                    ).get_default()
+                )
+            if 'not_stop_any_service' not in form_data:
+                form_data['not_stop_any_service'] = (  # توقف هیچ خدمتی وجود ندارد
+                    change_type_obj.not_stop_any_service
+                    if change_type_obj.not_stop_any_service is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "not_stop_any_service"
+                    ).get_default()
+                )
+            if 'has_role_back_plan' not in form_data:
+                form_data['has_role_back_plan'] = (  # وجود برنامه بازگشت
+                    change_type_obj.has_role_back_plan
+                    if change_type_obj.has_role_back_plan is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "has_role_back_plan"
+                    ).get_default()
+                )
+            if 'role_back_plan_description' not in form_data:
+                form_data['role_back_plan_description'] = (  # توضیحات برنامه بازگشت
+                    change_type_obj.role_back_plan_description
+                    if change_type_obj.role_back_plan_description is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "role_back_plan_description"
+                    ).get_default()
+                )
+            if 'reason_regulatory' not in form_data:
+                form_data['reason_regulatory'] = (  # دلیل: الزامات قانونی
+                    change_type_obj.reason_regulatory
+                    if change_type_obj.reason_regulatory is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "reason_regulatory"
+                    ).get_default()
+                )
+            if 'reason_technical' not in form_data:
+                form_data['reason_technical'] = (  # دلیل: الزامات فنی
+                    change_type_obj.reason_technical
+                    if change_type_obj.reason_technical is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "reason_technical"
+                    ).get_default()
+                )
+            if 'reason_security' not in form_data:
+                form_data['reason_security'] = (  # دلیل: الزامات امنیتی
+                    change_type_obj.reason_security
+                    if change_type_obj.reason_security is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "reason_security"
+                    ).get_default()
+                )
+            if 'reason_business' not in form_data:
+                form_data['reason_business'] = (  # دلیل: الزامات کسب‌وکار
+                    change_type_obj.reason_business
+                    if change_type_obj.reason_business is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "reason_business"
+                    ).get_default()
+                )
+            if 'reason_other' not in form_data:
+                form_data['reason_other'] = (  # دلیل: سایر
+                    change_type_obj.reason_other
+                    if change_type_obj.reason_other is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "reason_other"
+                    ).get_default()
+                )
+            if 'reason_other_description' not in form_data:
+                form_data['reason_other_description'] = (  # توضیحات دلیل: سایر
+                    change_type_obj.reason_other_description
+                    if change_type_obj.reason_other_description is not None
+                    else m.ConfigurationChangeRequest._meta.get_field(
+                        "reason_other_description"
+                    ).get_default()
+                )
+        except Exception as e:
+            return {"success": False, "message": f"خطا در دریافت اطلاعات نوع تغییر: {str(e)}"}
+
+        return form_data
+
+    def insert_change_type_records(self):
+        """
+        در این تابع برخی از اطلاعات اضافه مثل شرکت ها و تیم های مرتبط، تسک ها و ...
+        که بر اساس نوع تغییر مشخص می شوند درج می شود
+        """
+        
+        # ابتدا بررسی می کنیم که آیا چنین رکوردی در جدول نوع تغییرات وجود دارد یا خیر
+        change_type_obj = self.change_type_instance
+        # اگر نوع تغییر معتبر نباشد
+        if not change_type_obj:
+            return {"success": False, "message": "نوع درخواست معتبر نیست"}
+                
+
+        # حالا باید اطلاعات سایر جداول مرتبط را اضافه کنیم
+        # ایجاد رکوردهای مرتبط بر اساس نوع تغییر
+        try:
+            # 1. RequestCorp_ChangeType -> RequestCorp
+            request_corp_changetype_records: QuerySet[m.RequestCorp_ChangeType] = (
+                m.RequestCorp_ChangeType.objects.filter(changetype=change_type_obj)
+            )
+            for record in request_corp_changetype_records:
+                m.RequestCorp.objects.create(
+                    request=self.request_instance, corp_code=record.corp_code
+                )
+
+            # 2. RequestTeam_ChangeType -> RequestTeam
+            request_team_changetype_records: QuerySet[m.RequestTeam_ChangeType] = (
+                m.RequestTeam_ChangeType.objects.filter(changetype=change_type_obj)
+            )
+            for record in request_team_changetype_records:
+                m.RequestTeam.objects.create(
+                    request=self.request_instance, team_code=record.team_code
+                )
+
+            # 3. RequestExtraInformation_ChangeType -> RequestExtraInformation
+            request_extra_info_changetype_records: QuerySet[
+                m.RequestExtraInformation_ChangeType
+            ] = m.RequestExtraInformation_ChangeType.objects.filter(
+                change_type=change_type_obj
+            )
+            for record in request_extra_info_changetype_records:
+                m.RequestExtraInformation.objects.create(
+                    request=self.request_instance, extra_info=record.extra_info
+                )
+
+            # 4. RequestTask_ChangeType -> RequestTask
+            request_task_changetype_records: QuerySet[m.RequestTask_ChangeType] = (
+                m.RequestTask_ChangeType.objects.filter(changetype=change_type_obj)
+            )
+            for record in request_task_changetype_records:
+                m.RequestTask.objects.create(
+                    request=self.request_instance,
+                    task=record.task,
+                    status_code="DEFINE",  # وضعیت پیش‌فرض
+                )
+
+            # 5. RequestNotifyGroup_ChangeType -> RequestNotifyGroup
+            request_notify_group_changetype_records: QuerySet[
+                m.RequestNotifyGroup_ChangeType
+            ] = m.RequestNotifyGroup_ChangeType.objects.filter(
+                changetype=change_type_obj
+            )
+            for record in request_notify_group_changetype_records:
+                m.RequestNotifyGroup.objects.create(
+                    request=self.request_instance,
+                    notify_group=record.notify_group,
+                    by_email=record.by_email,
+                    by_sms=record.by_sms,
+                )
+
+        except Exception as e:
+            # اگر خطایی در ایجاد رکوردهای مرتبط رخ داد، درخواست را حذف می‌کنیم
+            self.request_instance.delete()
+            return {
+                "success": False,
+                "message": f"خطا در ایجاد رکوردهای مرتبط: {str(e)}",
+            }
+        
+        return {'success':True}
+    
+
+    def create_request(self, form_data: dict, user_nationalcode: str) -> dict:
+        """
+        این تابع برای ایجاد یک نسخه جدید از درخواست مورد استفاده قرار می گیرد
+
+        Args:
+            form_data (dict): این متغییر دربردارنده کلیه اطلاعات فرم در زمان ایجاد است
+            user_nationalcode (str): کد ملی کاربر درخواست دهنده
+
+        Returns:
+            dict: نتیجه عملیات
+        """
+        try:
+            result = self.get_record_data(form_data)
+            if not result.get('success', True):
+                return {"success": False, "message": "امکان فراخوانی اطلاعات تکمیلی درخواست وجود ندارد\n" + result['message']}
+            
+            form_data.update(result)
+            
+            # چون زمان تغییر است، برخی از اطلاعات باید با توجه به نوع تغییر تکمیل شوند
+            result = self.get_change_type_data(form_data['change_type_id'])
+            if not result.get('success', True):
+                return {"success": False, "message": "امکان فراخوانی اطلاعات بر اساس نوع درخواست وجود ندارد\n" + result['message']}
+            
+            form_data.update(result)        
+            
+            
+            # یک سری اطلاعات بر اساس نوع تغییر تکمیل می شود
+            # بخشی از این اطلاعات باید قبل از ذخیره رکورد درخواست ثبت شوند
+            # این موارد شامل فیلدهای اجباری مانند مدیر مربوطه می شود.
+            # برخی از موارد هم مانند تسک ها، باید بعد از درج رکورد مشخص شوند
+
+            # ایجاد درخواست
+            try:
+                self.request_instance = m.ConfigurationChangeRequest.objects.create(
+                    change_title=form_data.get("change_title"),
+                    change_type=form_data.get("change_type"),
+                    change_description=form_data.get("change_description"),
+                    requestor_nationalcode_id=user_nationalcode,
+                    requestor_team_code_id=form_data.get("requestor_team_code"),
+                    requestor_role_id_id=form_data.get("requestor_role_id"), 
+                    direct_manager_nationalcode=form_data.get("direct_manager_nationalcode"),
+                    status_code="DRAFTD",
+                    creator_user_id = user_nationalcode,
+                    last_modifier_user_id = user_nationalcode,
+                    # این فیلدها بر اساس نوع تغییر تکمیل می شوند
+                    # در تمامی موارد اگر مقدار در نوع تغییر مشخص نشده باشد، مقدار پیش فرض جدول در نظر گرفته می شود
+                    # کد ملی مدیر مربوطه
+                    related_manager_nationalcode=form_data.get('related_manager_nationalcode'),
+                    # محل تغییر: مرکز داده
+                    change_location_data_center=form_data.get('change_location_data_center'),
+                    # محل تغییر: پایگاه داده
+                    change_location_database=form_data.get('change_location_database'),
+                    # محل تغییر: سیستم‌ها
+                    change_location_systems=form_data.get('change_location_systems'),
+                    # محل تغییر: سایر
+                    change_location_other=form_data.get('change_location_other'),
+                    # توضیحات محل تغییر
+                    change_location_other_description=form_data.get('change_location_other_description'),
+                    # نیاز به کمیته
+                    need_committee=form_data.get('need_committee'),
+                    # کمیته
+                    committee=form_data.get('committee'),
+                    # کد ملی کاربر کمیته
+                    committee_user_nationalcode=form_data.get('committee_user_nationalcode'),
+                    # گستردگی تغییرات
+                    change_level=form_data.get('change_level'),
+                    # طبقه‌بندی
+                    classification=form_data.get('classification'),
+                    # اولویت
+                    priority=form_data.get('priority'),
+                    # سطح ریسک
+                    risk_level=form_data.get('risk_level'),
+                    # دامنه تغییر
+                    change_domain=form_data.get('change_domain'),
+                    # توقف خدمات بحرانی
+                    stop_critical_service=form_data.get('stop_critical_service'),
+                    # عنوان خدمات بحرانی
+                    critical_service_title=form_data.get('critical_service_title'),
+                    # توقف خدمات حساس
+                    stop_sensitive_service=form_data.get('stop_sensitive_service'),
+                    # عنوان خدمات حساس
+                    stop_service_title=form_data.get('stop_service_title'),
+                    # عدم توقف هیچ خدمتی
+                    not_stop_any_service=form_data.get('not_stop_any_service'),
+                    # وجود برنامه بازگشت
+                    has_role_back_plan=form_data.get('has_role_back_plan'),
+                    # توضیحات برنامه بازگشت
+                    role_back_plan_description=form_data.get('role_back_plan_description'),
+                    # الزامات قانونی
+                    reason_regulatory=form_data.get('reason_regulatory'),
+                    # الزامات فنی
+                    reason_technical=form_data.get('reason_technical'),
+                    # الزامات امنیتی
+                    reason_security=form_data.get('reason_security'),
+                    # الزامات کسب‌وکار
+                    reason_business=form_data.get('reason_business'),
+                    # سایر الزامات
+                    reason_other=form_data.get('reason_other'),
+                    # توضیحات سایر الزامات
+                    reason_other_description=form_data.get('reason_other_description'),
+                )
+            except Exception as e:
+                return {
+                    "success": False,
+                    "message": f"خطا در ایجاد درخواست: {str(e)}",
+                }
+
+
+            # شناسه درخواست را مقداردهی می کنیم
+            self.request_id = self.request_instance.id
+            self.change_type_instance = self.request_instance.change_type
+            
+            # سایر رکوردهایی که مربوط به نوع تغییر هستند، مانند شرکتها، تیم ها، تسک ها و ... را درج می کنیم
+            self.insert_change_type_records()
+            
+            # اطلاعات کاربران را مقداردهی می کنیم
+            self.extract_request_users()
+
+            # با استفاده از این تابع، عملیات رفتن به مرحله بعد و ارسال به کارتابل مدیر و اطلاع رسانی های لازم انجام می شود
+            result = self.next_step(
+                action_code="CON", user_nationalcode=user_nationalcode
+            )
+
+            if result["success"]:
+                return {
+                    "success": True,
+                    "request_id": self.request_instance.id,
+                    "message": "درخواست با موفقیت ایجاد شد",
+                }
+            else:
+                # اگر next_step با خطا مواجه شد، درخواست را حذف می‌کنیم
+                self.request_instance.delete()
+                return result
+
+        except Exception as e:
+            # اگر درخواست ایجاد شده بود، آن را حذف می‌کنیم
+            if hasattr(self, "request_instance") and self.request_instance:
+                try:
+                    self.request_instance.delete()
+                except:
+                    pass
+            return {"success": False, "message": f"خطا در ایجاد درخواست: {str(e)}"}
+
+    def next_status(self):
+        self.status_code
+
+    def update_request(self, form_data: dict, current_user_nationalcode:str) -> dict:
+        """
+        به‌روزرسانی درخواست موجود
+        """
+        try:
+            request_instance = self.request_instance
+
+            # اطلاعات درخواست را از داده های فرم استخراج می کنیم
+            result = self.get_record_data(form_data)
+            if not result.get('success', True):
+                return {"success": False, "message": "امکان فراخوانی اطلاعات تکمیلی درخواست وجود ندارد\n" + result['message']}
+            
+            form_data.update(result)
+            
+            #  برخی از اطلاعات باید با توجه به نوع تغییر تکمیل شوند
+            # چیزهایی که ممکن است عوض شده باشند، کمیته و مدیر مربوطه است
+            result = self.get_change_type_data(form_data['change_type_id'])
+            if not result.get('success', True):
+                return {"success": False, "message": "امکان فراخوانی اطلاعات بر اساس نوع درخواست وجود ندارد\n" + result['message']}
+            form_data.update(result)                        
+            
+            # کد وضعیت
+            if 'state_code' in form_data:
+                request_instance.state_code = form_data['state_code']
+            # عنوان تغییر
+            if 'change_title' in form_data:
+                request_instance.change_title = form_data['change_title']
+            # توضیحات
+            if 'change_description' in form_data:
+                request_instance.change_description = form_data['change_description']
+
+            # کد ملی مدیر مستقیم
+            if 'direct_manager_nationalcode' in form_data:
+                request_instance.direct_manager_nationalcode = form_data['direct_manager_nationalcode']
+            
+            # کد ملی مدیر مربوطه
+            if 'related_manager_nationalcode' in form_data:
+                request_instance.related_manager_nationalcode = form_data['related_manager_nationalcode']
+                                
+            # کد ملی کاربر کمیته
+            if 'committee_user_nationalcode' in form_data:
+                request_instance.committee_user_nationalcode = form_data['committee_user_nationalcode']
+           
+            # نیاز به کمیته
+            if 'need_committee' in form_data:
+                request_instance.need_committee = form_data['need_committee']
+                
+            # کمیته
+            if 'committee' in form_data:
+                request_instance.committee = form_data['committee']
+                
+            # گستردگی تغییرات
+            if 'change_level' in form_data:
+                request_instance.change_level = form_data['change_level']
+            # طبقه‌بندی
+            if 'classification' in form_data:
+                request_instance.classification = form_data['classification']
+            # اولویت
+            if 'priority' in form_data:
+                request_instance.priority = form_data['priority']
+            # سطح ریسک
+            if 'risk_level' in form_data:
+                request_instance.risk_level = form_data['risk_level']
+            # دامنه تغییر
+            if 'change_domain' in form_data:
+                request_instance.change_domain = form_data['change_domain']
+            # مدت زمان تغییرات
+            if 'changing_duration' in form_data:
+                request_instance.changing_duration = form_data['changing_duration']
+            # مدت زمان توقف
+            if 'downtime_duration' in form_data:
+                request_instance.downtime_duration = form_data['downtime_duration']
+            # بدترین مدت زمان توقف
+            if 'downtime_duration_worstcase' in form_data:
+                request_instance.downtime_duration_worstcase = form_data['downtime_duration_worstcase']
+            # توقف خدمات بحرانی
+            if 'stop_critical_service' in form_data:
+                request_instance.stop_critical_service = form_data['stop_critical_service']
+            # خدمات بحرانی
+            if 'critical_service_title' in form_data:
+                request_instance.critical_service_title = form_data['critical_service_title']
+            # توقف خدمات حساس
+            if 'stop_sensitive_service' in form_data:
+                request_instance.stop_sensitive_service = form_data['stop_sensitive_service']
+            # عنوان خدمات متوقف شده
+            if 'stop_service_title' in form_data:
+                request_instance.stop_service_title = form_data['stop_service_title']
+            # عدم توقف هیچ خدماتی
+            if 'not_stop_any_service' in form_data:
+                request_instance.not_stop_any_service = form_data['not_stop_any_service']
+            # برنامه بازگشت وجود دارد
+            if 'has_role_back_plan' in form_data:
+                request_instance.has_role_back_plan = form_data['has_role_back_plan']
+            # توضیحات برنامه بازگشت
+            if 'role_back_plan_description' in form_data:
+                request_instance.role_back_plan_description = form_data['role_back_plan_description']
+            # الزام قانونی
+            if 'reason_regulatory' in form_data:
+                request_instance.reason_regulatory = form_data['reason_regulatory']
+            # الزام فنی
+            if 'reason_technical' in form_data:
+                request_instance.reason_technical = form_data['reason_technical']
+            # الزام امنیتی
+            if 'reason_security' in form_data:
+                request_instance.reason_security = form_data['reason_security']
+            # الزام کسب و کاری
+            if 'reason_business' in form_data:
+                request_instance.reason_business = form_data['reason_business']
+            # سایر الزامات
+            if 'reason_other' in form_data:
+                request_instance.reason_other = form_data['reason_other']
+            # توضیحات الزامات دیگر
+            if 'reason_other_description' in form_data:
+                request_instance.reason_other_description = form_data['reason_other_description']
+
+            # به‌روزرسانی و درج رکوردهای جداول وابسته مانند RequestCorp
+            error_message = []
+            # مثال برای جدول RequestCorp
+            # فرض: اطلاعات رکورد RequestCorp در form_data['request_corp'] به صورت دیکشنری است (نه لیست)
+            # جدول RequestCorp: شرکت‌های مرتبط با درخواست تغییر
+            try:
+                request_corp_data = form_data.get('request_corps')
+                if request_corp_data is not None:
+                    for corp_item in request_corp_data:
+                        corp_id = corp_item.get('id')
+                        is_deleted = corp_item.get('is_deleted', False)
+                        if corp_id:
+                            corp_instance = m.RequestCorp.objects.filter(id=corp_id, request=request_instance).first()
+                            if corp_instance:
+                                if is_deleted:
+                                    corp_instance.delete()
+                                else:
+                                    if 'corp_code' in corp_item:
+                                        corp_instance.corp_code_id = corp_item['corp_code']
+                                    corp_instance.save()
+                        else:
+                            if not is_deleted:
+                                corp_code = corp_item.get('corp_code')
+                                if corp_code is not None:
+                                    corp_obj = m.Corp.objects.filter(pk=corp_code).first()
+                                    if corp_obj is not None:
+                                        m.RequestCorp.objects.create(
+                                            corp_code=corp_obj,
+                                            request=request_instance
+                                        )
+                                    else:
+                                        error_message.append(f'کد شرکت {corp_code} معتبر نیست')
+            except Exception as e:
+                error_message.append(f'خطا در پردازش شرکت‌ها: {str(e)}')
+
+            # جدول RequestSystem: سامانه‌های مرتبط با درخواست تغییر
+            try:
+                request_system_data = form_data.get('request_system')
+                if request_system_data is not None:
+                    for sys_item in request_system_data:
+                        sys_id = sys_item.get('id')
+                        is_deleted = sys_item.get('is_deleted', False)
+                        if sys_id:
+                            sys_instance = m.RequestSystem.objects.filter(id=sys_id, request=request_instance).first()
+                            if sys_instance:
+                                if is_deleted:
+                                    sys_instance.delete()
+                                else:
+                                    # کد سامانه
+                                    if 'system_code' in sys_item:
+                                        # verbose_name: 'کد سامانه'
+                                        sys_instance.system_code = sys_item['system_code']
+                                    # نام سامانه
+                                    if 'system_name' in sys_item:
+                                        # verbose_name: 'نام سامانه'
+                                        sys_instance.system_name = sys_item['system_name']
+                                    # توضیحات
+                                    if 'description' in sys_item:
+                                        # verbose_name: 'توضیحات'
+                                        sys_instance.description = sys_item['description']
+                                    sys_instance.save()
+                        else:
+                            if not is_deleted:
+                                create_fields = {}
+                                # کد سامانه
+                                if 'system_code' in sys_item:
+                                    # verbose_name: 'کد سامانه'
+                                    create_fields['system_code'] = sys_item['system_code']
+                                # نام سامانه
+                                if 'system_name' in sys_item:
+                                    # verbose_name: 'نام سامانه'
+                                    create_fields['system_name'] = sys_item['system_name']
+                                # توضیحات
+                                if 'description' in sys_item:
+                                    # verbose_name: 'توضیحات'
+                                    create_fields['description'] = sys_item['description']
+                                create_fields['request'] = request_instance
+                                m.RequestSystem.objects.create(**create_fields)
+            except Exception as e:
+                error_message.append(f'خطا در پردازش سامانه‌ها: {str(e)}')
+
+            # جدول RequestDatabase: پایگاه‌های داده مرتبط با درخواست تغییر
+            try:
+                request_database_data = form_data.get('request_database')
+                if request_database_data is not None:
+                    for db_item in request_database_data:
+                        db_id = db_item.get('id')
+                        is_deleted = db_item.get('is_deleted', False)
+                        if db_id:
+                            db_instance = m.RequestDatabase.objects.filter(id=db_id, request=request_instance).first()
+                            if db_instance:
+                                if is_deleted:
+                                    db_instance.delete()
+                                else:
+                                    # کد پایگاه داده
+                                    if 'database_code' in db_item:
+                                        # verbose_name: 'کد پایگاه داده'
+                                        db_instance.database_code = db_item['database_code']
+                                    # نام پایگاه داده
+                                    if 'database_name' in db_item:
+                                        # verbose_name: 'نام پایگاه داده'
+                                        db_instance.database_name = db_item['database_name']
+                                    # توضیحات
+                                    if 'description' in db_item:
+                                        # verbose_name: 'توضیحات'
+                                        db_instance.description = db_item['description']
+                                    db_instance.save()
+                        else:
+                            if not is_deleted:
+                                create_fields = {}
+                                # کد پایگاه داده
+                                if 'database_code' in db_item:
+                                    # verbose_name: 'کد پایگاه داده'
+                                    create_fields['database_code'] = db_item['database_code']
+                                # نام پایگاه داده
+                                if 'database_name' in db_item:
+                                    # verbose_name: 'نام پایگاه داده'
+                                    create_fields['database_name'] = db_item['database_name']
+                                # توضیحات
+                                if 'description' in db_item:
+                                    # verbose_name: 'توضیحات'
+                                    create_fields['description'] = db_item['description']
+                                create_fields['request'] = request_instance
+                                m.RequestDatabase.objects.create(**create_fields)
+            except Exception as e:
+                error_message.append(f'خطا در پردازش پایگاه‌های داده: {str(e)}')
+
+            # جدول RequestFlow: گردش درخواست تغییر
+            try:
+                request_flow_data = form_data.get('request_flows')
+                if request_flow_data is not None:
+                    for flow_item in request_flow_data:
+                        flow_id = flow_item.get('id')
+                        is_deleted = flow_item.get('is_deleted', False)
+                        if flow_id:
+                            flow_instance = m.RequestFlow.objects.filter(id=flow_id, request=request_instance).first()
+                            if flow_instance:
+                                if is_deleted:
+                                    flow_instance.delete()
+                                else:
+                                    # مرحله
+                                    if 'step' in flow_item:
+                                        # verbose_name: 'مرحله'
+                                        flow_instance.step = flow_item['step']
+                                    # وضعیت
+                                    if 'status' in flow_item:
+                                        # verbose_name: 'وضعیت'
+                                        flow_instance.status = flow_item['status']
+                                    # توضیحات
+                                    if 'description' in flow_item:
+                                        # verbose_name: 'توضیحات'
+                                        flow_instance.description = flow_item['description']
+                                    flow_instance.save()
+                        else:
+                            if not is_deleted:
+                                create_fields = {}
+                                # مرحله
+                                if 'step' in flow_item:
+                                    # verbose_name: 'مرحله'
+                                    create_fields['step'] = flow_item['step']
+                                # وضعیت
+                                if 'status' in flow_item:
+                                    # verbose_name: 'وضعیت'
+                                    create_fields['status'] = flow_item['status']
+                                # توضیحات
+                                if 'description' in flow_item:
+                                    # verbose_name: 'توضیحات'
+                                    create_fields['description'] = flow_item['description']
+                                create_fields['request'] = request_instance
+                                m.RequestFlow.objects.create(**create_fields)
+            except Exception as e:
+                error_message.append(f'خطا در پردازش گردش درخواست: {str(e)}')
+
+            # جدول RequestNotifyGroup: گروه‌های اطلاع‌رسانی مرتبط با درخواست تغییر
+            try:
+                request_notify_group_data = form_data.get('request_notify_groups')
+                if request_notify_group_data is not None:
+                    for ng_item in request_notify_group_data:
+                        ng_id = ng_item.get('id')
+                        is_deleted = ng_item.get('is_deleted', False)
+                        if ng_id:
+                            ng_instance = m.RequestNotifyGroup.objects.filter(id=ng_id, request=request_instance).first()
+                            if ng_instance:
+                                if is_deleted:
+                                    ng_instance.delete()
+                                else:
+                                    # کد گروه اطلاع‌رسانی
+                                    if 'notify_group_code' in ng_item:
+                                        # verbose_name: 'کد گروه اطلاع‌رسانی'
+                                        ng_instance.notify_group_code = ng_item['notify_group_code']
+                                    # نام گروه اطلاع‌رسانی
+                                    if 'notify_group_name' in ng_item:
+                                        # verbose_name: 'نام گروه اطلاع‌رسانی'
+                                        ng_instance.notify_group_name = ng_item['notify_group_name']
+                                    # توضیحات
+                                    if 'description' in ng_item:
+                                        # verbose_name: 'توضیحات'
+                                        ng_instance.description = ng_item['description']
+                                    ng_instance.save()
+                        else:
+                            if not is_deleted:
+                                create_fields = {}
+                                # کد گروه اطلاع‌رسانی
+                                if 'notify_group_code' in ng_item:
+                                    # verbose_name: 'کد گروه اطلاع‌رسانی'
+                                    create_fields['notify_group_code'] = ng_item['notify_group_code']
+                                # نام گروه اطلاع‌رسانی
+                                if 'notify_group_name' in ng_item:
+                                    # verbose_name: 'نام گروه اطلاع‌رسانی'
+                                    create_fields['notify_group_name'] = ng_item['notify_group_name']
+                                # توضیحات
+                                if 'description' in ng_item:
+                                    # verbose_name: 'توضیحات'
+                                    create_fields['description'] = ng_item['description']
+                                create_fields['request'] = request_instance
+                                m.RequestNotifyGroup.objects.create(**create_fields)
+            except Exception as e:
+                error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی: {str(e)}')
+
+            # جدول RequestTask: تسک‌های مرتبط با درخواست تغییر
+            try:
+                request_task_data = form_data.get('request_tasks')
+                if request_task_data is not None:
+                    for task_item in request_task_data:
+                        task_id = task_item.get('id')
+                        is_deleted = task_item.get('is_deleted', False)
+                        if task_id:
+                            task_instance = m.RequestTask.objects.filter(id=task_id, request=request_instance).first()
+                            if task_instance:
+                                if is_deleted:
+                                    task_instance.delete()
+                                else:
+                                    # شناسه تسک
+                                    if 'task' in task_item:
+                                        # verbose_name: 'شناسه تسک'
+                                        task_instance.task_id = task_item['task']
+                                    # وضعیت
+                                    if 'status' in task_item:
+                                        # verbose_name: 'وضعیت'
+                                        task_instance.status = task_item['status']
+                                    # توضیحات
+                                    if 'description' in task_item:
+                                        # verbose_name: 'توضیحات'
+                                        task_instance.description = task_item['description']
+                                    task_instance.save()
+                        else:
+                            if not is_deleted:
+                                create_fields = {}
+                                # شناسه تسک
+                                if 'task' in task_item:
+                                    # verbose_name: 'شناسه تسک'
+                                    create_fields['task_id'] = task_item['task']
+                                # وضعیت
+                                if 'status' in task_item:
+                                    # verbose_name: 'وضعیت'
+                                    create_fields['status'] = task_item['status']
+                                # توضیحات
+                                if 'description' in task_item:
+                                    # verbose_name: 'توضیحات'
+                                    create_fields['description'] = task_item['description']
+                                create_fields['request'] = request_instance
+                                m.RequestTask.objects.create(**create_fields)
+            except Exception as e:
+                error_message.append(f'خطا در پردازش تسک‌های درخواست: {str(e)}')
+
+
+            except Exception as e:
+                error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی نوع درخواست: {str(e)}')
+
+            # جدول RequestTask_ChangeType: تسک‌های نوع درخواست تغییر
+            try:
+                request_task_changetype_data = form_data.get('request_task_changetypes')
+                if request_task_changetype_data is not None:
+                    for tct_item in request_task_changetype_data:
+                        tct_id = tct_item.get('id')
+                        is_deleted = tct_item.get('is_deleted', False)
+                        if tct_id:
+                            tct_instance = m.RequestTask_ChangeType.objects.filter(id=tct_id, task__request=request_instance).first()
+                            if tct_instance:
+                                if is_deleted:
+                                    tct_instance.delete()
+                                else:
+                                    for field, value in tct_item.items():
+                                        if field not in ['id', 'task', 'is_deleted'] and hasattr(tct_instance, field):
+                                            setattr(tct_instance, field, value)
+                                    tct_instance.save()
+                        else:
+                            if not is_deleted:
+                                create_fields = {k: v for k, v in tct_item.items() if k not in ['id', 'is_deleted']}
+                                # باید task را به صورت صحیح مقداردهی کنید
+                                m.RequestTask_ChangeType.objects.create(**create_fields)
+            except Exception as e:
+                error_message.append(f'خطا در پردازش تسک‌های نوع درخواست: {str(e)}')
+
+
+            request_instance.last_modifier_user_id = current_user_nationalcode
+            request_instance.save()
+
+            return {"success": True, "message": "درخواست با موفقیت به‌روزرسانی شد"}
+
+        except Exception as e:
+            return {"success": False, "message": f"خطا در به‌روزرسانی درخواست: {str(e)}"}
+
+    def select_task(self, task_id: int, user_nationalcode: str) -> dict:
+        """
+        انتخاب تسک توسط مجری یا تستر
+        """
+        try:
+            # بررسی اینکه آیا کاربر مجری یا تستر این تسک است
+            task_user = m.TaskUserSelected.objects.filter(
+                request_task_id=task_id, task_user__user_nationalcode=user_nationalcode
+            ).first()
+
+            if not task_user:
+                return {"success": False, "message": "شما مجری یا تستر این تسک نیستید"}
+
+            # خارج کردن از کارتابل سایر کاربران
+            self.exit_cartable(task_id, user_nationalcode)
+
+            return {"success": True, "message": "تسک با موفقیت انتخاب شد"}
+
+        except Exception as e:
+            return {"success": False, "message": f"خطا در انتخاب تسک: {str(e)}"}
+
+    def save_task_report(
+        self, task_id: int, form_data: dict, user_nationalcode: str
+    ) -> dict:
+        """
+        ذخیره گزارش تسک
+        """
+        try:
+            # به‌روزرسانی اطلاعات تسک
+            task_user = m.TaskUserSelected.objects.filter(
+                request_task_id=task_id, task_user__user_nationalcode=user_nationalcode
+            ).first()
+
+            if task_user:
+                task_user.user_report_result = (
+                    form_data.get("operation_result") == "true"
+                )
+                task_user.user_report_date = form_data.get("operation_date")
+                task_user.user_report_time = form_data.get("operation_time")
+                task_user.user_report_description = form_data.get("operation_report")
+                task_user.user_done_date = form_data.get("operation_date")
+                task_user.user_done_time = form_data.get("operation_time")
+                task_user.save()
+
+            return {"success": True, "message": "گزارش تسک با موفقیت ذخیره شد"}
+
+        except Exception as e:
+            return {"success": False, "message": f"خطا در ذخیره گزارش تسک: {str(e)}"}
+
+    def send_cartable(self, from_user: str, to_user: str, doc_state: str):
+        """
+        ارسال به کارتابل کاربر
+        """
+        # این تابع dummy است
+        # ابتدا کنترل می کنیم که آیا سند برای این درخواست ثبت شده است؟
+        # اگر سند ثبت نشده باشد، باید ابتدا آن را ثبت کنیم
+        if not self.obj_cartable.doc_id or self.obj_cartable.doc_id < 0:
+            # رکورد متناظر درخواست را به دست می اوریم
+            request_title = self.request_instance.change_title
+            priority = (
+                self.request_instance.priority
+                if self.request_instance.priority
+                else "NORMAL"
+            )
+
+            # حالا سند را ایجاد می کنیم
+            self.obj_cartable.create_doc(
+                request_title,
+                self.request_id,
+                self.user_requestor.national_code,
+                priority,
+            )
+
+            # حالا شناسه سند را در رکورد متناظر درخواست به روزرسانی می کنیم
+            self.request_instance.doc_id = self.obj_cartable.doc_id
+            self.request_instance.save()
+
+        # در صورتی که سند موجود باشد آن را ارسال می کنیم
+        self.obj_cartable.send_cartable(
+            receiver=to_user, sender=from_user, new_doc_state=doc_state
+        )
+
+    def exit_cartable(self, task_id: int, user_nationalcode: str):
+        """
+        خارج کردن از کارتابل سایر کاربران
+        """
+        # این تابع dummy است
+        pass
+
+    def extract_request_users(self):
+        """
+        این تابع اطلاعات افراد درگیر در درخواست شامل، درخواست دهنده، مدیر مستیم، مدیر مربوطه، کاربر کمیته
+        """
+        self.user_requestor = self.request_instance.requestor_nationalcode
+        self.user_direct_manager = self.request_instance.direct_manager_nationalcode
+        self.user_related_manager = self.request_instance.related_manager_nationalcode
+        self.user_committee = self.request_instance.committee_user_nationalcode
+
+    def extract_task_users(self):
+        if not self.tasks:
+            self.get_all_tasks()
+
+        for t in self.tasks:
+            t: Task
+            t.get_users_info()
+            self.task_users.extend(t.users)
+            self.task_executors.extend(t.executors)
+            if t.selected_executor:
+                self.task_selected_executors.append(t.selected_executor)
+            self.task_testers.extend(t.testers)
+            if t.selected_tester:
+                self.task_selected_testers.append(t.selected_tester)
+
+    def get_all_users(self):
+        self.extract_request_users()
+        self.extract_task_users()
+
+    def validate(self) -> dict:
+        errors = []
+        # کد ملی درخواست کننده
+        if (
+            self.user_requestor
+            and not m.User.objects.filter(national_code=self.user_requestor).exists()
+        ):
+            errors.append("کد ملی درخواست کننده نامعتبر است.")
+
+    def save(self, data): ...
+
+    def create_tasks(self): ...
+
+    def get_data(self) -> dict: ...
+
+    def next_step(
+        self, action_code: str, user_nationalcode: str, form_data: dict = None
+    ) -> dict:
+        """این تابع وضعیت درخواست را بر اساس نوع عملیات، به مرحله بعدی منتقل می کند. انواع وضعیت های ممکن در زیر آورده شده است:
+        ('DRAFTD', 'پیش نویس'): CON->DIRMAN, RET->FAILED, REJ->FAILED
+        ('DIRMAN', 'اظهار نظر مدیر مستقیم'): CON->RELMAN, RET->DRAFTD, REJ->FAILED
+        ('RELMAN', 'اظهار نظر مدیر مربوطه'): CON->(if need_committee: COMITE else : DOTASK), RET->DIRMAN, REJ->FAILED
+        ('COMITE', 'اظهار نظر کمیته'): CON->DOTASK, RET->RELMAN, REJ->FAILED
+        ('DOTASK', 'انجام تسک ها'): CON->FINISH, REJ->FAILED
+        ('FINISH', 'خاتمه یافته'):
+        ('FAILED', 'خاتمه ناموفقیت آمیز'):
+
+        Args:
+            action_code (str): یک کد سه حرفی است که نوع عملیات انتخاب شده توسط کاربر را مشخص می کند و یکی از مقادیر زیر است:
+                CON: تایید
+                RET: بازگشت
+                REJ: رد
+            user_nationalcode (str): کد ملی کاربر جاری
+            form_data (dict): داده‌های فرم (اختیاری)
+
+        Returns:
+            dict: یک دیکشنری است که عضو اول موفقیت و یا عدم موفقیت و عضو دوم پیام مربوطه را شامل می شود
+        """
+        try:
+            current_status = self.request_instance.status_code
+            new_status = None
+            next_user = None
+
+            if action_code == "CON":
+                if current_status == "DRAFTD":
+                    new_status = "DIRMAN"
+                    next_user = (
+                        self.request_instance.direct_manager_nationalcode.national_code
+                    )
+                elif current_status == "DIRMAN":
+                    new_status = "RELMAN"
+                    next_user = (
+                        self.request_instance.related_manager_nationalcode.national_code
+                    )
+                elif current_status == "RELMAN":
+                    if self.request_instance.need_committee:
+                        new_status = "COMITE"
+                        next_user = (
+                            self.request_instance.committee_user_nationalcode.national_code
+                        )
+                    else:
+                        new_status = "DOTASK"
+                        # ارسال به کارتابل مجریان
+                        self.send_to_executors()
+                elif current_status == "COMITE":
+                    new_status = "DOTASK"
+                    # ارسال به کارتابل مجریان
+                    self.send_to_executors()
+                elif current_status == "DOTASK":
+                    new_status = "FINISH"
+
+            elif action_code == "RET":
+                if current_status == "DIRMAN":
+                    new_status = "DRAFTD"
+                    next_user = (
+                        self.request_instance.requestor_nationalcode.national_code
+                    )
+                elif current_status == "RELMAN":
+                    new_status = "DIRMAN"
+                    next_user = (
+                        self.request_instance.direct_manager_nationalcode.national_code
+                    )
+                elif current_status == "COMITE":
+                    new_status = "RELMAN"
+                    next_user = (
+                        self.request_instance.related_manager_nationalcode.national_code
+                    )
+
+            elif action_code == "REJ":
+                if current_status in ["DRAFTD", "DIRMAN", "RELMAN", "COMITE", "DOTASK"]:
+                    new_status = "FAILED"
+
+            else:
+                return {"success": False, "message": "کد عملیات معتبر نمی‌باشد."}
+
+            if new_status:
+                # به‌روزرسانی وضعیت
+                self.request_instance.status_code = new_status
+                self.request_instance.save()
+
+                self.status_code = new_status
+                # دریافت عنوان وضعیت از جدول ConstValue
+                try:
+                    status_const_value = m.ConstValue.objects.get(
+                        Code=f"STATUS_{new_status}"
+                    )
+                    self.status_title = status_const_value.Caption
+                except m.ConstValue.DoesNotExist:
+                    # اگر رکورد پیدا نشد، از choices مدل استفاده کن
+                    self.status_title = dict(
+                        m.ConfigurationChangeRequest.STATUS_CHOICES
+                    ).get(new_status, new_status)
+
+                # ارسال به کارتابل کاربر بعدی
+                if next_user:
+                    self.send_cartable(
+                        self.request_instance.id, next_user, self.status_title
+                    )
+
+                # ذخیره اطلاعات اضافی
+                if form_data:
+                    self.save_step_data(
+                        current_status, action_code, form_data, user_nationalcode
+                    )
+
+                return {
+                    "success": True,
+                    "message": f'وضعیت با موفقیت به "{new_status}" تغییر یافت.',
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "تغییر وضعیت برای حالت فعلی امکان‌پذیر نیست.",
+                }
+
+        except Exception as e:
+            return {"success": False, "message": f"خطا در تغییر وضعیت: {str(e)}"}
+
+    def send_to_executors(self):
+        """
+        ارسال به کارتابل مجریان
+        """
+        try:
+            # دریافت تسک‌های مربوط به این درخواست
+            request_tasks = m.RequestTask.objects.filter(request=self.request_instance)
+
+            for request_task in request_tasks:
+                # دریافت مجریان این تسک
+                executors = m.TaskUser.objects.filter(
+                    task=request_task.task, user_role_code="E"
+                )
+
+                for executor in executors:
+                    self.send_cartable(
+                        self.request_instance.id,
+                        executor.user_nationalcode.national_code,
+                    )
+
+        except Exception as e:
+            pass
+
+    def save_step_data(
+        self,
+        current_status: str,
+        action_code: str,
+        form_data: dict,
+        user_nationalcode: str,
+    ):
+        """
+        ذخیره اطلاعات مرحله
+        """
+        try:
+            # دریافت تاریخ و زمان فعلی به صورت شمسی
+            current_date = jdatetime.datetime.now()
+            current_time = current_date.strftime("%H:%M")
+
+            # اگر وضعیت فعلی مدیر باشد
+            if current_status == "DIRMAN":
+                # ثبت نظر مدیر (تایید یا رد)
+                self.request_instance.manager_opinion = action_code == "CON"
+                # ثبت تاریخ و زمان نظر مدیر
+                self.request_instance.manager_opinion_date = current_date.strftime(
+                    "%Y/%m/%d"
+                )
+                self.request_instance.manager_opinion_time = current_time
+                # اگر عملیات رد باشد، توضیح رد را ذخیره کن
+                if action_code == "REJ":
+                    self.request_instance.manager_reject_description = form_data.get(
+                        "reject_reason"
+                    )
+
+            # اگر وضعیت فعلی مربوط به مرحله تکمیل اطلاعات باشد
+            elif current_status == "RELMAN":
+                # ذخیره اطلاعات کامل درخواست
+                for field, value in form_data.items():
+                    # اگر فیلد در مدل وجود داشته باشد، مقدار آن را به‌روزرسانی کن
+                    if hasattr(self.request_instance, field):
+                        setattr(self.request_instance, field, value)
+
+            # اگر وضعیت فعلی کمیته باشد
+            elif current_status == "COMITE":
+                # ثبت نظر کمیته (تایید یا رد)
+                self.request_instance.committee_opinion = action_code == "CON"
+                # ثبت تاریخ و زمان نظر کمیته
+                self.request_instance.committee_opinion_date = current_date.strftime(
+                    "%Y/%m/%d"
+                )
+                self.request_instance.committee_opinion_time = current_time
+                # اگر عملیات رد باشد، توضیح رد را ذخیره کن
+                if action_code == "REJ":
+                    self.request_instance.committee_reject_description = form_data.get(
+                        "reject_reason"
+                    )
+
+            # ذخیره تغییرات در پایگاه داده
+            self.request_instance.save()
+
+        except Exception as e:
+            # در صورت بروز خطا، هیچ اقدامی انجام نده
+            pass
+
+    def task_action(
+        self,
+        task_id: int,
+        action_code: str,
+        user_nationalcode: str,
+        form_data: dict = None,
+    ) -> dict:
+        """
+        عملیات روی تسک
+        """
+        try:
+            task = self.get_task(task_id)
+            if not task:
+                return {"success": False, "message": "تسک پیدا نشد"}
+
+            result = task.next_step(action_code)
+            if result["success"]:
+                # ذخیره اطلاعات تسک
+                if form_data:
+                    task.save(form_data)
+
+                # ارسال به مرحله بعدی
+                self.handle_task_completion(task_id)
+
+            return result
+
+        except Exception as e:
+            return {"success": False, "message": f"خطا در عملیات تسک: {str(e)}"}
+
+    def handle_task_completion(self, task_id: int):
+        """
+        مدیریت تکمیل تسک
+        """
+        try:
+            # بررسی اینکه آیا همه تسک‌ها تکمیل شده‌اند
+            request_tasks = m.RequestTask.objects.filter(request=self.request_instance)
+            completed_tasks = request_tasks.filter(status_code="FINISH")
+
+            if completed_tasks.count() == request_tasks.count():
+                # همه تسک‌ها تکمیل شده‌اند
+                self.request_instance.status_code = "FINISH"
+                self.request_instance.save()
+
+        except Exception as e:
+            pass
+
+    def get_request_data(self):
+        """
+        این تابع تمامی داده های یک درخواست را بازگشت می دهد
+        از این داده ها برای بارگذاری فرم جهت انجام ویرایش استفاده می شود
+        """
+        data = {"success": True, "message": ""}
+
+        try:
+            if self.request_instance:
+                # اطلاعات درخواست
+                data["request"] = self.request_instance
+
+                # اضافه کردن اطلاعات درخواست به data
+                extra_info = m.RequestExtraInformation.objects.filter(
+                    request_id=self.request_id
+                )
+                data["extra_info"] = extra_info
+
+                # اطلاعات تیم های مرتبط
+                teams = m.RequestTeam.objects.filter(request_id=self.request_id)
+                data["request_teams"] = teams
+
+                # اطلاعات شرکت های مرتبط
+                corps = m.RequestCorp.objects.filter(request_id=self.request_id)
+                data["request_corps"] = corps
+
+                # اطلاعات تسک ها
+                tasks = m.RequestTask.objects.filter(request_id=self.request_id)
+                data["request_tasks"] = tasks
+            else:
+                return {"success": False, "message": "درخواست مورد نظر وجود ندارد"}
+
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+        return data
+
+    def get_all_tasks(self):
+        """
+        این تابع تمامی تسک های تعریف شده ذیل یک درخواست را بازگشت می دهد
+        """
+        request_tasks = m.RequestTask.objects.filter(
+            request=self.request_instance
+        ).order_by("task__ordernumber")
+        for request_task in request_tasks:
+            t = Task(request_task)
+            self.tasks.append(t)
+
+    def get_task(self, request_task_id: int) -> Task:
+        """این تابع شناسه تسک درخواست مربوطه را گرفته و آن را پیدا کرده و بازگشت می دهد
+
+        Args:
+            request_task_id (int): شناسه درخواست تسک
+
+        Returns:
+            Task: در صورتی که تسک مربوطه پیدا شود شناسه آن بازگشت داده می شود در غیر این صورت مقدار None بازگشت داده می شود
+        """
+        # اگر تسک ها قبلا بارگذاری نشده باشند بایستی بارگذاری شوند
+        if not self.tasks:
+            self.get_all_tasks()
+
+        # حالا آرایه را بررسی می کنیم که اگر تسک مربوطه پیدا شود آن را بازگشت دهیم
+        for t in self.tasks:
+            t: Task
+            if t.request_task_id == request_task_id:
+                return t
+        return None
+
+    # # این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
+    # def check_form_status(self, user_nationalcode: str) -> dict:
+    #     """
+    #     این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
+
+    #     Args:
+    #         user_nationalcode (str): کد ملی کاربر جاری
+
+    #     Returns:
+    #         _type_: دو مقدار را بازگشت می دهد، اولی کد وضعیت و دومی فرمی که باید باز شود قالب مقدار بازگشتی به این صورت است
+    #         {'status':'form_status','form':'form_name'}
+    #     """
+
+    #     # بررسی اعتبار request_id
+    #     request_instance = self.request_instance
+    #     status_code = self.status_code
+
+    #     # اگر شناسه درخواست نامعتبر باشد  در حالت درج باید باز شود
+    #     if not request_instance:
+    #         return {"status": "INSERT", "form": "RequestSimple"}
+    #     # مقادیر پیش فرض
+    #     status = "READONLY"
+    #     form = "RequestSimple"
+
+    #     if user_nationalcode == self.user_requestor.national_code:
+    #         form = "RequestSimple"
+    #         if status_code == "DRAFTD":
+    #             status = "UPDATE"
+    #     elif user_nationalcode == self.user_direct_manager.national_code:
+    #         form = "RequestSimple"
+    #         if status_code == "DIRMAN":
+    #             status = "UPDATE"
+    #     elif user_nationalcode == self.user_related_manager.national_code:
+    #         form = "RequestFull"
+    #         if status_code == "RELMAN":
+    #             status = "UPDATE"
+    #     elif user_nationalcode == self.user_committee.national_code:
+    #         form = "RequestFull"
+    #         if status_code == "COMITE":
+    #             status = "UPDATE"
+    #     # اگر تسک را داشته باشیم باید کاربران تسک را کنترل کنیم
+    #     elif self.task:
+    #         # ابتدا کنترل می کنیم که
+
+    #         # به دست آوردن لیست مجریان
+    #         executor_list = task_user_list(self.request_id, -1, "E", False)
+    #         # به دست آوردن لیست تسترها
+    #         tester_list = task_user_list(self.request_id, -1, "T", False)
+    #         if user_nationalcode in executor_list + tester_list:
+    #             form = "TaskSelect"
+    #             if request_instance.status_code == "DOTASK":
+    #                 # اگر شماره تسک مشخص شده باشد
+    #                 if request_task_id > 0:
+    #                     # تسک مربوطه را به دست می آوریم
+    #                     request_task = m.RequestTask.objects.filter(
+    #                         id=request_task_id
+    #                     ).first()
+    #                     request_task_user = m.TaskUserSelected.objects.filter(
+    #                         request_task=request_task_id
+    #                     )
+    #                     if request_task:
+    #                         # اگر وضعیت تسک انتخاب شده باشد
+    #                         if (
+    #                             request_task.status_code == "EXESEL"
+    #                             and request_task_user.filter()
+    #                         ):
+    #                             ...
+    #                     # در صورتی که شناسه تسک درخواست نامعتبر باشد
+    #                     else:
+    #                         status = "INVALID"
+    #                     status = "UPDATE"
+
+    #         elif user_nationalcode in tester_list:
+    #             form = "TaskSelect"
+    #             if request_instance.status_code == "TESREP":
+    #                 status = "UPDATE"
+
+    #         # به دست آوردن لیست مجریان منتخب
+    #         executor_list = task_user_list(self.request_id, -1, "E", True)
+    #         # به دست آوردن لیست تسترهای منتخب
+    #         tester_list = task_user_list(self.request_id, -1, "T", True)
+    #         if user_nationalcode in executor_list:
+    #             form = "TaskReport"
+    #             if request_instance.status_code == "EXEREP":
+    #                 status = "UPDATE"
+    #         elif user_nationalcode in tester_list:
+    #             form = "TaskReport"
+    #             if request_instance.status_code == "TESREP":
+    #                 status = "UPDATE"
+
+    #     return {"status": status, "form": form}
+
+    ############################################################################
+    # این توابع مربوط به نسخه قدیمی است
+    ############################################################################
+
+
+# # این تابع شناسه درخواست را گرفته و در صورت وجود مقدار رکورد درخواست را برمی گرداند
+# def get_request_instance(request_id:int):
+#     try:
+#         # دریافت درخواست بر اساس request_id
+#         request_instance = m.ConfigurationChangeRequest.objects.get(id=request_id)
+#     except m.ConfigurationChangeRequest.DoesNotExist:
+#         return None
+#     return request_instance
+
+# # این تابع شناسه تسک مربوط به درخواست را گرفته و در صورت وجود مقدار رکورد درخواست را برمی گرداند
+# def get_request_task_instance(request_task_id:int)->dict:
+#     request_task_instance = None
+#     task_users = None
+#     executor_users = None
+#     tester_users = None
+#     executor_user = None
+#     tester_user = None
+#     try:
+#         # دریافت درخواست بر اساس request_id
+#         request_task_instance = m.RequestTask.objects.get(id=request_task_id)
+
+#         # اطلاعات کلیه افراد مربوط به تسک
+#         task_user = m.TaskUser.objects.filter(task=request_task_instance.task).values_list('user_nationalcode')
+#         task_users = m.User.objects.filter(national_code__in=task_user)
+
+#         # دریافت اطلاعات مجریان تسک
+#         task_user = m.TaskUser.objects.filter(task=request_task_instance.task,user_role_code='E').values_list('user_nationalcode')
+#         executor_users = m.User.objects.filter(national_code__in=task_user)
+
+#         # دریافت اطلاعات تسترهای تسک
+#         task_user = m.TaskUser.objects.filter(task=request_task_instance.task,user_role_code='T').values_list('user_nationalcode')
+#         tester_users = m.User.objects.filter(national_code__in=task_user)
+
+#         # دریافت اطلاعات مجری منتخب
+#         selected_user = m.TaskUserSelected.objects.filter(request_task=request_task_instance, task_user__user_role_code='E').first()
+#         if selected_user is not None:
+#             executor_user = m.User.objects.filter(national_code=selected_user.task_user.user_nationalcode).first()
+
+#         # دریافت اطلاعات تستر منتخب
+#         selected_user = m.TaskUserSelected.objects.filter(request_task=request_task_instance, task_user__user_role_code='T').first()
+#         if selected_user is not None:
+#             tester_user = m.User.objects.filter(national_code=selected_user.task_user.user_nationalcode).first()
+
+#     except m.ConfigurationChangeRequest.DoesNotExist:
+#         request_task_instance = None
+
+#     return {'request_task_instance':request_task_instance,
+#             'task_users':task_users,
+#             'executor_users':executor_users,
+#             'tester_users':tester_users,
+#             'executor_user':executor_user,
+#             'tester_user':tester_user
+#             }
+
+# def task_user_list(request_id: int, request_task_id: int, role_code: str, selected_user: bool = False) -> list:
+#     user_list = []
+
+#     # اگر کد سمت معتبر نباشد
+#     if role_code not in ('E', 'T', 'A'):
+#         return user_list
+
+#     request = get_request_instance(request_id)
+#     # اگر شناسه درخواست معتبر باشد
+#     if request:
+#         # اگر تسک مربوطه مشخص شده باشد
+#         if request_task_id > 0:
+#             request_task_info = get_request_task_instance(request_task_id)
+#             # اگر کاربر انتخاب شده باشد
+#             if not selected_user:
+#                 if role_code == 'E':
+#                     user_list = request_task_info['executor_user']
+#                 elif role_code == 'T':
+#                     user_list = request_task_info['tester_user']
+#             else:
+#                 if role_code == 'E':
+#                     user_list = request_task_info['executor_users']
+#                 elif role_code == 'T':
+#                     user_list = request_task_info['tester_users']
+#                 else:
+#                     user_list = request_task_info['task_users']
+#         # در صورتی که شماره تسک ارسال نشده باشد تمامی مجریان تسک ها باید ارسال شود
+#         else:
+#             request_tasks = m.RequestTask.objects.filter(request=request).values_list('task_id')
+#             if role_code == 'E':
+#                 user_list = m.RequestTaskUser.objects.filter(task_id__in=request_tasks, user_role_code='E')
+#             elif role_code == 'T':
+#                 user_list = m.RequestTaskUser.objects.filter(task_id__in=request_tasks, user_role_code='T')
+#             else:
+#                 user_list = m.RequestTaskUser.objects.filter(task_id__in=request_tasks)
+
+#     # بازگشت لیستی از اشیاء User
+#     return [user.user_nationalcode for user in user_list]
+
+# def get_request_user_information(request_id:int)->str:
+#     """این تابع اطلاعات کاربر جاری درخواست را بازگشت می دهد
+
+#     Args:
+#         request_id (int): شناسه درخواست
+
+#     Returns:
+#         str: یک رشته که شامل نام و نام خانوادگی، سمت و تیم فرد مربوطه و عملیات مورد نظر می باشد
+#         مثلا آقای رضا احمدی دبیر کمیته امنیت، جهت اعلام نظر
+#         در صورتی که شناسه درخواست نامعتبر باشد،  مقدار رشته "نامشخص" بازگشت داده می شود
+#     """
+#     user_info = None
+#     operation_info = None
+#     team_info = None
+#     role_info = None
+
+#     request_instance = get_request_instance(request_id)
+#     if not request_instance:
+#         return 'نامشخص'
+
+#     # برای اینکه بتوانیم اطلاعات کاربر را به دست بیاوریم، بایستی آخرین رکورد جدول گردش مدرک را بخوانیم
+#     request_flow = m.RequestFlow.objects.filter(request = request_instance).last()
+#     user_info = request_flow.user_nationalcode
+#     role_info = request_flow.user_role_id.role_title
+#     team_info = request_flow.user_team_code.team_name
+
+#     # جهت مشخص شدن عملیات، باید وضعیت را به دست بیاوریم
+#     status_code = request_instance.status_code
+
+#     if status_code == 'DRAFTD':
+#         operation_info = "تکمیل اطلاعات فرم"
+#     elif status_code == 'DIRMAN' or 'RELMAN':
+#         operation_info = "بررسی و اعلام نظر"
+#     elif status_code == 'COMITE':
+#         operation_info = "اعلام نظر کمیته"
+#     elif status_code == 'DOTASK':
+#         # اگر وضعیت درخواست مربوط به اجرای تسک باشد، باید آخرین تسک اجرا نشده را پیدا کنیم
+#         request_task = m.RequestTask.object.filter(request=request_id, status_code__not_in=['FINISH','FAILED']).first()
+#         return get_task_user_information(request_task.id)
+#     # در صورتی که برای فردی ارسال شده باشد، مشخصات وی بازگشت داده می شود
+#     if user_info and operation_info:
+#         salutation = "آقای" if user_info.gender or user_info.gender is None else "خانم"
+#         role_info = role_info if role_info is not None else ""
+#         if team_info:
+#             return f"{salutation} {user_info.first_name} {user_info.last_name} {role_info} تیم {team_info} جهت {operation_info}"
+#         else:
+#             return f"{salutation} {user_info.first_name} {user_info.last_name} {role_info} جهت {operation_info}"
+#     else:
+#         return "نامشخص"
+
+
+# def get_task_user_information(request_task_id:int)->str:
+#     """این تابع اطلاعات کاربر جاری فعالیت را بازگشت می دهد
+
+#     Args:
+#         request_id (int): شناسه تسک درخواست
+#         status_code (str): کد وضعیت درخواست
+
+#     Returns:
+#         str: یک رشته که شامل نام و نام خانوادگی، سمت و تیم فرد مربوطه و عملیات مورد نظر می باشد
+#         مثلا آقای رضا احمدی تستر تیم عمر جهت تست فعالیت
+#         در صورتی که شناسه تسک درخواست نامعتبر باشد،  مقدار رشته "نامشخص" بازگشت داده می شود
+#     """
+#     user_info = None
+#     operation_info = None
+#     team_info = None
+#     role_info = None
+
+#     task_info = get_request_task_instance(request_task_id)
+#     request_task_instance = task_info['request_task_instance']
+#     if not request_task_instance:
+#         return 'نامشخص'
+
+#     # برای اینکه بتوانیم اطلاعات کاربر را به دست بیاوریم، بایستی آخرین رکورد جدول گردش مدرک را بخوانیم
+#     request_flow = m.RequestFlow.objects.filter(request = request_task_instance.request).last()
+#     user_info = request_flow.user_nationalcode
+#     role_info = request_flow.user_role_id.role_title
+#     team_info = request_flow.user_team_code.team_name
+
+#     # جهت مشخص شدن عملیات، باید وضعیت را به دست بیاوریم
+#     status_code = request_task_instance.status_code
+
+#     if status_code == 'EXERED':
+#         operation_info = "انتخاب مجری"
+#     elif status_code == 'EXESEL' :
+#         operation_info = "اجرای فعالیت"
+#     elif status_code == 'TESRED':
+#         operation_info = "انتخاب تستر"
+#     elif status_code == 'TESSEL':
+#         operation_info = "انجام تست"
+
+#     # در صورتی که برای فردی ارسال شده باشد، مشخصات وی بازگشت داده می شود
+#     if user_info and operation_info:
+#         salutation = "آقای" if user_info.gender or user_info.gender is None else "خانم"
+#         role_info = role_info if role_info is not None else ""
+#         if team_info:
+#             return f"{salutation} {user_info.first_name} {user_info.last_name} {role_info} تیم {team_info} جهت {operation_info}"
+#         else:
+#             return f"{salutation} {user_info.first_name} {user_info.last_name} {role_info} جهت {operation_info}"
+#     else:
+#         return "نامشخص"
+
+
+# # این تابع درصورتی که کد درخواستی وجود داشته باشد، اطلاعات آن را به روز می کند و اگر وجود نداشته باشد آن را ایجاد می کند
+# def save_form(form_data) -> int:
+#     # بررسی وجود شناسه درخواست
+#     request_id = form_data.get('request_id')
+
+
+#     # کلیدهای خارجی را باید به معادل آن تبدیل کنیم چون برای مقداردهی به نمونه مربوطه احتیاج دارد و مقدار کلید را قبول نمی کند
+#     executor_nationalcode = form_data.get('executor_user_nationalcode')
+#     if executor_nationalcode:
+#         executor_nationalcode = m.User.objects.get(national_code=executor_nationalcode)
+
+#     tester_nationalcode = form_data.get('tester_user_nationalcode')
+#     if tester_nationalcode:
+#         tester_nationalcode = m.User.objects.get(national_code=tester_nationalcode)
+
+#     requestor_nationalcode = form_data.get('requestor_user_nationalcode')
+#     if requestor_nationalcode:
+#         requestor_nationalcode = m.User.objects.get(national_code=requestor_nationalcode)
+
+#     executor_role = None
+#     executor_role_id = form_data.get('executor_user_role')
+#     if executor_role_id:
+#         try:
+#             executor_role = m.Role.objects.get(role_id=executor_role_id)
+#         except m.Role.DoesNotExist:
+#             executor_role = None
+
+#     tester_role = None
+#     tester_role_id = form_data.get('tester_user_role')
+#     if tester_role_id:
+#         try:
+#             tester_role = m.Role.objects.get(role_id=tester_role_id)
+#         except m.Role.DoesNotExist:
+#             tester_role = None
+
+#     requestor_role = None
+#     requestor_role_id = form_data.get('requestor_user_role')
+#     if requestor_role_id:
+#         try:
+#             requestor_role = m.Role.objects.get(role_id=requestor_role_id)
+#         except m.Role.DoesNotExist:
+#             requestor_role = None
+
+#     executor_team_code = form_data.get('executor_user_team')
+#     if executor_team_code:
+#         executor_team = m.Team.objects.get(team_code=executor_team_code)
+
+#     tester_team_code = form_data.get('tester_user_team')
+#     if tester_team_code:
+#         tester_team = m.Team.objects.get(team_code=tester_team_code)
+
+#     requestor_team_code = form_data.get('requestor_user_team')
+#     if requestor_team_code:
+#         requestor_team = m.Team.objects.get(team_code=requestor_team_code)
+
+
+#     committee_user_nationalcode = form_data.get('committee_user_nationalcode')
+#     if committee_user_nationalcode:
+#         committee_user_nationalcode = m.User.objects.get(national_code=committee_user_nationalcode)
+
+#     manager_nationalcode = form_data.get('manager_nationalcode')
+#     if manager_nationalcode:
+#         manager_nationalcode = m.User.objects.get(national_code=manager_nationalcode)
+
+
+#     if request_id:
+#         # به‌روزرسانی اطلاعات درخواست موجود
+#         request = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
+#         if request:
+#             # نقش های درگیر
+#             request.executor_nationalcode = executor_nationalcode
+#             request.tester_nationalcode = tester_nationalcode
+#             request.requestor_nationalcode = requestor_nationalcode
+
+#             request.executor_team_code = executor_team
+#             request.tester_team_code = tester_team
+#             request.requestor_team_code = requestor_team
+
+#             request.executor_role_id = executor_role
+#             request.tester_role_id = tester_role
+#             request.requestor_role_id = requestor_role
+
+#             request.committee_user_nationalcode = committee_user_nationalcode
+
+#             committee_id = form_data.get('committee')
+#             if committee_id:
+#                 request.committee_id = committee_id
+
+#             request.need_committee = form_data.get('need_committee')
+
+#             request.manager_nationalcode = manager_nationalcode
+
+#             request.test_required = form_data.get('need_test')
+
+#             # ویژگی های تغییر
+#             request.change_level_id = form_data.get('change_level')
+#             request.classification_id = form_data.get('classification')
+#             request.priority_id = form_data.get('priority')
+#             request.risk_level_id = form_data.get('risk_level')
+
+#             # اطلاعات تغییر
+#             request.change_title = form_data.get('change_title')
+#             request.change_description = form_data.get('change_description')
+#             request.change_type_id = form_data.get('change_type')
+
+#             # محل تغییر
+#             request.change_location_data_center_id = form_data.get('change_location_data_center')
+#             request.change_location_database_id = form_data.get('change_location_database')
+#             request.change_location_systems_id = form_data.get('change_location_systems')
+#             request.change_location_other_id = form_data.get('change_location_other')
+#             request.change_location_other_description_id = form_data.get('change_location_other_description')
+
+#             # حوزه تغییر
+#             request.change_domain_id = form_data.get('change_domain')
+
+#             # زمانبندی تغییرات
+#             request.changing_date = form_data.get('change_date')
+#             request.changing_time = form_data.get('change_time')
+#             request.changing_date_actual = form_data.get('changing_date_actual')
+#             request.changing_duration = form_data.get('changing_duration')
+#             request.changing_duration_actual = form_data.get('changing_duration_actual')
+#             request.downtime_duration = form_data.get('downtime_duration')
+#             request.downtime_duration_worstcase = form_data.get('downtime_duration_worstcase')
+#             request.downtime_duration_actual = form_data.get('downtime_duration_actual')
+
+#             # اثر گذاری تغییر
+#             request.stop_critical_service = form_data.get('stop_critical_service')
+#             request.critical_service_title = form_data.get('critical_service_title')
+#             request.stop_sensitive_service = form_data.get('stop_sensitive_service')
+#             request.stop_service_title = form_data.get('stop_service_title')
+#             request.not_stop_any_service = form_data.get('not_stop_any_service')
+
+#             # طرح بازگشت
+#             request.has_role_back_plan = form_data.get('has_role_back_plan')
+#             request.role_back_plan_description = form_data.get('role_back_plan_description')
+
+#             # الزامات تغییر
+#             request.reason_regulatory = form_data.get('reason_regulatory')
+#             request.reason_technical = form_data.get('reason_technical')
+#             request.reason_security = form_data.get('reason_security')
+#             request.reason_business = form_data.get('reason_business')
+#             request.reason_other = form_data.get('reason_other')
+#             request.reason_other_description = form_data.get('reason_other_description')
+
+#             # اطلاعات تکمیلی سایر مراحل
+#             # نظر مدیر
+#             request.manager_opinion = form_data.get('manager_opinion')
+#             request.manager_opinion_date = form_data.get('manager_opinion_date')
+#             request.manager_reject_description = form_data.get('manager_reject_description')
+
+#             # نظر کمیته
+#             request.committee_opinion = form_data.get('committee_opinion')
+#             request.committee_opinion_date = form_data.get('committee_opinion_date')
+#             request.committee_reject_description = form_data.get('committee_reject_description')
+
+#             # گزارش اجرا
+#             request.executor_report = form_data.get('executor_report')
+#             request.executor_report_date = form_data.get('executor_report_date')
+#             request.execution_description = form_data.get('execution_description')
+
+#             # گزارش تست
+#             request.test_date = form_data.get('test_date')
+#             request.tester_report = form_data.get('tester_report')
+#             request.tester_report_date = form_data.get('tester_report_date')
+#             request.test_report_description = form_data.get('test_report_description')
+
+#             request.save()
+#     else:
+#         # ایجاد درخواست جدید
+#         request = m.ConfigurationChangeRequest.objects.create(
+#             # نقش های درگیر
+
+#             executor_nationalcode = executor_nationalcode
+#             ,tester_nationalcode = tester_nationalcode
+#             ,requestor_nationalcode = requestor_nationalcode
+
+#             ,executor_team_code = executor_team
+#             ,tester_team_code = tester_team
+#             ,requestor_team_code = requestor_team
+
+#             ,executor_role_id = executor_role
+#             ,tester_role_id = tester_role
+#             ,requestor_role_id = requestor_role
+
+#             ,committee_user_nationalcode = committee_user_nationalcode
+#             ,committee_id = form_data.get('committee')
+#             ,need_committee = form_data.get('need_committee')
+
+#             ,manager_nationalcode = manager_nationalcode
+#             ,test_required = form_data.get('need_test')
+
+#             # ویژگی های تغییر
+#             ,change_level_id = form_data.get('change_level')
+#             ,classification_id = form_data.get('classification')
+#             ,priority_id = form_data.get('priority')
+#             ,risk_level_id = form_data.get('risk_level')
+
+#             # اطلاعات تغییر
+#             ,change_title = form_data.get('change_title')
+#             ,change_description = form_data.get('change_description')
+#             ,change_type_id = form_data.get('change_type')
+
+#             # محل تغییر
+#             ,change_location_data_center = form_data.get('change_location_data_center')
+#             ,change_location_database = form_data.get('change_location_database')
+#             ,change_location_systems = form_data.get('change_location_systems')
+#             ,change_location_other = form_data.get('change_location_other')
+#             ,change_location_other_description = form_data.get('change_location_other_description')
+
+#             # حوزه تغییر
+#             ,change_domain_id = form_data.get('change_domain')
+
+#             # زمانبندی تغییرات
+#             ,changing_date = form_data.get('change_date')
+#             ,changing_time = form_data.get('change_time')
+#             ,changing_duration = form_data.get('changing_duration')
+#             ,downtime_duration = form_data.get('downtime_duration')
+#             ,downtime_duration_worstcase = form_data.get('downtime_duration_worstcase')
+
+#             # اثر گذاری تغییر
+#             ,stop_critical_service = form_data.get('stop_critical_service')
+#             ,critical_service_title = form_data.get('critical_service_title')
+#             ,stop_sensitive_service = form_data.get('stop_sensitive_service')
+#             ,stop_service_title = form_data.get('stop_service_title')
+#             ,not_stop_any_service = form_data.get('not_stop_any_service')
+
+#             # طرح بازگشت
+#             ,has_role_back_plan = form_data.get('has_role_back_plan')
+#             ,role_back_plan_description = form_data.get('role_back_plan_description')
+
+#             # الزامات تغییر
+#             ,reason_regulatory = form_data.get('reason_regulatory')
+#             ,reason_technical = form_data.get('reason_technical')
+#             ,reason_security = form_data.get('reason_security')
+#             ,reason_business = form_data.get('reason_business')
+#             ,reason_other = form_data.get('reason_other')
+#             ,reason_other_description = form_data.get('reason_other_description')
+#         )
+
+#     # حذف رکوردهای موجود و درج رکوردهای جدید
+#     # تیم‌ها
+#     # مواردی که هم اکنون در دیتابیس وجود دارد را استخراج می کنیم
+#     existing_teams = m.RequestTeam.objects.filter(request=request)
+#     for team_code in form_data.get('teams', []):
+#         if team_code not in existing_teams:
+#             # اگر موردی در لیست باشد که در دیتابیس وجود نداشته باشد آن را اضافه می کنیم
+#             m.RequestTeam.objects.create(request=request, team_code_id=team_code)
+#     # مواردی که در لیست نیستند ولی در دیتابیس هستند را حذف می کنیم
+#     existing_teams.exclude(team_code_id__in=form_data.get('teams', [])).delete()
+
+#     # شرکت‌ها
+#     # مواردی که هم اکنون در دیتابیس وجود دارد را استخراج می کنیم
+#     existing_corps = m.RequestCorp.objects.filter(request=request)
+#     for corp_code in form_data.get('corps', []):
+#         if corp_code not in existing_corps:
+#             # اگر موردی در لیست باشد که در دیتابیس وجود نداشته باشد آن را اضافه می کنیم
+#             m.RequestCorp.objects.create(request=request, corp_code_id=corp_code)
+#     # مواردی که در لیست نیستند ولی در دیتابیس هستند را حذف می کنیم
+#     existing_corps.exclude(corp_code_id__in=form_data.get('corps', [])).delete()
+
+#     # اطلاعات تکمیلی
+#     # مواردی که هم اکنون در دیتابیس وجود دارد را استخراج می کنیم
+#     existing_extra_info = m.RequestExtraInformation.objects.filter(request=request)
+#     for extra_info_id in form_data.get('extra_information', []):
+#         if extra_info_id not in existing_extra_info:
+#             # اگر موردی در لیست باشد که در دیتابیس وجود نداشته باشد آن را اضافه می کنیم
+#             m.RequestExtraInformation.objects.create(request=request, extra_info_id=extra_info_id)
+#     # مواردی که در لیست نیستند ولی در دیتابیس هستند را حذف می کنیم
+#     existing_extra_info.exclude(extra_info_id__in=form_data.get('extra_information', [])).delete()
+
+#     return request.id
+
+# # این تابع صحت سنجی فرم را انجام می دهد در صورتی که خطا داشته باشد مقدار بازگشتی برابر با پیام های خطا خواهد بود
+# def form_validation(form_data):
+#     errors = []
+
+#     # اعتبارسنجی فیلدهای الزامی
+#     required_fields = {
+#         'requestor_user_nationalcode': "کد ملی درخواست دهنده الزامی است.",
+#         'requestor_user_role': "سمت درخواست‌دهنده الزامی است.",
+#         'requestor_user_team': "تیم درخواست‌دهنده الزامی است.",
+#         'executor_user_nationalcode': "کد ملی مجری الزامی است.",
+#         'executor_user_role': "سمت مجری الزامی است.",
+#         'executor_user_team': "تیم مجری الزامی است.",
+#         'tester_user_nationalcode': "کد ملی تستر الزامی است.",
+#         'tester_user_role': "سمت تستر الزامی است.",
+#         'tester_user_team': "تیم تستر الزامی است.",
+#         'change_title': "عنوان تغییر الزامی است.",
+#         'change_description': "توضیحات تغییر الزامی است.",
+#         'change_type': "نوع تغییر الزامی است.",
+#     }
+
+#     # اگر تست نیازی ندارد، نباید شناسه آن وجود داشته باشد
+#     if form_data.get('need_test') == 0:
+#         form_data.pop('tester_user_nationalcode', None)
+#     else:
+#         required_fields['tester_user_nationalcode'] = 'انتخاب تستر الزامی است.'
+
+#     # اگر نیاز به کمیته ندارد، باید شناسه مربوطه حذف شود
+#     if form_data.get('need_committee') == 0:
+#         form_data.pop('committee', None)
+#     else:
+#         required_fields['committee'] = 'انتخاب کمیته الزامی است.'
+
+#     # بررسی فیلدهای الزامی
+#     for field, error_message in required_fields.items():
+#         if not form_data.get(field):
+#             errors.append(error_message)
+
+#     # فیلدهای تاریخ
+#     date_fields = [
+#         ('change_date','تاریخ تغییرات'),
+#         ('change_date_actual','تاریخ واقعی انجام تغییرات'),
+#         ('test_date', 'تاریخ انجام تست'),
+#         ('tester_report_date','تاریخ گزارش تست'),
+#         ('manager_opinion_date','تاریخ اظهار نظر مدیر مستقیم'),
+#         ('committee_opinion_date','تاریخ اظهار نظر کمیته'),
+#     ]
+
+
+#     for field, description in date_fields:
+#         date = form_data.get(field)
+#         if date:
+#             try:
+#                 # بررسی اینکه آیا ورودی از نوع رشته است
+#                 if isinstance(date, str):
+#                     # تبدیل به تاریخ شمسی
+#                     date = jdatetime.datetime.strptime(date, '%Y/%m/%d')
+#                 else:
+#                     errors.append(f"فرمت تاریخ برای '{description}' نامعتبر است.")
+#             except ValueError:
+#                 errors.append(f"'{description}' باید در فرمت 'YYYY-MM-DD' باشد.")
+
+#     time_fields = [
+#         ('change_time','ساعت تغییرات'),
+#         ('change_time_actual','ساعت واقعی انجام تغییرات'),
+#         ('test_time', 'ساعت انجام تست'),
+#         ('tester_report_time','ساعت گزارش تست'),
+#         ('manager_opinion_time','ساعت اظهار نظر مدیر مستقیم'),
+#         ('committee_opinion_time','ساعت اظهار نظر کمیته'),
+#     ]
+
+#     for field, description in time_fields:
+#         time = form_data.get(field)
+#         if time:
+#             try:
+#                 # بررسی اینکه آیا ورودی از نوع رشته است
+#                 if isinstance(time, str):
+#                     # بررسی اینکه آیا فرمت زمان صحیح است
+#                     hours, minutes = map(int, time.split(':'))
+#                     if 0 <= hours <= 24 and 0 <= minutes <= 59:
+#                         pass
+#                     else:
+#                         errors.append(f"فرمت ساعت برای '{description}' نامعتبر است. ساعت باید بین 00:00 تا 23:59 باشد.")
+#                 else:
+#                     errors.append(f"فرمت ساعت برای '{description}' نامعتبر است.")
+#             except ValueError:
+#                 errors.append(f"'{description}' باید در فرمت 'HH:MM' باشد.")
+
+
+#     # کد ملی درخواست کننده
+#     if form_data.get('requestor_user_nationalcode') and not m.User.objects.filter(national_code=form_data['requestor_user_nationalcode']).exists():
+#         errors.append("کد ملی درخواست کننده نامعتبر است.")
+
+#     # تیم درخواست‌دهنده
+#     if form_data.get('requestor_user_team') and not m.Team.objects.filter(team_code=form_data['requestor_user_team']).exists():
+#         errors.append("تیم درخواست‌دهنده نامعتبر است.")
+
+#     # کد ملی مجری
+#     if form_data.get('executor_user_nationalcode') and not m.User.objects.filter(national_code=form_data['executor_user_nationalcode']).exists():
+#         errors.append("کد ملی مجری نامعتبر است.")
+
+#     # تیم مجری
+#     if form_data.get('executor_user_team') and not m.Team.objects.filter(team_code=form_data['executor_user_team']).exists():
+#         errors.append("تیم مجری نامعتبر است.")
+
+#     # کد ملی تستر
+#     if form_data.get('tester_user_nationalcode') and not m.User.objects.filter(national_code=form_data['tester_user_nationalcode']).exists():
+#         errors.append("کد ملی تستر نامعتبر است.")
+
+#     # تیم تستر
+#     if form_data.get('tester_user_team') and not m.Team.objects.filter(team_code=form_data['tester_user_team']).exists():
+#         errors.append("تیم تستر نامعتبر است.")
+
+#     # کد ملی مدیر
+#     if not form_data.get('manager_nationalcode'):
+#         manager_nationalcode = m.UserTeamRole.objects.filter(team_code=form_data['requestor_user_team'], role_id=form_data['requestor_user_role']).values('manager_national_code').first()
+#         if manager_nationalcode:
+#             form_data['manager_nationalcode'] = manager_nationalcode['manager_national_code']
+#         # حالتی است که مدیر کاربر پیدا نشده است
+#         else:
+#             errors.append("امکان تشخیص دادن مدیر کاربر درخواست دهنده وجود ندارد")
+#     elif not m.User.objects.filter(national_code=form_data['manager_nationalcode']).exists():
+#         errors.append("کد ملی مدیر نامعتبر است.")
+
+
+#     # شناسه کمیته
+#     if form_data.get('committee') and not m.Committee.objects.filter(id=form_data['committee']).exists():
+#         errors.append("شناسه کمیته نامعتبر است.")
+
+#     # کد ملی کاربر کمیته
+#     if form_data.get('committee_user_nationalcode') and not m.User.objects.filter(national_code=form_data['committee_user_nationalcode']).exists():
+#         errors.append("کد ملی کاربر کمیته نامعتبر است.")
+
+#     if not form_data.get('committee_user_nationalcode'):
+#         committee_user_nationalcode = m.Committee.objects.filter(id=form_data['committee']).values('administrator_nationalCode').first()
+#         if committee_user_nationalcode:
+#             form_data['committee_user_nationalcode'] = committee_user_nationalcode['administrator_nationalCode']
+#         # حالتی است که مدیر کاربر پیدا نشده است
+#         else:
+#             errors.append("امکان تشخیص دادن کاربر کمیته وجود ندارد")
+#     elif not m.User.objects.filter(national_code=form_data['committee_user_nationalcode']).exists():
+#         errors.append("کد ملی کاربر کمیته نامعتبر است.")
+
+
+#     # گستردگی تغییرات
+#     if form_data.get('change_level') and not m.ConstValue.objects.filter(id=form_data['change_level']).exists():
+#         errors.append("گستردگی تغییرات نامعتبر است.")
+
+#     # طبقه‌بندی
+#     if form_data.get('classification') and not m.ConstValue.objects.filter(id=form_data['classification']).exists():
+#         errors.append("طبقه‌بندی نامعتبر است.")
+
+#     # اولویت
+#     if form_data.get('priority') and not m.ConstValue.objects.filter(id=form_data['priority']).exists():
+#         errors.append("اولویت نامعتبر است.")
+
+#     # سطح ریسک
+#     if form_data.get('risk_level') and not m.ConstValue.objects.filter(id=form_data['risk_level']).exists():
+#         errors.append("سطح ریسک نامعتبر است.")
+
+#     # دامنه تغییر
+#     if form_data.get('change_domain') and not m.ConstValue.objects.filter(id=form_data['change_domain']).exists():
+#         errors.append("دامنه تغییر نامعتبر است.")
+
+
+#     # نوع تغییر
+#     if form_data.get('change_type') and not m.ChangeType.objects.filter(id=form_data['change_type']).exists():
+#         errors.append("نوع تغییر نامعتبر است.")
+
+
+#     # اعتبارسنجی محل تغییر: سایر
+#     try:
+#         validator.Validator.validate_change_location_other(
+#             form_data.get('change_location_other'),
+#             form_data.get('change_location_other_description')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     # اعتبارسنجی توقف خدمات بحرانی و حساس
+#     try:
+#         validator.Validator.validate_critical_service(
+#             form_data.get('stop_critical_service'),
+#             form_data.get('critical_service_title')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     try:
+#         validator.Validator.validate_sensitive_service(
+#             form_data.get('stop_sensitive_service'),
+#             form_data.get('stop_service_title')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     # اعتبارسنجی سایر الزامات
+#     try:
+#         validator.Validator.validate_reason_other(
+#             form_data.get('reason_other'),
+#             form_data.get('reason_other_description')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     # اعتبارسنجی نظر مدیر
+#     try:
+#         validator.Validator.validate_manager_opinion(
+#             form_data.get('manager_opinion'),
+#             form_data.get('manager_reject_description')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     # اعتبارسنجی فیلدهای کمیته
+#     try:
+#         validator.Validator.validate_committee_fields(
+#             form_data.get('need_committee'),
+#             form_data.get('committee_user_nationalcode'),
+#             form_data.get('committee_opinion_date'),
+#             form_data.get('committee_opinion'),
+#             form_data.get('committee_reject_description')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     # اعتبارسنجی تاریخ تست و گزارش تست
+#     try:
+#         validator.Validator.validate_test_date(
+#             form_data.get('test_date'),
+#             form_data.get('changing_date_actual')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     try:
+#         validator.Validator.validate_tester_report_date(
+#             form_data.get('tester_report_date'),
+#             form_data.get('test_date')
+#         )
+#     except ValidationError as e:
+#         errors.append(str(e))
+
+#     # اعتبارسنجی کلیدهای خارجی برای تیم‌ها
+#     for team_code in form_data.get('teams', []):
+#         if not m.Team.objects.filter(team_code=team_code).exists():
+#             errors.append(f"کد تیم '{team_code}' نامعتبر است.")
+
+#     # اعتبارسنجی کلیدهای خارجی برای شرکت‌ها
+#     for corp_code in form_data.get('corps', []):
+#         if not m.Corp.objects.filter(corp_code=corp_code).exists():
+#             errors.append(f"کد شرکت '{corp_code}' نامعتبر است.")
+
+#     # اعتبارسنجی مقادیر اطلاعات تکمیلی
+#     for extra_info_id in form_data.get('extra_information', []):
+#         if not m.ConstValue.objects.filter(id=extra_info_id).exists():
+#             errors.append(f"مقدار اطلاعات تکمیلی با شناسه '{extra_info_id}' نامعتبر است.")
+
+#     return errors

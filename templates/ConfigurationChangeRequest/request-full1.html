@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}فرم درخواست کامل{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>فرم درخواست کامل</h2>
+    
+    {% if message %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endif %}
+    
+    <form method="post" id="fullRequestForm">
+        {% csrf_token %}
+        
+        <!-- اطلاعات اصلی -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>اطلاعات اصلی</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="change_title">عنوان درخواست *</label>
+                            <input type="text" class="form-control" id="change_title" name="change_title" 
+                                   value="{{ request.change_title|default:'' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="change_type">نوع تغییر *</label>
+                            <select class="form-control" id="change_type" name="change_type" required>
+                                <option value="">انتخاب کنید</option>
+                                {% for ct in change_type %}
+                                <option value="{{ ct.id }}" {% if request.change_type.id == ct.id %}selected{% endif %}>
+                                    {{ ct.change_type_title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="change_description">توضیحات درخواست *</label>
+                            <textarea class="form-control" id="change_description" name="change_description" 
+                                      rows="4" required>{{ request.change_description|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ویژگی‌های تغییر -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>ویژگی‌های تغییر</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="change_level">گستردگی تغییرات</label>
+                            <select class="form-control" id="change_level" name="change_level">
+                                <option value="">انتخاب کنید</option>
+                                {% for cl in change_level_values %}
+                                <option value="{{ cl.id }}" {% if request.change_level.id == cl.id %}selected{% endif %}>
+                                    {{ cl.Caption }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="classification">طبقه‌بندی</label>
+                            <select class="form-control" id="classification" name="classification">
+                                <option value="">انتخاب کنید</option>
+                                {% for c in classification_values %}
+                                <option value="{{ c.id }}" {% if request.classification.id == c.id %}selected{% endif %}>
+                                    {{ c.Caption }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="priority">اولویت</label>
+                            <select class="form-control" id="priority" name="priority">
+                                <option value="">انتخاب کنید</option>
+                                {% for p in priority_values %}
+                                <option value="{{ p.id }}" {% if request.priority.id == p.id %}selected{% endif %}>
+                                    {{ p.Caption }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="risk_level">سطح ریسک</label>
+                            <select class="form-control" id="risk_level" name="risk_level">
+                                <option value="">انتخاب کنید</option>
+                                {% for rl in risk_level_values %}
+                                <option value="{{ rl.id }}" {% if request.risk_level.id == rl.id %}selected{% endif %}>
+                                    {{ rl.Caption }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="change_domain">دامنه تغییر</label>
+                            <select class="form-control" id="change_domain" name="change_domain">
+                                <option value="">انتخاب کنید</option>
+                                {% for d in domain_values %}
+                                <option value="{{ d.id }}" {% if request.change_domain.id == d.id %}selected{% endif %}>
+                                    {{ d.Caption }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- زمانبندی -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>زمانبندی</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="changing_date">تاریخ تغییرات</label>
+                            <input type="text" class="form-control" id="changing_date" name="changing_date" 
+                                   value="{{ request.changing_date|default:'' }}" placeholder="YYYY/MM/DD">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="changing_time">ساعت تغییرات</label>
+                            <input type="text" class="form-control" id="changing_time" name="changing_time" 
+                                   value="{{ request.changing_time|default:'' }}" placeholder="HH:MM">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="changing_duration">مدت زمان تغییرات (دقیقه)</label>
+                            <input type="number" class="form-control" id="changing_duration" name="changing_duration" 
+                                   value="{{ request.changing_duration|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- دکمه‌های عملیات -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">ذخیره و ادامه</button>
+                <button type="button" class="btn btn-secondary" onclick="history.back()">بازگشت</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('fullRequestForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            // ارسال به مرحله بعدی
+            window.location.href = '/ConfigurationChangeRequest/request/action/{{ request.id }}/CON/';
+        } else {
+            alert('خطا: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('خطا در ذخیره درخواست');
+    });
+});
+</script>
+{% endblock %}

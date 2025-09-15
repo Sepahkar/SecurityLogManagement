@@ -1,25 +1,30 @@
 from django.urls import path
-from .views import insert_request, submit_request, next_step, view_request
-from .api import (
-    configuration_change_request_list,
-    configuration_change_request_create,
-    configuration_change_request_detail,
-    configuration_change_request_update,
-    configuration_change_request_partial_update,
-    configuration_change_request_delete,
-)
+from . import views
+
+app_name = 'ConfigurationChangeRequest'
 
 urlpatterns = [
-    path('request/', insert_request, name='insert_request'),
-    path('request/<int:request_id>/', submit_request, name='submit_request'),
-    path('request/view/<int:request_id>/', view_request, name='view_request'),
-    path('request/next_step/<int:request_id>/<str:action>/', next_step, name='next_step'),
+    # ایجاد درخواست جدید
+    path('', views.request_create, name='request_create'),
     
-
-    path('api/configuration_change_request/v1/', configuration_change_request_list, name='configuration_change_request_list'),
-    path('api/configuration_change_request/v1/create/', configuration_change_request_create, name='configuration_change_request_create'),
-    path('api/configuration_change_request/v1/<int:pk>/', configuration_change_request_detail, name='configuration_change_request_detail'),
-    path('api/configuration_change_request/v1/<int:pk>/update/', configuration_change_request_update, name='configuration_change_request_update'),
-    path('api/configuration_change_request/v1/<int:pk>/partial-update/', configuration_change_request_partial_update, name='configuration_change_request_partial_update'),
-    path('api/configuration_change_request/v1/<int:pk>/delete/', configuration_change_request_delete, name='configuration_change_request_delete'),
+    # درخواست در مراحل مختلف
+    path('<int:request_id>/', views.request_view, name='request_view'),
+    
+    # انتخاب تسک (برای مجری/تستر)
+    path('task/select/<int:request_id>/<int:task_id>/', views.task_select_view, name='task_select'),
+    
+    # گزارش تسک (برای مجری/تستر)
+    path('task/report/<int:request_id>/<int:task_id>/', views.task_report_view, name='task_report'),
+    
+    # عملیات روی درخواست (تایید/رد/بازگشت)
+    path('request/action/<int:request_id>/<str:action>/', views.request_action_view, name='request_action'),
+    
+    # عملیات روی تسک (تایید/رد/بازگشت)
+    path('task/action/<int:request_id>/<int:task_id>/<str:action>/', views.task_action_view, name='task_action'),
+    
+    # مشاهده درخواست (فقط خواندنی)
+    path('request/view/<int:request_id>/', views.request_view_view, name='request_view'),
+    
+    # تست پیام‌ها
+    path('test/messages/', views.test_messages_view, name='test_messages'),
 ]

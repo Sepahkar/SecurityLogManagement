@@ -1,0 +1,269 @@
+{% extends 'ConfigurationChangeRequest/base.html' %}
+{% load static %} 
+{% load custom_filters %}
+
+{% block main_content %}
+    {% if status == 'INSERT' or status == 'UPDATE' %}
+    <div class="container">
+        <div class="attachment-form-container">
+            <!-- هدر فرم پیوست -->
+            <div class="form-header">
+                <h2 class="form-title">
+                    <i class="fas fa-paperclip"></i>
+                    فرم پیوست
+                </h2>
+                <p class="form-description">
+                    در این فرم می‌توانید فایل‌های مورد نیاز برای درخواست تغییرات را پیوست کنید
+                </p>
+            </div>
+
+            <!-- بخش اطلاعات درخواست -->
+            <div class="request-info-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    اطلاعات درخواست
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>شماره درخواست:</label>
+                        <span>{{ request_number|default:"جدید" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>تاریخ ثبت:</label>
+                        <span>{{ request_date }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>درخواست دهنده:</label>
+                        <span>{{ current_user.fullname }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بخش انتخاب نوع پیوست -->
+            <div class="attachment-type-section">
+                <div class="section-title">
+                    <i class="fas fa-list"></i>
+                    نوع پیوست
+                </div>
+                <div class="attachment-types">
+                    {% for attachment_type in attachment_type_values %}
+                    <div class="attachment-type-item">
+                        <input type="checkbox" 
+                               id="attachment_type_{{ attachment_type.id }}" 
+                               name="attachment_types" 
+                               value="{{ attachment_type.id }}"
+                               class="attachment-type-checkbox">
+                        <label for="attachment_type_{{ attachment_type.id }}" class="attachment-type-label">
+                            <i class="fas fa-file"></i>
+                            {{ attachment_type.Caption }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- بخش آپلود فایل -->
+            <div class="file-upload-section">
+                <div class="section-title">
+                    <i class="fas fa-upload"></i>
+                    آپلود فایل
+                </div>
+                
+                <!-- فایل‌های موجود -->
+                <div class="existing-files">
+                    <h4>فایل‌های موجود:</h4>
+                    <div class="file-list" id="existing-files-list">
+                        <!-- فایل‌های موجود اینجا نمایش داده می‌شوند -->
+                    </div>
+                </div>
+
+                <!-- آپلود فایل جدید -->
+                <div class="new-file-upload">
+                    <h4>افزودن فایل جدید:</h4>
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p>فایل خود را اینجا بکشید و رها کنید یا کلیک کنید</p>
+                            <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar" style="display: none;">
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file-input').click()">
+                                انتخاب فایل
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- پیش‌نمایش فایل‌های انتخاب شده -->
+                    <div class="selected-files" id="selected-files" style="display: none;">
+                        <h5>فایل‌های انتخاب شده:</h5>
+                        <div class="selected-files-list" id="selected-files-list">
+                            <!-- فایل‌های انتخاب شده اینجا نمایش داده می‌شوند -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بخش توضیحات -->
+            <div class="description-section">
+                <div class="section-title">
+                    <i class="fas fa-comment"></i>
+                    توضیحات
+                </div>
+                <div class="description-input">
+                    <textarea name="attachment_description" 
+                              id="attachment-description" 
+                              class="form-control" 
+                              rows="4" 
+                              placeholder="توضیحات مربوط به فایل‌های پیوست شده را اینجا وارد کنید..."></textarea>
+                </div>
+            </div>
+
+            <!-- دکمه‌های عملیات -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-success" id="save-attachments">
+                    <i class="fas fa-save"></i>
+                    ذخیره پیوست‌ها
+                </button>
+                <button type="button" class="btn btn-secondary" id="clear-form">
+                    <i class="fas fa-eraser"></i>
+                    پاک کردن
+                </button>
+                <button type="button" class="btn btn-info" id="preview-attachments">
+                    <i class="fas fa-eye"></i>
+                    پیش‌نمایش
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+<!-- لینک فایل CSS خاص فرم پیوست -->
+<link rel="stylesheet" type="text/css" href="{% static 'ConfigurationChangeRequest/css/attachment-form.css' %}">
+
+<!-- اسکریپت‌های خاص فرم پیوست -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const selectedFiles = document.getElementById('selected-files');
+    const selectedFilesList = document.getElementById('selected-files-list');
+    
+    // Drag and Drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        handleFiles(e.target.files);
+    });
+    
+    // Handle selected files
+    function handleFiles(files) {
+        if (files.length > 0) {
+            selectedFiles.style.display = 'block';
+            
+            Array.from(files).forEach(file => {
+                const fileItem = createFileItem(file);
+                selectedFilesList.appendChild(fileItem);
+            });
+        }
+    }
+    
+    // Create file item element
+    function createFileItem(file) {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'file-info';
+        
+        const fileIcon = document.createElement('i');
+        fileIcon.className = 'fas fa-file file-icon';
+        
+        const fileName = document.createElement('span');
+        fileName.textContent = file.name;
+        
+        const fileSize = document.createElement('small');
+        fileSize.textContent = ` (${formatFileSize(file.size)})`;
+        
+        fileInfo.appendChild(fileIcon);
+        fileInfo.appendChild(fileName);
+        fileInfo.appendChild(fileSize);
+        
+        const fileActions = document.createElement('div');
+        fileActions.className = 'file-actions';
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-sm btn-danger';
+        removeBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        removeBtn.onclick = function() {
+            fileItem.remove();
+            if (selectedFilesList.children.length === 0) {
+                selectedFiles.style.display = 'none';
+            }
+        };
+        
+        fileActions.appendChild(removeBtn);
+        fileItem.appendChild(fileInfo);
+        fileItem.appendChild(fileActions);
+        
+        return fileItem;
+    }
+    
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Save attachments button
+    document.getElementById('save-attachments').addEventListener('click', function() {
+        // اینجا کد ذخیره پیوست‌ها قرار می‌گیرد
+        alert('پیوست‌ها با موفقیت ذخیره شدند!');
+    });
+    
+    // Clear form button
+    document.getElementById('clear-form').addEventListener('click', function() {
+        if (confirm('آیا مطمئن هستید که می‌خواهید فرم را پاک کنید؟')) {
+            selectedFilesList.innerHTML = '';
+            selectedFiles.style.display = 'none';
+            document.getElementById('attachment-description').value = '';
+            // پاک کردن چک باکس‌ها
+            document.querySelectorAll('.attachment-type-checkbox').forEach(cb => cb.checked = false);
+        }
+    });
+    
+    // Preview attachments button
+    document.getElementById('preview-attachments').addEventListener('click', function() {
+        const selectedTypes = Array.from(document.querySelectorAll('.attachment-type-checkbox:checked'))
+            .map(cb => cb.nextElementSibling.textContent.trim());
+        
+        const description = document.getElementById('attachment-description').value;
+        const filesCount = selectedFilesList.children.length;
+        
+        let previewText = 'پیش‌نمایش فرم پیوست:\n\n';
+        previewText += `نوع‌های پیوست انتخاب شده: ${selectedTypes.join(', ') || 'هیچ‌کدام'}\n`;
+        previewText += `تعداد فایل‌ها: ${filesCount}\n`;
+        previewText += `توضیحات: ${description || 'توضیحی وارد نشده'}`;
+        
+        alert(previewText);
+    });
+});
+</script>
+{% endblock %} 

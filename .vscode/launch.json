@@ -4,15 +4,19 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
             "name": "Django",
             "type": "python",
             "request": "launch",
-            "module": "manage",
-            "args": [
-                "runserver"
-            ],
-            "justMyCode": true
-        }
+            "program": "${workspaceFolder}\\manage.py",
+            "args": ["runserver", "127.0.0.1:8000"],
+            "django": true,
+            "justMyCode": true,
+            "subProcess": true,
+            "jinja": true,
+            "console": "integratedTerminal",
+            "env": { "DJANGO_SETTINGS_MODULE": "Config.settings" }
+          }
     ]
 }

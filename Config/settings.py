@@ -17,10 +17,11 @@ import environ
 
 # ایجاد یک شیء environ
 env = environ.Env()
-environ.Env.read_env()  # بارگذاری متغیرها از فایل .env
+# بارگذاری متغیرها از فایل .env (اگر وجود داشته باشد)
+environ.Env.read_env(env_file='.env', default='.env')
 
-# استفاده از متغیر
-APPCODE = env('APPCODE')
+# استفاده از متغیر (با مقدار پیش‌فرض)
+APPCODE = env('APPCODE', default='SECURITY_LOG')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -97,10 +98,9 @@ DATABASES = {
         'PORT': '',
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
+            'use_legacy_datetime': False,
         },
     },
-
-
 }
 
 
@@ -128,11 +128,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
 USE_TZ = True
+
+# تنظیمات اضافی برای timezone
+USE_L10N = True
 
 
 # Static files (CSS, JavaScript, Images)

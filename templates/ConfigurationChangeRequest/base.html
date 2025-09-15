@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/change-request.css" >
     <link rel="stylesheet" href="/static/ConfigurationChangeRequest/scss/select2.scss">
     <link rel="stylesheet" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
-    <title>درخواست تغییرات</title>
+    <title>{% if page_title %}{{ page_title }}{% else %}درخواست تغییرات{% endif %}</title>
 </head>
 <body>
     <form id="requestForm" method="POST" action="">
@@ -31,7 +31,7 @@
                 {% endif %}
             </div>
             <div class="title col-4">
-                درخواست تغییرات
+                {% if page_title %}{{ page_title }}{% else %}درخواست تغییرات{% endif %}
                 <div class="step-button">
                     <span class="step">{{bc}}</span>
                 </div> 

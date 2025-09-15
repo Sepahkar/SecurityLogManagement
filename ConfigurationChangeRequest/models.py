@@ -1,9 +1,35 @@
+from turtle import mode
 from django.db import models
 import jdatetime
 from django.core.validators import MinValueValidator
 from ConfigurationChangeRequest.validator import Validator as v, DefaultValue as d
 from django.core.exceptions import ValidationError
-# Create your models here.
+from django.utils import timezone
+
+class BaseModel(models.Model):
+    """
+    این مدل 4 فیلد مربوط به ایجاد و تغییرات را به جدول مربوطه اضافه می کند
+    """
+    create_date = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد',)
+    modify_date = models.DateTimeField(auto_now=True, verbose_name='تاریخ آخرین تغییر')
+    creator_user = models.ForeignKey(
+        'User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='created_%(class)ss', verbose_name='کاربر ایجادکننده')
+    last_modifier_user = models.ForeignKey(
+        'User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='modified_%(class)ss', 
+        # %(class)s در Django هنگام تعریف مدل‌های انتزاعی (abstract) استفاده می‌شود تا نام مدل فرزند را به طور خودکار جایگزین کند. این باعث می‌شود هر مدل فرزند یک related_name یکتا داشته باشد، مثلاً برای مدل ConfigurationChangeRequest مقدار آن modified_configurationchangerequests خواهد شد.
+        verbose_name='آخرین کاربر ویرایشگر')
+
+    def save(self, *args, **kwargs):
+        # اطمینان از استفاده از timezone-aware datetime
+        if not self.pk:  # اگر رکورد جدید است
+            self.create_date = timezone.now()
+        self.modify_date = timezone.now()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
 
 class User(models.Model):
     national_code = models.CharField(max_length=10, primary_key=True, verbose_name='کد ملی', 
@@ -29,9 +55,9 @@ class User(models.Model):
 class UserTeamRole(models.Model):
     national_code = models.ForeignKey(to='user', db_column='national_code', verbose_name='کد ملی کاربر', related_name='user', on_delete=models.CASCADE)    
     role_id = models.IntegerField(verbose_name="شناسه سمت")
-    role_title = models.CharField(max_length=100, verbose_name='سمت کاربر', null=False, help_text='لطفاً سمت خود را وارد کنید.')
     team_code = models.ForeignKey('Team', on_delete=models.SET_NULL, verbose_name='تیم کاربر', null=True, blank=True, help_text='تیم مربوط به کاربر را انتخاب کنید.', db_column='team_code')
-    manager_national_code = models.ForeignKey(to='user', db_column='manager_national_code', null=True, verbose_name='کد ملی مدیر مستقیم', related_name='direct_manager',on_delete=models.SET_NULL)    
+    manager_national_code = models.ForeignKey(to='user', db_column='manager_national_code', null=True, 
+                                              verbose_name='کد ملی مدیر مستقیم', related_name='direct_manager',on_delete=models.SET_NULL)    
 
     class Meta:
         verbose_name = 'سمت کاربر'
@@ -108,7 +134,7 @@ class Committee(models.Model):
         verbose_name_plural = 'کمیته ها'
 
     def __str__(self) -> str:
-        return self.Title    
+        return self.title    
 
 class ChangeType(models.Model):
     code = models.CharField(max_length=6, verbose_name='کد نوع تغییر', db_column='code',
@@ -118,6 +144,11 @@ class ChangeType(models.Model):
                                     help_text='لطفاً عنوان تغییر را وارد کنید.')
     change_description = models.TextField(max_length=1000, verbose_name='توضیحات تغییر', 
                                         null=True, blank=True, help_text='توضیحات مربوط به تغییر را وارد کنید.')
+
+    related_manager = models.ForeignKey(to=User, on_delete=models.CASCADE, null=False, 
+                                        verbose_name = "مدیر مربوطه",
+                                        help_text="مدیر مربوطه را انتخاب کنید")
+    
     change_location_data_center = models.BooleanField(default=False, verbose_name='محل تغییر: مرکز داده', null=True,
                                                     help_text='آیا تغییر در مرکز داده انجام می‌شود؟')
     change_location_database = models.BooleanField(default=False, verbose_name='محل تغییر: پایگاه داده', null=True,
@@ -133,26 +164,11 @@ class ChangeType(models.Model):
         blank=True, 
         help_text='توضیحات مربوط به محل تغییر را وارد کنید.',)
 
-    # اطلاعات افراد درگیر
-    executor_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
-                                            related_name='executors', 
-                                            db_column='executor_nationalcode',
-                                            verbose_name='کد ملی کاربر مجری', 
-                                            null=True, blank=True)
-    tester_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
-                                            related_name='testers', 
-                                            db_column='tester_nationalcode',
-                                            verbose_name='کد ملی کاربر تست کننده', 
-                                            null=True, blank=True)
-    test_required = models.BooleanField(verbose_name='نیازمند تست است؟', 
-                                        default=False, 
-                                        null=True,
-                                        help_text='در صورتی که نیاز به تست داشته باشد مقدار یک و در غیر این صورت مقدار صفر خواهد داشت')
     need_committee = models.BooleanField(default=False, 
                                         verbose_name='نیاز به کمیته',
                                         null=True,
                                         help_text='آیا نیاز به کمیته وجود دارد؟')
-    committee = models.ForeignKey(to='Committee', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='کمیته' )
+    committee = models.ForeignKey(to=Committee, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='کمیته' )
 
     # ویژگی های تغییر
     change_level = models.ForeignKey(to="ConstValue",
@@ -229,7 +245,7 @@ class ChangeType(models.Model):
         managed = True
 
     def __str__(self):
-        return self.Code
+        return self.code
     
     def clean(self) -> None:
         v.ConstValue_Validator(prefix="change_level")
@@ -239,24 +255,67 @@ class ChangeType(models.Model):
         v.ConstValue_Validator(prefix="change_domain")
         return super().clean()
 
-class ConfigurationChangeRequest(models.Model):
-    # اطلاعات درخواست
+class NotifyGroup(models.Model):
+    code = models.CharField(verbose_name='کد گروه', max_length=10)
+    title = models.CharField(verbose_name='عنوان گروه', max_length=30)
+    role_id = models.ForeignKey(to=Role, verbose_name='شناسه سمت', on_delete=models.SET_NULL,
+                                null=True, related_name='notify_role_id',
+                                help_text='در صورتی این گروه مربوط به یک سمت خاص است')
+    team_code = models.ForeignKey(to=Team, verbose_name='کد سمت', on_delete=models.SET_NULL,
+                                null=True, related_name='notify_team_code',
+                                help_text='در صورتی این گروه مربوط به یک تیم است')
 
+    class Meta:
+        verbose_name = 'گروه اطلاع رسانی'
+        verbose_name_plural = 'گروه های اطلاع رسانی'
+        managed = True
+
+    def __str__(self):
+        return self.title
+
+class NotifyGroupUser(models.Model):
+    notify_group_code = models.ForeignKey(to=NotifyGroup, verbose_name='کد گروه اطلاع رسانی', on_delete=models.CASCADE)
+    user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
+                                          db_column='user_nationalcode', on_delete=models.CASCADE)
+    user_role_id = models.ForeignKey(to=Role, db_column='user_role_id' ,verbose_name='سمت کاربر', 
+                                    null=True,
+                                    help_text='لطفاً سمت فرد کاربر را وارد کنید.', 
+                                    on_delete=models.SET_NULL)
+    user_team_code = models.ForeignKey(to=Team, on_delete=models.SET_NULL, 
+                                       verbose_name='تیم کاربر', 
+                                        null=True, blank=True, 
+                                        help_text='تیم مربوط به کاربر را انتخاب کنید.',
+                                        db_column='user_team_code')
+
+    class Meta:
+        verbose_name = 'افراد اطلاع رسانی'
+        verbose_name_plural = 'افراد اطلاع رسانی'
+        managed = True
+
+    def __str__(self):
+        return self.user_nationalcode    
+
+
+
+
+class ConfigurationChangeRequest(BaseModel):
+    # اطلاعات درخواست
     doc_id = models.IntegerField(verbose_name='کد سند', null=True, 
                                 help_text='لطفاً کد سند را وارد کنید.')
     STATUS_CHOICES = [
         ('DRAFTD', 'پیش نویس'),
-        ('MANAGE', 'اظهار نظر مدیر مستقیم'),
+        ('DIRMAN', 'اظهار نظر مدیر مستقیم'),
+        ('RELMAN', 'اظهار نظر مدیر مستقیم'),
         ('COMITE', 'اظهار نظر کمیته'),
-        ('EXECUT', 'اجرا توسط مجری'),
-        ('TESTER', 'تست توسط تستر'),
+        ('DOTASK', 'انجام تسک ها'),
         ('FINISH', 'خاتمه یافته'),
         ('FAILED', 'خاتمه ناموفقیت آمیز'),
+        ('ERRORF', 'خاتمه با خطا'),
+        
     ]
 
     status_code = models.CharField(
-        max_length=6,
-        choices=STATUS_CHOICES,
+        max_length=6, choices=STATUS_CHOICES,
         verbose_name='کد وضعیت',
         default='DRAFTD',
         help_text='لطفاً کد وضعیت را وارد کنید.'
@@ -265,8 +324,47 @@ class ConfigurationChangeRequest(models.Model):
     # اطلاعات تغییر
     change_type = models.ForeignKey(ChangeType, on_delete=models.CASCADE, verbose_name='کد نوع تغییر',
                                         null=False)
+    change_title = models.CharField(max_length=255, verbose_name='عنوان تغییر', null=False, 
+                                    help_text='لطفاً عنوان تغییر را وارد کنید.')
+    change_description = models.TextField(max_length=1000, verbose_name='توضیحات تغییر', 
+                                        null=True, blank=True, help_text='توضیحات مربوط به تغییر را وارد کنید.')
+ 
     # اطلاعات افراد درگیر
+    requestor_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
+                                                verbose_name='کد ملی درخواست کننده',
+                                                null=False, db_column='requestor_nationalcode',
+                                                related_name='requestor_nationalcode')
+    requestor_team_code = models.ForeignKey(Team, on_delete=models.CASCADE, 
+                                                verbose_name='تیم درخواست کننده',
+                                                null=False, db_column='requestor_team_code',
+                                                related_name='requestor_team_code')
+    requestor_role_id = models.ForeignKey(Role, on_delete=models.CASCADE, 
+                                                verbose_name='سمت درخواست کننده',
+                                                null=False, db_column='requestor_role_id',
+                                                related_name='requestor_role_id')
+    direct_manager_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
+                                            db_column='direct_manager_nationalcode',
+                                            verbose_name='کد ملی مدیر', 
+                                            related_name='direct_manager_nationalcode',
+                                            null=False)
+    related_manager_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
+                                            db_column='related_manager_nationalcode',
+                                            verbose_name='کد ملی مدیر مربوطه', 
+                                            related_name='related_manager_natioanlcode',
+                                            null=False)
+    committee_user_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
+                                                    db_column='committee_user_nationalcode',
+                                                    verbose_name='کد ملی کاربر کمیته', 
+                                                    related_name='committee_user_nationalcode',
+                                                    null=True, blank=True)    
     
+    # کمیته
+    need_committee = models.BooleanField(default=False, verbose_name='نیاز به کمیته', 
+                                        help_text='آیا نیاز به کمیته وجود دارد؟')    
+    committee = models.ForeignKey(to=Committee, on_delete=models.SET_NULL, null=True, 
+                                  blank=True, verbose_name='کمیته' )
+    
+    # این فیلدها توسط مدیر مربوطه تکمیل می شود
     # ویژگی های تغییر
     change_level = models.ForeignKey(to="ConstValue",
                                     on_delete=models.SET_NULL, 
@@ -301,11 +399,6 @@ class ConfigurationChangeRequest(models.Model):
                                     related_name= "request_change_domain",
                                     help_text='دامنه تغییرات می تواند درون سازمانی، برون سازمانی و یا بین سازمانی باشد.')
     
-    # اطلاعات تغییر
-    change_title = models.CharField(max_length=255, verbose_name='عنوان تغییر', null=False, 
-                                    help_text='لطفاً عنوان تغییر را وارد کنید.')
-    change_description = models.TextField(max_length=1000, verbose_name='توضیحات تغییر', 
-                                        null=True, blank=True, help_text='توضیحات مربوط به تغییر را وارد کنید.')
     # محل تغییر
     change_location_data_center = models.BooleanField(default=False, verbose_name='محل تغییر: مرکز داده', 
                                                     help_text='آیا تغییر در مرکز داده انجام می‌شود؟')
@@ -380,88 +473,7 @@ class ConfigurationChangeRequest(models.Model):
     reason_other_description = models.CharField(max_length=500, verbose_name='توضیحات الزامات دیگر', 
                                                 null=True, blank=True, 
                                                 help_text='توضیحات مربوط به الزامات دیگر را وارد کنید.',)
-    
-    # افراد درگیر
-    requestor_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='درخواست کننده',
-                                            null=False, db_column='requestor_nationalcode',
-                                            related_name='requestor')
-    requestor_role_id = models.ForeignKey(to=Role, db_column='requestor_role_id' ,verbose_name='سمت درخواست‌دهنده', null=True, related_name='requestor_role_id',
-                                            help_text='لطفاً سمت فرد درخواست‌دهنده را وارد کنید.', on_delete=models.SET_NULL)
-    requestor_team_code = models.ForeignKey('Team', on_delete=models.SET_NULL, verbose_name='تیم درخواست‌دهنده', 
-                                            null=True, blank=True, help_text='تیم مربوط به درخواست‌دهنده را انتخاب کنید.',
-                                            db_column='requestor_team_code')
-    
-    manager_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
-                                            db_column='manager_nationalcode',
-                                            verbose_name='کد ملی مدیر', 
-                                            related_name='manager',
-                                            null=False)
-    manager_opinion = models.BooleanField(null=True, 
-                                        help_text='در صورت موافقت مدیر مقدار 1 و در غیر این صورت مقدار صفر دارد')
-    manager_opinion_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ اعلام نظر مدیر',
-                                                help_text='تاریخ اظهار نظر مدیر به شمسی.')
-    manager_opinion_time = models.CharField(null=True, max_length=5, verbose_name='ساعت اعلام نظر مدیر',
-                                                help_text=' ساعت اظهار نظر مدیر در قالب HH:MM.')
-    manager_reject_description = models.CharField(max_length=500, verbose_name='توضیحات رد مدیر', 
-                                                null=True, blank=True, 
-                                                help_text='توضیحات مربوط به رد مدیر را وارد کنید.')
 
-    need_committee = models.BooleanField(default=False, verbose_name='نیاز به کمیته', 
-                                        help_text='آیا نیاز به کمیته وجود دارد؟')
-    committee = models.ForeignKey(to='Committee', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='کمیته' )
-    committee_user_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
-                                                    db_column='committee_user_nationalcode',
-                                                    verbose_name='کد ملی کاربر کمیته', 
-                                                    related_name='committee',
-                                                    null=True, blank=True)
-    committee_opinion_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ اعلام نظر کمیته',
-                                            help_text='تاریخ اظهار نظر کمیته به شمسی.')
-    committee_opinion_time = models.CharField(null=True, max_length=5, verbose_name='ساعت اعلام نظر کمیته',
-                                            help_text='ساعت اظهار نظر کمیته در قالب HH:MM.')
-    committee_opinion = models.BooleanField(null=True, help_text='در صورتی که نظر کمیته مثبت است مقدار 1 و در غیر این صورت مقدار صفر خواهد داشت')
-    committee_reject_description = models.CharField(max_length=500, verbose_name='توضیحات رد کمیته', 
-                                                    null=True, blank=True, help_text='توضیحات مربوط به رد کمیته را وارد کنید.',
-                                                    )
-    executor_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
-                                            db_column='executor_nationalcode',
-                                            related_name='executor',
-                                            verbose_name='کد ملی مجری', null=False)
-    executor_role_id = models.ForeignKey(to=Role, db_column='executor_role_id', verbose_name='سمت مجری', null=True, related_name='executor_role_id',
-                                            help_text='لطفاً سمت فرد مجری را وارد کنید.', on_delete=models.SET_NULL)
-    executor_team_code = models.ForeignKey('Team', on_delete=models.SET_NULL, verbose_name='تیم مجری', 
-                                            null=True, blank=True, help_text='تیم مربوط به مجری را انتخاب کنید.',
-                                            db_column='executor_team_code', related_name='executor_team_code')
-
-    executor_report_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ گزارش مجری',
-                                                help_text='تاریخ گزارش مجری به شمسی.')
-    executor_report_time = models.CharField(null=True, max_length=5, verbose_name='ساعت گزارش مجری',
-                                            help_text='ساعت گزارش مجری به شمسی در قالب HH:MM.')
-    executor_report = models.BooleanField(null=True, help_text='در صورتی که اجرا موفقیت آمیز باشد مقدار 1 و در غیر این صورت مقدار صفر خواهد داشت')
-    execution_description = models.CharField(max_length=1000, verbose_name='گزارش انجام', 
-                                            null=True, blank=True, help_text='گزارش انجام را وارد کنید.')
-
-    test_required = models.BooleanField(verbose_name='نیازمند تست است؟', default=0,
-                                    help_text='در صورتی که نیاز به تست داشته باشد مقدار یک و در غیر این صورت مقدار صفر خواهد داشت')
-    tester_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
-                                            db_column='tester_nationalcode',
-                                            related_name='tester',
-                                            verbose_name='کد ملی تستر', null=False)
-    tester_role_id = models.ForeignKey(to=Role, db_column='tester_role_id', verbose_name='سمت تستر', null=True,related_name='tester_role_id',
-                                            help_text='لطفاً سمت فرد تستر را وارد کنید.', on_delete=models.SET_NULL)
-    tester_team_code = models.ForeignKey('Team', on_delete=models.SET_NULL, verbose_name='تیم تستر', 
-                                            null=True, blank=True, help_text='تیم مربوط به تستر را انتخاب کنید.',
-                                            db_column='tester_team_code', related_name='tester_team_code')    
-    tester_report = models.BooleanField(null=True, help_text='در صورتی که تست موفقیت آمیز باشد مقدار 1 و در غیر این صورت مقدار صفر خواهد داشت')
-    tester_report_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ گزارش تستر',
-                                                help_text='تاریخ گزارش تستر به شمسی.')
-    tester_report_time = models.CharField(null=True, max_length=5, verbose_name='ساعت گزارش تستر',
-                                            help_text='ساعت گزارش تستر به شمسی در قالب HH:MM.')
-    test_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ انجام تست',
-                                                help_text='تاریخ انجام تست به شمسی.')
-    test_time = models.CharField(null=True, max_length=5, verbose_name='ساعت انجام تست',
-                                            help_text='ساعت انجام تست به شمسی در قالب HH:MM.')
-    test_report_description = models.CharField(max_length=1000, verbose_name='توضیحات تست', null=True, blank=True, help_text='توضیحات تست را وارد کنید.')
-    
 
     def get_state_display(self):
         """برگشت مقدار متنی متناظر با کد وضعیت."""
@@ -528,6 +540,220 @@ class ConfigurationChangeRequest(models.Model):
         # اعتبارسنجی توضیحات تغییر
         if not self.change_description:
             raise ValidationError("توضیحات تغییر الزامی است.")
+
+class Task(models.Model):
+    title = models.CharField(max_length=50, verbose_name='عنوان فعالیت')
+    test_required = models.BooleanField(verbose_name='نیازمند تست است؟', default=0,
+                                    help_text='در صورتی که نیاز به تست داشته باشد مقدار یک و در غیر این صورت مقدار صفر خواهد داشت')
+    order_number = models.PositiveSmallIntegerField(verbose_name='شماره ترتیب', default = 1)
+    
+    class Meta:
+        verbose_name = 'تسک'
+        verbose_name_plural = 'تسک ها'
+        managed = True  
+    
+    def __str__(self) -> str:
+        return self.title
+        
+class TaskUser(models.Model):
+    task = models.ForeignKey(to=Task, verbose_name='شناسه تسک', on_delete=models.CASCADE)
+    user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
+                                          db_column='user_nationalcode', on_delete=models.CASCADE)
+    user_role_id = models.ForeignKey(to=Role, db_column='user_role_id' ,verbose_name='سمت کاربر', 
+                                    null=True, related_name='user_role_id',
+                                    help_text='لطفاً سمت فرد کاربر را وارد کنید.', 
+                                    on_delete=models.SET_NULL)
+    user_team_code = models.ForeignKey(to=Team, on_delete=models.SET_NULL, verbose_name='تیم کاربر', 
+                                        null=True, blank=True, 
+                                        help_text='تیم مربوط به کاربر را انتخاب کنید.',
+                                        db_column='user_team_code')
+    ROLE_CHOICES = [
+        ('E', 'مجری'),
+        ('T', 'تستر'),
+    ]    
+    user_role_code = models.CharField(max_length=1,choices=ROLE_CHOICES, verbose_name='سمت کاربر در تسک' )
+    
+    class Meta:
+        verbose_name = 'کاربر تسک'
+        verbose_name_plural = 'کاربران تسک ها'
+        managed = True  
+    
+    def __str__(self) -> str:
+        return self.task      
+
+
+class RequestTask(models.Model):
+    request = models.ForeignKey(to=ConfigurationChangeRequest, 
+                                verbose_name='شناسه درخواست', 
+                                on_delete=models.CASCADE)
+    task = models.ForeignKey(to=Task, verbose_name='شناسه تسک', 
+                            on_delete=models.CASCADE)
+
+    STATUS_CHOICES = [
+        ('DEFINE', 'تعریف'),
+        ('EXERED', 'آماده انتخاب مجری'),
+        ('EXESEL', 'مجری انتخاب شده'),
+        ('TESRED', 'آماده انتخاب تستر'),
+        ('TESSEL', 'تستر انتخاب شده'),
+        ('FINISH', 'انجام موفق'),
+        ('FAILED', 'انجام ناموفق'),
+        
+        
+    ]
+    status_code = models.CharField(max_length=6, verbose_name='وضعیت تسک' , choices=STATUS_CHOICES)
+    
+    class Meta:
+        verbose_name = 'تسک درخواست'
+        verbose_name_plural = 'تسک های درخواست ها'
+        managed = True  
+    
+    def __str__(self) -> str:
+        return f'{self.request} - {self.task}'
+
+
+class TaskUserSelected(models.Model):
+    task_user = models.ForeignKey(to=TaskUser, verbose_name='شناسه کاربر تسک', on_delete=models.CASCADE)
+    request_task = models.ForeignKey(to=RequestTask, verbose_name='شناسه کاربر تسک', on_delete=models.CASCADE)
+    pickup_date = models.DateTimeField(verbose_name='تاریخ و ساعت انتخاب تسک', auto_now_add=True,
+                                       help_text='تاریخ و ساعتی که این تسک توسط کاربر انتخاب شده است')
+    user_report_result = models.BooleanField(null=True, 
+                                             help_text='در صورتی که تست موفقیت آمیز باشد مقدار 1 و در غیر این صورت مقدار صفر خواهد داشت')
+    user_report_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ گزارش تستر',
+                                                help_text='تاریخ گزارش تستر به شمسی.')
+    user_report_time = models.CharField(null=True, max_length=5, verbose_name='ساعت گزارش تستر',
+                                        help_text='ساعت گزارش تستر به شمسی در قالب HH:MM.')
+    user_done_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ انجام تست',
+                                help_text='تاریخ انجام تست به شمسی.')
+    user_done_time = models.CharField(null=True, max_length=5, verbose_name='ساعت انجام تست',
+                                help_text='ساعت انجام تست به شمسی در قالب HH:MM.')
+    user_report_description = models.CharField(max_length=1000, verbose_name='توضیحات تست', null=True, blank=True, 
+                                               help_text='توضیحات تست را وارد کنید.')
+    
+    
+    class Meta:
+        verbose_name = 'کاربر انجام دهنده تسک'
+        verbose_name_plural = 'کاربران انجام دهنده تسک ها'
+        managed = True  
+    
+    def __str__(self) -> str:
+        return self.task_user      
+
+
+
+class RequestTask_ChangeType(models.Model):
+    changetype= models.ForeignKey(to=ChangeType, on_delete=models.CASCADE, 
+                                verbose_name='کد نوع تغییر', null=False)
+    task = models.ForeignKey(to=Task, verbose_name='شناسه تسک', 
+                            on_delete=models.CASCADE)
+    class Meta:
+        verbose_name = 'تسک نوع درخواست'
+        verbose_name_plural = 'تسک های نوع درخواست ها'
+        managed = True  
+    
+    def __str__(self) -> str:
+        return f'{self.request} - {self.task}'
+
+class RequestTaskUser(models.Model):
+    request_task = models.ForeignKey(to=RequestTask, 
+                                verbose_name='شناسه تسک درخواست', 
+                                on_delete=models.CASCADE)
+    user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
+                                          db_column='user_nationalcode', on_delete=models.CASCADE)
+    user_role_id = models.ForeignKey(to=Role, db_column='user_role_id' ,verbose_name='سمت کاربر', 
+                                    null=True,
+                                    help_text='لطفاً سمت فرد کاربر را وارد کنید.', 
+                                    on_delete=models.SET_NULL)
+    user_team_code = models.ForeignKey(to=Team, on_delete=models.SET_NULL, verbose_name='تیم کاربر', 
+                                        null=True, blank=True, 
+                                        help_text='تیم مربوط به کاربر را انتخاب کنید.',
+                                        db_column='user_team_code')
+    STATUS_CHOICES = [
+        ('E', 'مجری'),
+        ('T', 'تستر'),
+    ]    
+    user_role_code = models.CharField(max_length=1, verbose_name='سمت کاربر در تسک' )
+    
+    class Meta:
+        verbose_name = 'کاربر تسک درخواست'
+        verbose_name_plural = 'کاربران تسک های درخواست ها'
+        managed = True  
+    
+    def __str__(self) -> str:
+        return f'{self.request} - {self.task} '
+
+class RequestFlow(models.Model):
+    request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
+                                on_delete=models.CASCADE)
+    user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
+                                          db_column='user_nationalcode', on_delete=models.CASCADE)
+    user_role_id = models.ForeignKey(to=Role, db_column='user_role_id' ,verbose_name='سمت کاربر', 
+                                    null=True, 
+                                    help_text='لطفاً سمت فرد کاربر را وارد کنید.', 
+                                    on_delete=models.SET_NULL)
+    user_team_code = models.ForeignKey(to=Team, on_delete=models.SET_NULL, verbose_name='تیم کاربر', 
+                                        null=True, blank=True, 
+                                        help_text='تیم مربوط به کاربر را انتخاب کنید.',
+                                        db_column='user_team_code')
+    user_role_code = models.ForeignKey(to=ConstValue, on_delete=models.CASCADE, 
+                                       related_name='user_role_code',
+                                       verbose_name='کد سمت کاربر', 
+                                        help_text='کد سمت کاربر',
+                                        db_column='user_role_code') 
+    user_opinion = models.ForeignKey(to=ConstValue, verbose_name='نظر کاربر', 
+                                     related_name='user_opinion',
+                                     on_delete=models.CASCADE)
+    receiver_date = models.DateTimeField(auto_now_add=True, verbose_name='زمان دریافت')
+    send_date = models.DateTimeField(null=True, verbose_name='زمان دریافت')
+    fields_value = models.JSONField(null=True, verbose_name='مقادیر فیلدها', 
+                                    help_text='مقادیر فیلدهای فرم در زمان خروج از کارتابل، به صورت json ذخیره می شود')
+    user_send_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ اعلام نظر کاربر',
+                                                help_text='تاریخ اظهار نظر کاربر به شمسی.')
+    user_send_time = models.CharField(null=True, max_length=5, verbose_name='ساعت اعلام نظر کاربر',
+                                                help_text=' ساعت اظهار نظر کاربر در قالب HH:MM.')
+    user_reject_description = models.CharField(max_length=500, verbose_name='توضیحات رد کاربر', 
+                                                null=True, blank=True, 
+                                                help_text='توضیحات مربوط به رد کاربر را وارد کنید.')
+    class Meta:
+        verbose_name = 'گردش درخواست'
+        verbose_name_plural = 'گردش درخواست ها'
+        managed = True
+
+    def __str__(self):
+        return f"{self.request} در {self.request}"
+    
+class RequestNotifyGroup(models.Model):
+    request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
+                                on_delete=models.CASCADE)
+    notify_group = models.ForeignKey(to=NotifyGroup, verbose_name='شناسه گروه اطلاع رسانی'
+                                     ,db_column='notify_group_code', on_delete=models.CASCADE)
+    by_email = models.BooleanField(verbose_name='اطلاع رسانی از طریق ایمیل', default=True)
+    by_sms = models.BooleanField(verbose_name='اطلاع رسانی از طریق پیامک', default=False)
+    class Meta:
+        verbose_name = 'گروه اطلاع رسانی درخواست'
+        verbose_name_plural = 'گروه های اطلاع رسانی درخواست ها'
+        managed = True
+
+    def __str__(self):
+        return f"{self.request} در {self.notify_group}"   
+
+class RequestNotifyGroup_ChangeType(models.Model):
+    request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
+                                on_delete=models.CASCADE)
+    notify_group = models.ForeignKey(to=NotifyGroup, verbose_name='شناسه گروه اطلاع رسانی'
+                                     ,db_column='notify_group_code', on_delete=models.CASCADE)
+    by_email = models.BooleanField(verbose_name='اطلاع رسانی از طریق ایمیل', default=True)
+    by_sms = models.BooleanField(verbose_name='اطلاع رسانی از طریق پیامک', default=False)
+    changetype = models.ForeignKey(ChangeType, on_delete=models.CASCADE, 
+                                    verbose_name='کد نوع تغییر', null=False)
+     
+    class Meta:
+        verbose_name = 'گروه اطلاع رسانی درخواست نوع درخواست'
+        verbose_name_plural = 'گروه های اطلاع رسانی درخواست ها نوع درخواست'
+        managed = True
+
+    def __str__(self):
+        return f"{self.request} در {self.notify_group}"   
+
 
 class RequestCorp_ChangeType(models.Model):
     changetype = models.ForeignKey(ChangeType, on_delete=models.CASCADE, 

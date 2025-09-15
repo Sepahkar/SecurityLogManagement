@@ -1,0 +1,86 @@
+{% load static %}
+{% extends "base.html" %}
+
+{% block title %}تست پیام‌ها{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>تست سیستم پیام‌ها</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <h3>تست پیام‌های مختلف</h3>
+            <button class="btn btn-success mb-2" onclick="showSuccess('این یک پیام موفقیت است!', 'موفقیت')">
+                پیام موفقیت
+            </button>
+            <br>
+            <button class="btn btn-danger mb-2" onclick="showError('این یک پیام خطا است!', 'خطا')">
+                پیام خطا
+            </button>
+            <br>
+            <button class="btn btn-warning mb-2" onclick="showWarning('این یک پیام هشدار است!', 'هشدار')">
+                پیام هشدار
+            </button>
+            <br>
+            <button class="btn btn-info mb-2" onclick="showInfo('این یک پیام اطلاعات است!', 'اطلاعات')">
+                پیام اطلاعات
+            </button>
+            <br>
+            <button class="btn btn-primary mb-2" onclick="showConfirm('آیا از این عملیات اطمینان دارید؟', 'تایید', function() { showSuccess('عملیات تایید شد!'); })">
+                پیام تایید
+            </button>
+        </div>
+        
+        <div class="col-md-6">
+            <h3>تست پیام‌های context</h3>
+            <p>این پیام‌ها از context Django نمایش داده می‌شوند:</p>
+            
+            {% if message %}
+                <div class="alert alert-info">
+                    پیام خطا در context: {{ message }}
+                </div>
+            {% endif %}
+            
+            {% if success_message %}
+                <div class="alert alert-success">
+                    پیام موفقیت در context: {{ success_message }}
+                </div>
+            {% endif %}
+            
+            {% if warning_message %}
+                <div class="alert alert-warning">
+                    پیام هشدار در context: {{ warning_message }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="/ConfigurationChangeRequest/request/simple/" class="btn btn-primary">
+                بازگشت به فرم درخواست
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // تست نمایش پیام‌های context
+    {% if message %}
+        console.log('نمایش پیام خطا از context');
+        showError("{{ message }}", "خطا");
+    {% endif %}
+    
+    {% if success_message %}
+        console.log('نمایش پیام موفقیت از context');
+        showSuccess("{{ success_message }}", "موفقیت");
+    {% endif %}
+    
+    {% if warning_message %}
+        console.log('نمایش پیام هشدار از context');
+        showWarning("{{ warning_message }}", "هشدار");
+    {% endif %}
+});
+</script>
+{% endblock %}

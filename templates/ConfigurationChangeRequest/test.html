@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>تست توابع</title>
+    <script>
+        const functionParams = JSON.parse(document.getElementById('functionParams').textContent);
+
+        function showInputs() {
+            const functionSelect = document.getElementById('functionSelect');
+            const selectedFunction = functionSelect.value;
+            const paramsDiv = document.getElementById('params');
+            paramsDiv.innerHTML = ''; // Clear previous inputs
+
+            const functionParams = functionParams[selectedFunction] || [];
+            functionParams.forEach(param => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = param;
+                input.name = param;
+                paramsDiv.appendChild(input);
+            });
+        }
+
+        function callFunction() {
+            const functionSelect = document.getElementById('functionSelect');
+            const selectedFunction = functionSelect.value;
+            const params = {};
+            const inputs = document.querySelectorAll('#params input');
+            inputs.forEach(input => {
+                params[input.name] = input.value;
+            });
+
+            fetch(`/call_function/${selectedFunction}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(params)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').innerText = data.output;
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>تست توابع</h1>
+    <select id="functionSelect" onchange="showInputs()">
+        <option value="">انتخاب تابع</option>
+        {% for name in functions.keys %}
+            <option value="{{ name }}">{{ name }}</option>
+        {% endfor %}
+    </select>
+
+    <div id="params"></div>
+    <button onclick="callFunction()">فراخوانی تابع</button>
+
+    <h2>خروجی:</h2>
+    <div id="output"></div>
+
+    <script id="functionParams" type="application/json">{{ function_params|safe }}</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}مشاهده درخواست{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>مشاهده درخواست تغییرات</h2>
+    
+    {% if request %}
+    <div class="card">
+        <div class="card-header">
+            <h5>اطلاعات درخواست</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>عنوان:</strong> {{ request.change_title }}</p>
+                    <p><strong>نوع تغییر:</strong> {{ request.change_type.change_type_title }}</p>
+                    <p><strong>وضعیت:</strong> {{ request.get_status_code_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>درخواست دهنده:</strong> {{ request.requestor_nationalcode.fullname }}</p>
+                    <p><strong>تاریخ ایجاد:</strong> {{ request.changing_date }}</p>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <p><strong>توضیحات:</strong></p>
+                    <p>{{ request.change_description }}</p>
+                </div>
+            </div>
+            
+            {% if mode == 'UPDATE' %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6>عملیات:</h6>
+                    <button class="btn btn-success" onclick="performAction('CON')">تایید</button>
+                    <button class="btn btn-warning" onclick="performAction('RET')">بازگشت</button>
+                    <button class="btn btn-danger" onclick="performAction('REJ')">رد</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">درخواست یافت نشد.</div>
+    {% endif %}
+</div>
+
+<script>
+function performAction(action) {
+    if (confirm('آیا از انجام این عملیات اطمینان دارید؟')) {
+        const formData = new FormData();
+        formData.append('action', action);
+        
+        fetch('/ConfigurationChangeRequest/request/action/{{ request.id }}/' + action + '/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('خطا: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطا در انجام عملیات');
+        });
+    }
+}
+</script>
+{% endblock %}
