@@ -1283,7 +1283,7 @@ class FormManager:
             data["committee"] = committee
 
             corps = m.Corp.objects.all()
-            teams = m.Team.objects.all()
+            teams = m.Team.objects.filter(is_active=True)
             data["corps"] = corps
             data["teams"] = teams
 

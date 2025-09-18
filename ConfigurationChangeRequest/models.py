@@ -9,6 +9,9 @@ from django.utils import timezone
 class BaseModel(models.Model):
     """
     این مدل 4 فیلد مربوط به ایجاد و تغییرات را به جدول مربوطه اضافه می کند
+    هر کلاسی که از این کلاس ارث ببرد به صورت خودکار فیلدهای تاریخ ایجاد، تاریخ تغییر، کاربر ایجاد کننده و آخرین کاربر تغییر دهنده را دریافت می کند
+    تاریخ ایجاد و تاریخ تغییر به صورت خودکار مقداردهی می گردد
+    ولی کاربر ایجاد کننده و کاربر تغییر دهنده باید توسط کدی که برنامه نویس می نویسد مدیریت شوند
     """
     create_date = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد',)
     modify_date = models.DateTimeField(auto_now=True, verbose_name='تاریخ آخرین تغییر')
@@ -32,6 +35,11 @@ class BaseModel(models.Model):
         abstract = True
 
 class User(models.Model):
+    """
+    این جدول دربردارنده اطلاعات کلیه کاربران سازمان است
+    اطلاعات این جدول به صورت خودکار از سیستم منابع انسانی تکمیل می شود 
+    نیازی به اینکه کاربر بتواند رکوردهای این جدول را تغییر دهد وجود ندارد
+    """
     national_code = models.CharField(max_length=10, primary_key=True, verbose_name='کد ملی', 
                                     null=False, help_text='لطفاً کد ملی خود را وارد کنید.',
                                     validators=[v.NationalCode_Validator])
@@ -53,6 +61,12 @@ class User(models.Model):
         return f"{self.first_name} {self.last_name} ({self.national_code})"
 
 class UserTeamRole(models.Model):
+    """
+    در این جدول سمت های جاری کلیه کاربران قرار دارد
+    اطلاعات این جدول از سیستم منابع انسانی به صورت خودکار تغییر می گردد و نیازی نیست که کاربر چیزی را تغییر دهد
+    از اطلاعات این جدول برای پیدا کردن مدیر مستقیم فرد درخواست دهنده استفاده می کنیم
+
+    """
     national_code = models.ForeignKey(to='user', db_column='national_code', verbose_name='کد ملی کاربر', related_name='user', on_delete=models.CASCADE)    
     role_id = models.IntegerField(verbose_name="شناسه سمت")
     team_code = models.ForeignKey('Team', on_delete=models.SET_NULL, verbose_name='تیم کاربر', null=True, blank=True, help_text='تیم مربوط به کاربر را انتخاب کنید.', db_column='team_code')
@@ -67,6 +81,22 @@ class UserTeamRole(models.Model):
         return f"{self.role_title} {self.team_code.team_name}"
 
 class ConstValue(models.Model):
+    """
+        کلیه اطلاعات مربوط به مقادیر ثابت پروژه در این جدول ذخیره می شود
+        این اطلاعات شامل مواردی می شوند که کومبوها و یا دکمه های رادیویی را نشان می دهند
+        مثلا اولویت تغییر (استاندارد، فوری، اضطراری)
+        نحوه ذخیره سازی به این صورت است که یک رکورد مادر داریم (مثلا با عنوان «اولویت تغییر» که دارای یک کد Priority است.)
+        رکوردهای فرزند (مثلا استاندارد، فوری، اضطراری) در ذیل این رکورد ثبت می شوند و مقدار فیلد parent_id
+        آنها برابر با فیلد id رکورد مادر است
+        همچنین کد آنها هم ترکیبی از کد مادر و فرزند است. مثلا:
+        Priority_Standard: اولویت استاندارد
+        Priority_Urgent: اولویت فوری
+        Priority_Emergency: اولویت اضطراری
+        یک مقدار ثابت را نمی توان پاک کرد، ولی می توان غیر فعال کرد
+        همچنین می توان ترتیب نمایش انها را با استفاده از فیلد
+        OrderNumber
+        تغییر داد
+    """
     class Meta:
         verbose_name = "مقدار ثابت"
         verbose_name_plural = "مقادیر ثابت"
@@ -85,6 +115,11 @@ class ConstValue(models.Model):
         return self.Caption
 
 class Corp(models.Model):
+    """
+    لیست شرکت ها در این جدول ذخیره می شود. 
+    این اطلاعات از سیستم EIT
+    به صورت خودکار تکمیل می شود و نیازی نیست که کاربر رکوردی را ویرایش کند
+    """
     corp_code = models.CharField(max_length=3, primary_key=True, verbose_name='کد شرکت', null=False, help_text='کد منحصر به فرد شرکت را وارد کنید.')
     corp_name = models.CharField(max_length=100, verbose_name='نام شرکت', null=False, help_text='نام شرکت را وارد کنید.')
 
@@ -98,9 +133,15 @@ class Corp(models.Model):
         return self.corp_name
 
 class Team(models.Model):
+    """
+    اطلاعات کلیه تیم ها در این جدول ذخیره می شود
+    این جدول به صورت خودکار از HR مقدار می گیرد
+    این امکان وجود دارد که یک تیم فعال یا غیر فعال شود
+
+    """
     team_code = models.CharField(max_length=3, primary_key=True, verbose_name='کد تیم', null=False, help_text='کد منحصر به فرد تیم را وارد کنید.')
     team_name = models.CharField(max_length=100, verbose_name='نام تیم', null=False, help_text='نام تیم را وارد کنید.')
-
+    is_active = models.BooleanField(default=True, verbose_name='فعال است')
     class Meta:
         verbose_name = 'تیم'
         verbose_name_plural = 'تیم‌ها'
@@ -110,6 +151,11 @@ class Team(models.Model):
         return self.team_name
 
 class Role(models.Model):
+    """
+    این جدول حاوی اطلاعات سمت های سازمانی است
+    این اطلاعات از جدول سمت ها در سیستم منابع انسانی به صورت خودکار تکمیل می شود
+    نیازی به تغییر اطلاعات این جدول نیست
+    """
     role_id = models.IntegerField(primary_key=True, verbose_name='شناسه سمت')
     role_title = models.CharField(max_length=150, verbose_name='عنوان سمت')
 
@@ -122,6 +168,13 @@ class Role(models.Model):
         return self.role_title
 
 class Committee(models.Model):
+    """
+    اطلاعات کمیته ها در این جدول ذخیره می شود
+    ممکن است نیاز باشد کمیته جدیدی اضافه شود و یا دبیر یک کمیته تغییر کند
+    نباید امکان حذف کمیته وجود داشته باشد، فقط می شود کمیته ای که وجود دارد را غیر فعال کرد
+    فعلا سابقه ای برای تغییرات دبیر کمیته وجود ندارد
+    ولی در صورت نیاز باید سوابق تغییرات دبیرکمیته در یک جدول دیگر ذخیره شود
+    """
     title = models.CharField(max_length=50, verbose_name='عنوان کمیته', null=False)
     administrator_nationalCode = models.ForeignKey(to='User', on_delete=models.SET_NULL, 
                                             related_name='administrator', null=True,
@@ -137,6 +190,15 @@ class Committee(models.Model):
         return self.title    
 
 class ChangeType(models.Model):
+    """ 
+    در این جدول به ازای هر نوع درخواست، اطلاعات پیش فرض مربوطه ذخیره می شود
+    این جدول در حقیقت الگوهای درخواست را مشخص می کند
+    وقتی کاربر یک الگو را انتخاب می کند، به صورت پیش فرض اطلاعات فیلدهای درخواست بر اساس آن تکمیل می گردد
+    البته کاربر مدیر مربوطه می تواند حسب نیاز این اطلاعات را ویرایش نماید
+    در حال حاضر هیچ جدولی برای ذخیره سوابق تغییرات این الگوها نداریم.
+    یعنی اگر کسی یک الگو را تغییر دهد، معلوم نمی شود که چه موقعی چه مقداری توسط چه کسی ویرایش شده است
+    جداول وابسته زیادی (مانند جدول تسک ها، شرکت های مرتبط و ...) به این جدول وجود دارند
+    """
     code = models.CharField(max_length=6, verbose_name='کد نوع تغییر', db_column='code',
                             null=True, help_text='لطفاً کد نوع تغییر را وارد کنید.')
     change_type_title = models.CharField(max_length=255, verbose_name='عنوان نوع تغییر', null=True)
@@ -256,6 +318,19 @@ class ChangeType(models.Model):
         return super().clean()
 
 class NotifyGroup(models.Model):
+    """ 
+    این جدول شامل اطلاعات گروه های اطلاع رسانی است
+    یک گروه اطلاع رسانی می تواند شامل یک سمت خاص باشد، مثلا برنامه نویسان
+    یا یک تیم خاص باشد، مثلا تیم خودرو
+    یا هر دو مثلا تحلیل گران تیم درمان
+    در زمانی که قرار است اطلاع رسانی انجام شود، در صورتی که این گروه انتخاب شده باشد
+    اطلاع رسانی به کلیه اعضای آن گروه (کلیه برنامه نویسان، یا کلیه اعضای تیم خودرو، یا تمامی تحلیل گران تیم درمان) انجام می شود
+    همچنین می شود یک گروه تعریف کنیم که سمت و تیم خاصی را شامل نشود، مثلا گروه آدم های مهم!
+    بعدش در جدول
+    NotifyGroupUser
+    مشخص می کنیم که منظورمان چه افرادی است
+    """
+    
     code = models.CharField(verbose_name='کد گروه', max_length=10)
     title = models.CharField(verbose_name='عنوان گروه', max_length=30)
     role_id = models.ForeignKey(to=Role, verbose_name='شناسه سمت', on_delete=models.SET_NULL,
@@ -274,6 +349,11 @@ class NotifyGroup(models.Model):
         return self.title
 
 class NotifyGroupUser(models.Model):
+    """
+    در صورتی که بخواهیم یک گروه تعریف کنیم که شامل افراد خاصی باشد
+    اطلاعات آنها را در این جدول ذخیره می کنیم
+    توجه کنید که سمت و تیم هر فرد را هم باید اینجا ذخیره کنیم
+    """
     notify_group_code = models.ForeignKey(to=NotifyGroup, verbose_name='کد گروه اطلاع رسانی', on_delete=models.CASCADE)
     user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
                                           db_column='user_nationalcode', on_delete=models.CASCADE)
@@ -299,7 +379,16 @@ class NotifyGroupUser(models.Model):
 
 
 class ConfigurationChangeRequest(BaseModel):
-    # اطلاعات درخواست
+    """
+    این جدول اصلی ترین جدول سیستم است
+    کلیه درخواست های تغییرات در این جدول ذخیره می شوند
+    جدوال وابسته هم به این جدول رابطه دارند
+    وقتی کاربر درخواست دهنده نوع تغییر را وارد می کند، اطلاعات از جدول
+    change_type
+    در این جدول کپی می شوند
+    در حال حاضر جدولی برای ذخیره سوابق تغییرات نداریم 
+    """
+    
     doc_id = models.IntegerField(verbose_name='کد سند', null=True, 
                                 help_text='لطفاً کد سند را وارد کنید.')
     STATUS_CHOICES = [
@@ -542,6 +631,10 @@ class ConfigurationChangeRequest(BaseModel):
             raise ValidationError("توضیحات تغییر الزامی است.")
 
 class Task(models.Model):
+    """ 
+    در این جدول اطلاعات تسک هایی که در راستای تغییرات مختلف باید انجام شوند وجود دارد
+    توجه کنید که ممکن است ترکیبی از این تسک ها در یک درخواست انجام شوند که در جداول بعدی مشخص می شود
+    """
     title = models.CharField(max_length=50, verbose_name='عنوان فعالیت')
     test_required = models.BooleanField(verbose_name='نیازمند تست است؟', default=0,
                                     help_text='در صورتی که نیاز به تست داشته باشد مقدار یک و در غیر این صورت مقدار صفر خواهد داشت')
@@ -556,6 +649,16 @@ class Task(models.Model):
         return self.title
         
 class TaskUser(models.Model):
+    """
+    در این جدول افراد مرتبط با تسک (تستر یا مجری) مشخص می شود
+    این افراد کسانی هستند که می توانند تسک را انجام داده و یا تست کنند
+    تیم و سمت کاربر را هم ذخیره می کنیم
+    اینکه کاربر نقش تستر و یا مجری دارد در فیلد
+    user_role_code
+    مشخص می شود
+    توجه کنید که این افراد، کاندید هستند، یعنی ممکن است برای یک تسک 5 مجری تعریف شود
+    ولی در نهایت به ازای هر درخواست، فقط یکی از این افراد، مجری آن تسک در آن درخواست خواهد بود     
+    """
     task = models.ForeignKey(to=Task, verbose_name='شناسه تسک', on_delete=models.CASCADE)
     user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
                                           db_column='user_nationalcode', on_delete=models.CASCADE)
@@ -583,6 +686,11 @@ class TaskUser(models.Model):
 
 
 class RequestTask(models.Model):
+    """ 
+    در این جدول تسک های مربوط به یک درخواست درج می شود
+    به صورت پیش فرض این تسک ها بر اساس نوع درخواست تعیین  می شوند
+    ولی مدیر مربوطه می تواند آنها را کم و یا زیاد کند
+    """
     request = models.ForeignKey(to=ConfigurationChangeRequest, 
                                 verbose_name='شناسه درخواست', 
                                 on_delete=models.CASCADE)
@@ -612,6 +720,14 @@ class RequestTask(models.Model):
 
 
 class TaskUserSelected(models.Model):
+    """ 
+    زمانی که یک فرد یک تسک را جهت انجام عملیات مربوطه (اجرای تسک یا تست تسک) انتخاب می کند
+    یک رکورد در این جدول درج می شود
+    همچنین فرد مربوطه باید گزارش، تاریخ انجام تسک و ... را هم وارد کند که در این جدول ذخیره می شود
+    در حال حاضر جدولی نداریم که سوابق تغییرات این جدول در آن ذخیره شود
+    یعنی اگر تستر فرم را به مجری برگرداند و مجری دوباره تسک را انجام دهد
+    فقط تاریخ آخر را خواهیم داشت
+    """
     task_user = models.ForeignKey(to=TaskUser, verbose_name='شناسه کاربر تسک', on_delete=models.CASCADE)
     request_task = models.ForeignKey(to=RequestTask, verbose_name='شناسه کاربر تسک', on_delete=models.CASCADE)
     pickup_date = models.DateTimeField(verbose_name='تاریخ و ساعت انتخاب تسک', auto_now_add=True,
@@ -641,6 +757,10 @@ class TaskUserSelected(models.Model):
 
 
 class RequestTask_ChangeType(models.Model):
+    """ 
+    در این جدول به ازای هر نوع تغییر، تسک های مربوطه ذکر شده است
+    وقتی کاربر یک نوع تغییر را انتخاب می کند، به صورت خودکار کلیه تسک های مربوطه در جدول تسک های آن درخواست ثبت خواهد شد
+    """
     changetype= models.ForeignKey(to=ChangeType, on_delete=models.CASCADE, 
                                 verbose_name='کد نوع تغییر', null=False)
     task = models.ForeignKey(to=Task, verbose_name='شناسه تسک', 
@@ -654,6 +774,16 @@ class RequestTask_ChangeType(models.Model):
         return f'{self.request} - {self.task}'
 
 class RequestTaskUser(models.Model):
+    """ 
+    هر تسک می تواند چند مجری یا تستر داشته باشد
+    اما مدیر مربوطه می تواند تعدادی از آنها را در یک درخواست کم و زیاد کند
+    مثلا یک تسک داریم که علی و حسن و حسین می توانند مجری آن باشند
+    مدیر مربوطه برای یک درخواست خاص به دلیل اینکه حسن به مرخصی رفته است، اسم او را حذف کرده 
+    و اسم لیلا و مینا را اضافه می کند
+    در نتیجه برای این تسک در این درخواست خاص، مجریان می شوند علی، حسین، لیلا و مینا
+    به صورت پیش فرض تمامی افراد مرتبط (مجریان و تسترها) در یک تسک برای یک درخواست ثبت می شوند
+    مدیر مربوطه می تواند آنها را کم و یا زیاد کند
+    """
     request_task = models.ForeignKey(to=RequestTask, 
                                 verbose_name='شناسه تسک درخواست', 
                                 on_delete=models.CASCADE)
@@ -682,6 +812,12 @@ class RequestTaskUser(models.Model):
         return f'{self.request} - {self.task} '
 
 class RequestFlow(models.Model):
+    """ 
+    در این جدول سوابق گردش مدرک ذخیره می شود
+    یعنی مشخص می کند که مثلا مدیر مستقیم درخواست را تایید کرده است
+    یا مدیر مربوطه آن را بازگشت داده است و ...
+    نکته مهم این است که در حال حاضر این موضوع فقط مربوط به گردش درخواست است نه گردش تسک
+    """
     request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
                                 on_delete=models.CASCADE)
     user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
@@ -722,12 +858,18 @@ class RequestFlow(models.Model):
         return f"{self.request} در {self.request}"
     
 class RequestNotifyGroup(models.Model):
+    """
+    در این جدول مشخص می شود که گروه های اطلاع رسانی مربوط به یک درخواست چه موارد است
+    در پایان فرآیند اطلاع رسانی به صورت خودکار به تمامی افراد هر یک از این گروه ها انجام می شود 
+    """
     request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
                                 on_delete=models.CASCADE)
     notify_group = models.ForeignKey(to=NotifyGroup, verbose_name='شناسه گروه اطلاع رسانی'
                                      ,db_column='notify_group_code', on_delete=models.CASCADE)
     by_email = models.BooleanField(verbose_name='اطلاع رسانی از طریق ایمیل', default=True)
     by_sms = models.BooleanField(verbose_name='اطلاع رسانی از طریق پیامک', default=False)
+    by_phone = models.BooleanField(verbose_name='اطلاع رسانی از طریق تلفن گویا', default=False)
+
     class Meta:
         verbose_name = 'گروه اطلاع رسانی درخواست'
         verbose_name_plural = 'گروه های اطلاع رسانی درخواست ها'
@@ -737,14 +879,20 @@ class RequestNotifyGroup(models.Model):
         return f"{self.request} در {self.notify_group}"   
 
 class RequestNotifyGroup_ChangeType(models.Model):
-    request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
-                                on_delete=models.CASCADE)
+    """ 
+    در این جدول گروه های اطلاع رسانی به ازای هر نوع درخواست مشخص می شود
+    زمانی که کاربر نوع درخواست را مشخص می کند به صورت خودکار تمامی گروه های اطلاع رسانی مربوطه
+    برای آن درخواست کپی می شود
+    مدیر مربوطه میتواند این گروه ها را کم و یا زیاد کند
+    """
+    changetype = models.ForeignKey(ChangeType, on_delete=models.CASCADE, 
+                                    verbose_name='کد نوع تغییر', null=False)
     notify_group = models.ForeignKey(to=NotifyGroup, verbose_name='شناسه گروه اطلاع رسانی'
                                      ,db_column='notify_group_code', on_delete=models.CASCADE)
     by_email = models.BooleanField(verbose_name='اطلاع رسانی از طریق ایمیل', default=True)
     by_sms = models.BooleanField(verbose_name='اطلاع رسانی از طریق پیامک', default=False)
-    changetype = models.ForeignKey(ChangeType, on_delete=models.CASCADE, 
-                                    verbose_name='کد نوع تغییر', null=False)
+    by_phone = models.BooleanField(verbose_name='اطلاع رسانی از طریق تلفن گویا', default=False)
+    
      
     class Meta:
         verbose_name = 'گروه اطلاع رسانی درخواست نوع درخواست'
@@ -756,6 +904,10 @@ class RequestNotifyGroup_ChangeType(models.Model):
 
 
 class RequestCorp_ChangeType(models.Model):
+    """
+    در این جدول مشخص می شود که شرکت های مرتبط با نوع درخواست چه شرکت هایی هستند
+    زمانی که کاربر نوع درخواست را مشخص می کند، کلیه شرکت های مربوطه در لیست شرکت های مرتبط با آن درخواست کپی می شوند 
+    """
     changetype = models.ForeignKey(ChangeType, on_delete=models.CASCADE, 
                                         verbose_name='کد نوع تغییر', null=False)
     corp_code = models.ForeignKey(Corp, on_delete=models.CASCADE, verbose_name='شرکت', null=False, db_column='corp_code')
@@ -769,6 +921,11 @@ class RequestCorp_ChangeType(models.Model):
         return f"{self.corp_code} در {self.request}"
 
 class RequestTeam_ChangeType(models.Model):
+    """
+        در این جدول اطلاعات تیم های مرتبط با نوع درخواست ذخیره می شود
+        زمانی که کاربر یک نوع درخواست را انتخاب می کند، اطلاعات کلیه تیم های مرتبط برای آن درخواست کپی می شود
+        کاربر بعدا می تواند برای آن درخواست خاص، تیم ها را کم و یا اضافه نماید
+    """
     changetype= models.ForeignKey(ChangeType, on_delete=models.CASCADE, 
                                         verbose_name='کد نوع تغییر', null=False)
     team_code = models.ForeignKey(Team, on_delete=models.CASCADE, verbose_name='تیم', null=False, db_column='team_code')
@@ -782,6 +939,13 @@ class RequestTeam_ChangeType(models.Model):
         return f"{self.team_code} در {self.request}"
 
 class RequestExtraInformation_ChangeType(models.Model):
+    """ 
+    به ازای هر درخواست یک سری اطلاعات تکمیلی داریم
+    مثلا اطلاعات انواع مراکز داده در محل تغییر (ارتباطات مخابراتی، شبکه و ...) در این جدول ذخیره می شوند
+    البته مقدار این جدول مربوط به نوع تغییر است.
+    وقتی کاربر یک نوع تغییر را انتخاب می کند، کلیه اطلاعات تکمیلی درخواست در آن درخواست کپی می شود
+    بعدا مدیر مربوطه می تواند این اطلاعات را ویرایش کند
+    """
     extra_info = models.ForeignKey(to='ConstValue', on_delete=models.CASCADE, null=False, verbose_name='شناسه اطلاعات تکمیلی')
     change_type = models.ForeignKey(to='ChangeType', on_delete=models.CASCADE, null=False, verbose_name='شناسه نوع درخواست')
     class Meta:
@@ -792,6 +956,11 @@ class RequestExtraInformation_ChangeType(models.Model):
         return f'{self.change_type.change_type_title} - {self.extra_info.Caption}'
 
 class RequestCorp(models.Model):
+    """
+        این جدول دربردارنده اطلاعات شرکت های مرتبط با یک درخواست است
+        در ابتدا این موارد با توجه به نوع درخواست که توسط کاربر مشخص می شود تعیین می شوند
+        بعدا مدیر مربوطه می تواند آنها را تغییر دهد
+    """
     request = models.ForeignKey(ConfigurationChangeRequest, on_delete=models.CASCADE, verbose_name='درخواست', null=False)
     corp_code = models.ForeignKey(Corp, on_delete=models.CASCADE, verbose_name='شرکت', null=False, db_column='corp_code')
 
@@ -804,6 +973,11 @@ class RequestCorp(models.Model):
         return f"{self.corp_code} در {self.request}"
 
 class RequestTeam(models.Model):
+    """ 
+        این جدول دربردارنده اطلاعات تیم های مرتبط با یک درخواست است
+        در ابتدا این موارد با توجه به نوع درخواست که توسط کاربر مشخص می شود تعیین می شوند
+        بعدا مدیر مربوطه می تواند آنها را تغییر دهد
+    """
     request = models.ForeignKey(ConfigurationChangeRequest, on_delete=models.CASCADE, verbose_name='درخواست', null=False)
     team_code = models.ForeignKey(Team, on_delete=models.CASCADE, verbose_name='تیم', null=False, db_column='team_code')
 
@@ -817,6 +991,13 @@ class RequestTeam(models.Model):
 
 
 class RequestExtraInformation(models.Model):
+    """ 
+        به ازای هر درخواست یک سری اطلاعات تکمیلی داریم
+        مثلا اطلاعات انواع مراکز داده در محل تغییر (ارتباطات مخابراتی، شبکه و ...) در این جدول ذخیره می شوند
+        البته مقدار این جدول مربوط به نوع تغییر است.
+        وقتی کاربر یک نوع تغییر را انتخاب می کند، کلیه اطلاعات تکمیلی درخواست در آن درخواست کپی می شود
+        بعدا مدیر مربوطه می تواند این اطلاعات را ویرایش کند
+    """    
     extra_info = models.ForeignKey(to=ConstValue, on_delete=models.CASCADE, null=False, verbose_name='شناسه اطلاعات تکمیلی')
     request = models.ForeignKey(to='ConfigurationChangeRequest', on_delete=models.CASCADE, null=False, verbose_name='شناسه درخواست')
     class Meta:

@@ -2,15 +2,14 @@
 {%  load static %}
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.css" >
-    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.rtl.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.min.css" >
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/jquery-confirm.min.css" >
-    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/fontawesome.css" >
-    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/solid.css" >
-    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/brands.css" >
-    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/change-request.css" >
-    <link rel="stylesheet" href="/static/ConfigurationChangeRequest/scss/select2.scss">
-    <link rel="stylesheet" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/all.min.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/select2.scss">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
+    <!-- Extra CSS -->
+    {% block extra_css %}{% endblock %}
+
     <title>{% if page_title %}{{ page_title }}{% else %}درخواست تغییرات{% endif %}</title>
 </head>
 <body>
@@ -60,11 +59,24 @@
 
     {% block main_content%}
     {% endblock %}
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p>&copy; 2024 سیستم مدیریت درخواست تغییرات. تمامی حقوق محفوظ است.</p>
+        </div>
+    </footer>
+
 </form>
 </body>
 <script src="/static/ConfigurationChangeRequest/js/jquery-3.6.0.min.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/jquery-confirm.min.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/select2.min.js"></script>
-<script src="/static/ConfigurationChangeRequest/js/change-request.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/message-handler.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/bootstrap.bundle.min.js"></script>
+
+    
+    <!-- Custom JavaScript -->
+    {% block extra_js %}{% endblock %}
 
 </html>

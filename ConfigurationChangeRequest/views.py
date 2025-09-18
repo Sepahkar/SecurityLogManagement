@@ -262,11 +262,11 @@ def get_simple_form_data(request):
     current_user_nationalcode = current_user
 
     form_data = {
-        'request_id': request.POST.get('requestor_id', -1), 
+        'request_id': int(request.POST.get('request_id', -1)), 
         'change_title': request.POST.get('change_title',''),
-        'change_type': int(request.POST.get('change_type')),
+        'change_type': int(request.POST.get('change_type', -1)),
         'change_description': request.POST.get('change_description',''),
-        'user_team_role': request.POST.get('user_team_role'),
+        'user_team_role': request.POST.get('user_team_role',''),
         'action': request.POST.get('action','CON'),
         'user_nationalcode': current_user_nationalcode
     }
@@ -550,6 +550,11 @@ def request_full_view(request, request_id, data):
     # بارگذاری داده‌های فرم
     if not data:
         data = form_manager.load_form_data(request_id, current_user_nationalcode)
+    
+    # اضافه کردن لیست کاربران برای کومبو
+    if 'all_users' in data:
+        data['users'] = data['all_users']
+    
     return render(request, 'ConfigurationChangeRequest/request-full.html', data)
 
 def task_select_view(request, request_id, task_id):
