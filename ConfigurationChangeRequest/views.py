@@ -442,6 +442,7 @@ def request_view(request, request_id):
     if request_obj.request_id is None or request_obj.request_id < 0:
         return render(request, 'ConfigurationChangeRequest/404.html', data)    
     
+    # ممکن است در زمان ایجاد درخواست، با خطا مواجه شده باشد
     if request_obj.error_message:
         return JsonResponse({'success': False, 'message': request_obj.error_message})
     
