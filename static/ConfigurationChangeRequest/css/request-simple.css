@@ -153,3 +153,57 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/******************User info**************/
+.user-info
+{
+    display:flex;
+    align-items: flex-start;
+    margin-bottom: 50px;
+}
+.user-info .user-avatar
+{
+  text-align: center;
+  margin-left: 20px;   
+  flex: 0 0 100px; 
+}
+.user-info .personnel-avatar {
+    width: 100px;
+    height:105px;
+    border-radius: 50%;
+ 
+}
+.user-info .user-information
+{
+    flex: 1; 
+    margin-right: 20px;
+}
+.user-info .user-information [name="requestor_user_team_role"]
+{
+    width: 250px;
+}
+.user-info .user-information label,
+.user-info .user-information span,
+.user-info .user-information select {
+    display: inline-block;
+    margin-left: 10px;
+    margin-bottom: 5px;
+}
+
+.user-info .user-information label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 120px;
+}
+
+.user-info .user-information .field-row {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.user-info .user-information .field-row label,
+.user-info .user-information .field-row span,
+.user-info .user-information .field-row select {
+    display: inline-block;
+    margin-left: 10px;
+}

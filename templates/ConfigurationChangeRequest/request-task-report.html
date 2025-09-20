@@ -1,0 +1,64 @@
+{% extends 'ConfigurationChangeRequest/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}درخواست تغییرات - گزارش تسک{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'ConfigurationChangeRequest/css/request-task-report.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block main_content %}
+<div class="request-task-report-container">
+    {% if success %}
+        {% include 'ConfigurationChangeRequest/request-info.html' %}
+    <div class="task-info-box mb-4">
+        <div class="row mb-2">
+            <div class="col-4 label-title">شناسه تسک:</div>
+            <div class="col-8">{{ task.id }}</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-4 label-title">عنوان تسک:</div>
+            <div class="col-8">{{ task.name }}</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-4 label-title">تاریخ انتخاب تسک:</div>
+            <div class="col-8">{{ task.selected_date|jalali_date }}</div>
+        </div>
+    </div>
+
+    <div class="task-report-box mb-4">
+        <form method="post" id="task-report-form">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-4 label-title">تاریخ انجام تسک:</div>
+                <div class="col-8">
+                    <input type="text" class="form-control" name="done_date" id="done_date" value="{{ report.done_date|default_if_none:'' }}" placeholder="تاریخ انجام را وارد کنید">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-4 label-title">گزارش انجام:</div>
+                <div class="col-8">
+                    <textarea class="form-control" name="report_text" id="report_text" rows="4" placeholder="گزارش انجام تسک را وارد کنید">{{ report.report_text|default_if_none:'' }}</textarea>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="button" class="btn btn-secondary mx-2" onclick="window.history.back();">بازگشت</button>
+                    <button type="submit" class="btn btn-success">تایید</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% else %}
+        {% if message %}
+            <h1 class="error">{{message}}</h1>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'ConfigurationChangeRequest/js/request-task-report.js' %}"></script>
+{% endblock %}
+
+    

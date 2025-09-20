@@ -1,0 +1,64 @@
+<div class="col-12 requestor user-info">
+    <div class="title">اطلاعات درخواست</div>
+    <hr/>
+    <div class="content">
+        <div class="row">
+            <div class="user-avatar col-6">
+                <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.requestor_nationalcode.username|split:'@' }}.jpg" 
+                alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}" class="personnel-avatar">
+            </div>
+            <div class="user-information col-6">
+                <input type="hidden" name="requestor_user_nationalcode" value="{{request.requestor_nationalcode.national_code}}"/>
+                <span>{{request.requestor_nationalcode.fullname}}</span>
+                <span>{{request.requestor_role_id.role_title}}</span> تیم
+                {{request.requestor_team_code.team_name}}</span>
+            </div>
+        </div>
+        <div class="col-12">
+            <div>
+                <div class="row">
+                    <div class="col-4">
+                        <span class="label-title">عنوان تغییر:</span>
+                    </div>
+                    <div class="col-8">
+                        {{ request.change_title }}
+                        <!--
+                         چون باید اطلاعات برگشت داده شود، در یک
+                        input hidden
+                        هم ذخیره می کنیم
+                        -->
+                        <input type="hidden" name="change_title" value="{{ request.change_title }}"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">
+                        <span class="label-title">نوع تغییر:</span>
+                    </div>
+                    <div class="col-8">
+                        {{ request.change_type.change_type_title }}
+                        <!--
+                         چون باید اطلاعات برگشت داده شود، در یک
+                        input hidden
+                        هم ذخیره می کنیم
+                        -->
+                        <input type="hidden" name="change_type" value="{{ request.change_type.id }}"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">
+                        <span class="label-title">توضیحات:</span>
+                    </div>
+                    <div class="col-8">
+                        {{ request.change_description }}
+                        <!--
+                         چون باید اطلاعات برگشت داده شود، در یک
+                        input hidden
+                        هم ذخیره می کنیم
+                        -->
+                        <input type="hidden" name="change_description" value="{{ request.change_description }}"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

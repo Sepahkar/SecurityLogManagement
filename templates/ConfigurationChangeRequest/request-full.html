@@ -1,6 +1,6 @@
 {% extends 'ConfigurationChangeRequest/base.html' %}
 {% load static %}
-{% load custom_filters %}
+
 
 {% block title %}درخواست تغییرات - بررسی مدیر مربوطه{% endblock %}
 
@@ -72,7 +72,7 @@
                                                     input hidden
                                                     هم ذخیره می کنیم
                                                     -->
-                                                    <input type="hidden" name="change_یثسزقهحفهخد" value="{{ request.change_description }}"/>
+                                                    <input type="hidden" name="change_description" value="{{ request.change_description }}"/>
                                                 </div>
                                             </div>
                                         </div>

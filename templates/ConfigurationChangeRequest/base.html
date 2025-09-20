@@ -1,5 +1,6 @@
 <html dir="rtl" lang="fa-IR">
 {%  load static %}
+{% load custom_filters %}
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.min.css" >
@@ -7,11 +8,32 @@
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/all.min.css" >
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/select2.scss">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/request.css">
     <!-- Extra CSS -->
     {% block extra_css %}{% endblock %}
 
-    <title>{% if page_title %}{{ page_title }}{% else %}درخواست تغییرات{% endif %}</title>
+    <title>درخواست تغییرات</title>
+    <subtitle>{{ page_title }}</subtitle>
+
+<!-- Meta tags برای انتقال پیام‌های context به JavaScript -->
+{% if message %}
+    <meta name="context-message" content="{{ message }}">
+    {% if success == False %}
+        <meta name="context-success" content="false">
+    {% else %}
+        <meta name="context-success" content="true">
+    {% endif %}
+{% endif %}
+
+{% if success_message %}
+    <meta name="context-success-message" content="{{ success_message }}">
+{% endif %}
+
+{% if warning_message %}
+    <meta name="context-warning-message" content="{{ warning_message }}">
+{% endif %}    
 </head>
+
 <body>
     <form id="requestForm" method="POST" action="">
     <div class="header">
@@ -34,13 +56,6 @@
                 <div class="step-button">
                     <span class="step">{{bc}}</span>
                 </div> 
-                <nav class="breadcrumbs">
-                    {%for bc in breadcrumbs%}
-                    <a href="#home" class="breadcrumbs__item {%if bc.default%}is-active{%endif%}" id="bc-{{bc.order}}">{{bc.name}}</a>
-                    {%if bc.default%}<input type="hidden" id="bc-value" value="bc-{{bc.order}}">{%endif%}
-                    {%endfor%}
-                    
-                </nav>                   
             </div>
             <div class='button-container left col-2'>
                 {% if status == 'INSERT' %}
@@ -48,17 +63,50 @@
                 {% elif status == 'UPDATE' %}
                 <button type="button" class="btn btn-danger" id="reject">رد مدرک</button>
                 {% endif %}
-
             </div>
             <div class='info col-2'>
-                <p><b>شماره درخواست: </b><span>{{request_number}}<span></p>
-                <p><b>تاریخ ثبت درخواست: </b><span>{{request_date}}</span></p>
+                <p><b>شماره درخواست: </b>
+                    <span>
+                        {% if request_number and request_number|to_int > 1 %}
+                            {{ request_number }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </p>
+                <p><b>تاریخ ثبت درخواست: </b>
+                    <span>
+                        {% if request.create_date %}
+                            {{ request.create_date|to_jalali:"%Y/%m/%d" }}
+                        {% else %}
+                            {% now "Y-m-d" as today_gregorian %}
+                            {{ today_gregorian|to_jalali:"%Y/%m/%d" }}
+                        {% endif %}
+                    </span>
+                </p>
             </div>
 
     </div>
 
     {% block main_content%}
     {% endblock %}
+    
+    <!--form buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            {% if mode == 'UPDATE' %}
+                <button type="submit" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'approve')">تایید</button>
+                <button type="submit" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'reject')">رد</button>
+                <button type="button" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'back')">بازگشت</button>
+            {% elif mode != 'READONLY' %}
+                <button type="submit" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')">شروع فرآیند</button>
+                <button type="button" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'back')">بازگشت</button>
+            {% else %}
+                <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+            {% endif %}
+        </div>
+    </div>
+
 
     <!-- Footer -->
     <footer class="bg-light text-center text-muted py-3 mt-5">
@@ -74,6 +122,7 @@
 <script src="/static/ConfigurationChangeRequest/js/select2.min.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/message-handler.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/bootstrap.bundle.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/request.js"></script>
 
     
     <!-- Custom JavaScript -->

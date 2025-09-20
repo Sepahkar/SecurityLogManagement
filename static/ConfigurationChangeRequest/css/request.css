@@ -1,0 +1,167 @@
+/* این فایل شامل استایل های عمومی است که در تمامی فرم ها استفاده می شود */
+
+
+/************** Font style start***************/
+@font-face
+{
+  font-family: Defined-Mina;
+  src: url("../font/MINA_SF.TTF");
+}
+@font-face
+{
+  font-family: Defined-Tabasom;
+  src: url("../font/BTABASSO.TTF");
+}
+@font-face
+{
+  font-family: Defined-Kamran;
+  src: url("../font/BKAMRANB.TTF");
+}
+@font-face
+{
+  font-family: Defined-Farnaz;
+  src: url("../font/FARNAZ.TTF");
+}
+@font-face
+{
+  font-family: Defined-Yekan;
+  src: url("../font/BYekan.TTF");
+}
+@font-face
+{
+  font-family: Defined-Titr;
+  src: url("../font/BTitrBd.TTF");
+}
+@font-face
+{
+  font-family: Defined-Roya;
+  src: url("../font/BRoyaBd.TTF");
+}
+
+@font-face
+{
+  font-family: Defined-Decorative;
+  src: url("../font/Mj_Decorative Bold_ufont.ir.TTF");
+}
+@font-face
+{
+  font-family: Defined-IranNastaliq;
+  src: url("../font/IranNastaliq.TTF");
+}
+@font-face
+{
+  font-family: Defined-Baseet;
+  src: url("../font/FarBaseet.TTF");
+}
+@font-face
+{
+  font-family: Defined-Sepahbod;
+  src: url("../font/Sepahbod.otf");
+}
+@font-face
+{
+  font-family: Defined-Aman;
+  src: url("../font/Far.Aman.ttf");
+}
+@font-face
+{
+  font-family: Defined-Janat;
+  src: url("../font/a-JannatLT-Bold.ttf");
+}
+@font-face
+{
+  font-family: Defined-Salamat;
+  src: url("../font/Salamat.ttf");
+}
+@font-face
+{
+  font-family: Defined-Fani;
+  src: url("../font/Far.Fanni.ttf");
+}
+@font-face
+{
+  font-family: Defined-Arshia;
+  src: url("../font/BArshia.ttf");
+}
+@font-face
+{
+  font-family: Defined-Titr;
+  src: url("../font/BTitrBd.TTF");
+}
+@font-face
+{
+  font-family: Defined-IranSans;
+  src: url("../font/IRANSans_Light.TTF");
+}
+@font-face
+{
+  font-family: Defined-Traffic;
+  src: url("../font/BTraffic.TTF");
+}
+
+/************** Font style end***************/
+
+
+/************** General style start***************/
+body {
+    direction: rtl;
+    font-family: 'Defined-IranSans';
+}
+
+
+/************** General style end***************/
+
+
+
+/************** Header in base start***************/
+
+.header {
+
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+}
+.header #requestForm
+{
+    display: flex;
+    width: 100%;
+    margin-block-end: auto;
+}
+.header .title {
+    font-size: 30px;
+    font-weight: bold;
+    font-family: 'Defined-Titr';
+}
+.header .logo
+{
+    width: 150px;
+}
+
+.header .info {
+    text-align: right;
+
+}
+.header .info p {
+    margin: 0;
+    font-family: 'Defined-Traffic';
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.button-container button{
+  width: 150px;
+}
+.button-container.right {
+  align-items: self-end;
+}
+
+.button-container.left {
+
+}
+/************** Header in base end***************/

@@ -7,11 +7,11 @@ import inspect
 
 requestor = '1280419180'
 manager = '1379150728'
-rel_manger = '1280419180'
-commitee = '1280419180'
+rel_manger = '0081578091'
+commitee = '5228300880'
 executor = '6309920952'
 tester = '0063425750'
-current_user = rel_manger
+current_user = requestor
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -260,50 +260,56 @@ def get_simple_form_data(request):
         request (_type_): درخواست http
     """
     current_user_nationalcode = current_user
+    request_id = int(request.POST.get('request_id')) if request.POST.get('request_id') else -1
+
+    # یک نمونه از شی فرم ایجاد می کنیم
+    objFormManager = FormManager(request_id=request_id)
+
+
 
     form_data = {
-        'request_id': int(request.POST.get('request_id', -1)), 
+        'request_id': request_id, 
         'change_title': request.POST.get('change_title',''),
         'change_type': int(request.POST.get('change_type', -1)),
         'change_description': request.POST.get('change_description',''),
         'user_team_role': request.POST.get('user_team_role',''),
         'action': request.POST.get('action','CON'),
-        'user_nationalcode': current_user_nationalcode
+        'user_nationalcode': current_user_nationalcode,
+        'objFormManager': objFormManager,
+        'requestor_user_nationalcode': request.POST.get('requestor_user_nationalcode'),  # کد ملی ایجاد کننده درخواست
     }
+
+    # سمت و تیم کاربر در قالب یک متغییر بازگشت داده می شود.
+    # CAR-73 : یعنی تیم خودرو و سمتی که شناسه آن 73 است
+    utr = request.POST.get('requestor_user_team_role','')
+    user_team_role = objFormManager.get_user_team_role(utr)
+    if user_team_role['success']:
+        form_data['requestor_team_code']=user_team_role.get('team_code','')
+        form_data['requestor_role_id']=user_team_role.get('role_id',-1)
     
     return form_data
 
 def get_full_form_data(request):
     # دریافت اطلاعات فرم ساده
     form_data = get_simple_form_data(request=request)
-
-    # یک نمونه از شی فرم ایجاد می کنیم
-    objFormManager = FormManager(request_id=form_data.get('request_id', -1))
+    objFormManager :FormManager= form_data['objFormManager']  # اصلاح: استفاده از [] به جای ()
     #*******************************صفحه اول*****************************
     #################################سطر اول#############################
     #-----------------------------قسمت اول-----------------------------
-    # اطلاعات کاربران
-    form_data['requestor_user_nationalcode'] = request.POST.get('requestor_user_nationalcode')  # کد ملی ایجاد کننده درخواست
-    # سمت و تیم کاربر در قالب یک متغییر بازگشت داده می شود.
-    # CAR-73 : یعنی تیم خودرو و سمتی که شناسه آن 73 است
-    utr = request.POST.get('requestor_user_team_role')
-    form_data['requestor_user_team'] = b.get_team_role('T',utr)  #تیم  ایجاد کننده درخواست
-    form_data['requestor_user_role'] = b.get_team_role('R', utr)  # سمت ایجاد کننده درخواست
 
     #-----------------------------قسمت دوم-----------------------------
     # ویژگی های تغییر
-    form_data['classification'] = request.POST.get('classification')  # طبقه‌بندی
-    form_data['change_level'] = request.POST.get('change_level')  # سطح تغییر
-    form_data['priority'] = request.POST.get('priority')  # اولویت
-    form_data['risk_level'] = request.POST.get('risk_level')  # سطح ریسک
-    
+    form_data['classification'] = int(request.POST.get('classification')) if request.POST.get('classification') else None  # طبقه‌بندی
+    form_data['change_level'] = int(request.POST.get('change_level')) if request.POST.get('change_level') else None  # سطح تغییر
+    form_data['priority'] = int(request.POST.get('priority')) if request.POST.get('priority') else None  # اولویت
+    form_data['risk_level'] = int(request.POST.get('risk_level')) if request.POST.get('risk_level') else None  # سطح ریسک
 
     #################################سطر دوم#############################
     #-----------------------------قسمت اول-----------------------------
     # محل تغییر
     form_data['change_location_data_center'] = request.POST.get('change_location_data_center') == 'true'  # محل تغییر: مرکز داده (Boolean)
     # دریافت چک باکس‌های داینامیک برای DataCenter
-    extra_information = b.get_dynamic_checkbox('DataCenter', request)
+    extra_information = objFormManager.get_dynamic_checkbox('DataCenter', request)
     # اطمینان از اینکه extra_information یک لیست است
     if not isinstance(form_data.get('extra_information'), list):
         form_data['extra_information'] = []
@@ -312,7 +318,7 @@ def get_full_form_data(request):
     form_data['change_location_database'] = request.POST.get('change_location_database') == 'true'  # محل تغییر: پایگاه داده (Boolean)
     form_data['change_location_systems'] = request.POST.get('change_location_systems') == 'true'  # محل تغییر: سیستم‌ها (Boolean)
     # دریافت چک باکس‌های داینامیک برای SystemsServices
-    extra_information = b.get_dynamic_checkbox('SystemsServices', request)
+    extra_information = objFormManager.get_dynamic_checkbox('SystemsServices', request)
     # اطمینان از اینکه extra_information یک لیست است
     if not isinstance(form_data.get('extra_information'), list):
         form_data['extra_information'] = []
@@ -324,25 +330,25 @@ def get_full_form_data(request):
     #-----------------------------قسمت دوم-----------------------------
     # دامنه تغییرات
     form_data['need_committee'] = request.POST.get('need_committee') == '1'  # نیاز به کمیته (Boolean)
-    form_data['committee'] = request.POST.get('committee')  # کمیته انتخاب شده
+    form_data['committee'] = int(request.POST.get('committee'))  # کمیته انتخاب شده
     form_data['domain'] = request.POST.get('domain')  # دامنه تغییر
 
     # دریافت چک باکس‌های داینامیک برای تیم‌ها
-    form_data['teams'] = b.get_selected_items('t', request)
+    form_data['teams'] = objFormManager.get_selected_items('t', request)
 
     # دریافت چک باکس‌های داینامیک برای شرکت‌ها
-    form_data['corps'] = b.get_selected_items('c', request)
+    form_data['corps'] = objFormManager.get_selected_items('c', request)
 
     #*******************************صفحه دوم*****************************
     #################################سطر اول#############################
     #-----------------------------قسمت اول-----------------------------
     # زمانبندی تغییرات
-    form_data['changing_duration_hour'] = int(request.POST.get('duration_hour', 0))  # ساعت مدت زمان تغییرات
-    form_data['changing_duration_minute'] = int(request.POST.get('duration_minute', 0))  # دقیقه مدت زمان تغییرات
-    form_data['downtime_duration_hour'] = int(request.POST.get('estimate_downtime_hour', 0))  # ساعت مدت زمان توقف
-    form_data['downtime_duration_minute'] = int(request.POST.get('estimate_downtime_minute', 0))  # دقیقه مدت زمان توقف
-    form_data['downtime_duration_worstcase_hour'] = int(request.POST.get('worstcase_downtime_hour', 0))  # ساعت بدترین مدت زمان توقف
-    form_data['downtime_duration_worstcase_minute'] = int(request.POST.get('worstcase_downtime_minute', 0))  # دقیقه بدترین مدت زمان توقف
+    form_data['changing_duration_hour'] = int(request.POST.get('duration_hour')) if request.POST.get('duration_hour') else None  # ساعت مدت زمان تغییرات
+    form_data['changing_duration_minute'] = int(request.POST.get('duration_minute')) if request.POST.get('duration_minute') else None  # دقیقه مدت زمان تغییرات
+    form_data['downtime_duration_hour'] = int(request.POST.get('estimate_downtime_hour')) if request.POST.get('estimate_downtime_hour') else None  # ساعت مدت زمان توقف
+    form_data['downtime_duration_minute'] = int(request.POST.get('estimate_downtime_minute')) if request.POST.get('estimate_downtime_minute') else None  # دقیقه مدت زمان توقف
+    form_data['downtime_duration_worstcase_hour'] = int(request.POST.get('worstcase_downtime_hour')) if request.POST.get('worstcase_downtime_hour') else None  # ساعت بدترین مدت زمان توقف
+    form_data['downtime_duration_worstcase_minute'] = int(request.POST.get('worstcase_downtime_minute')) if request.POST.get('worstcase_downtime_minute') else None  # دقیقه بدترین مدت زمان توقف
     form_data['change_date'] = request.POST.get('request_date')  # تاریخ تغییر
     form_data['change_time'] = request.POST.get('request_time')  # تاریخ تغییر
     # ############################تست تاریخ شمسی#####################
@@ -375,7 +381,7 @@ def get_full_form_data(request):
     form_data['role_back_plan_description'] = request.POST.get('RollbackPlan')  # توضیحات برنامه بازگشت
 
     #---------------------------نظرم مدیر---------------------------------
-    form_data['manager_opinion'] = request.POST.get('manager_opinion')
+    form_data['manager_opinion'] = int(request.POST.get('manager_opinion')) if request.POST.get('manager_opinion') else None
     form_data['manager_reject_description'] = request.POST.get('manager_reject_description')
 
     

@@ -394,7 +394,7 @@ class ConfigurationChangeRequest(BaseModel):
     STATUS_CHOICES = [
         ('DRAFTD', 'پیش نویس'),
         ('DIRMAN', 'اظهار نظر مدیر مستقیم'),
-        ('RELMAN', 'اظهار نظر مدیر مستقیم'),
+        ('RELMAN', 'اظهار نظر مدیر مربوطه'),
         ('COMITE', 'اظهار نظر کمیته'),
         ('DOTASK', 'انجام تسک ها'),
         ('FINISH', 'خاتمه یافته'),

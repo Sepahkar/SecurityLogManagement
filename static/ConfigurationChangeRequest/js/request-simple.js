@@ -313,4 +313,22 @@ $(document).ready(function() {
         showErrorMessage: showErrorMessage,
         showWarningMessage: showWarningMessage
     };
+
+    $('#change_type').change(function() {
+        // وقتی نوع تغییر عوض شد، مقدار data-title و data-description گزینه انتخاب شده را می‌گیریم
+        var selectedOption = $(this).find('option:selected');
+        var change_title = selectedOption.data('title');
+        var change_description = selectedOption.data('description');
+
+        // اگر مقدار change_title نال نبود، در input مربوطه قرار بده
+        if (change_title != null) {
+            $('#change_title').val(change_title);
+        }
+
+        // اگر مقدار change_description نال نبود، در textarea مربوطه قرار بده
+        if (change_description != null) {
+            $('#change_description').val(change_description);
+        }
+    });
+
 });
