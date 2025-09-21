@@ -56,6 +56,13 @@ class User(models.Model):
     def fullname(self):
         return f"{self.first_name} {self.last_name}"
 
+    @property
+    def fullname_gender(self):
+        gender = 'آقای'
+        if not self.gender:
+            gender = 'خانم'
+            
+        return f"{gender} {self.first_name} {self.last_name}"
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.national_code})"

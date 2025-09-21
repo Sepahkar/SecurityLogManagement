@@ -1,6 +1,6 @@
 {% extends 'ConfigurationChangeRequest/base.html' %}
 {% load static %}
-
+{% load custom_filters %}
 
 {% block title %}درخواست تغییرات - بررسی مدیر مربوطه{% endblock %}
 
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block main_content %}
-<div class="request-full-container">
+    <div class="request-full-container">
     {% if success %}
         <div class="container">
             <div id="pnl-step-1" >
@@ -648,21 +648,14 @@
                 </div>
 
             </div>
-            <div class="col-12">
-                {% if mode == 'UPDATE' %}
-                    <button type="submit" name="action" value="approve" class="btn btn-success" onclick="confirm()">تایید</button>
-                    <button type="submit" name="action" value="reject" class="btn btn-danger ms-2" onclick="reject()">رد</button>
-                    <button type="button" class="btn btn-secondary ms-2" onclick="reject()">بازگشت</button>
-                {% else %}
-                    <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
-                {% endif %}
-            </div>    
+ 
         </div>
     {% else %}
         {% if message %}
             <h1 class="error">{{message}}</h1>
         {% endif %}
     {% endif %}
+    </div>
 {% endblock %}
 {% block extra_js %}
     <script src="{% static 'ConfigurationChangeRequest/js/request-full.js' %}"></script>

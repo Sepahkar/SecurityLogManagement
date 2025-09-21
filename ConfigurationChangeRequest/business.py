@@ -1599,7 +1599,7 @@ class Task:
 
         status_code = self.task_status
         new_status = None
-
+        message = ''
         if action_code == "CON":
             if status_code == "DEFINE":
                 new_status = "EXERED"
@@ -1634,7 +1634,7 @@ class Task:
             self.task_status = new_status
             return {
                 "success": True,
-                "message": f'وضعیت با موفقیت به "{new_status}" تغییر یافت',
+                "message":message,
             }
         else:
             return {
@@ -1898,7 +1898,7 @@ class Request:
         # در صورتی که در حالت درج نباشیم، اطلاعات تیم درخواست کننده و مدیر مستقیم را از رکورد درخواست استخراج می کنیم
         else:
             team_code = self.request_instance.requestor_team_code.team_code
-            role_id = self.request_instance.requestor_role_id.id
+            role_id = self.request_instance.requestor_role_id.role_id
             manager_obj = self.request_instance.direct_manager_nationalcode
             user_requestor = self.request_instance.requestor_nationalcode.national_code
         
@@ -2386,7 +2386,8 @@ class Request:
                 return {
                     "success": True,
                     "request_id": self.request_instance.id,
-                    "message": f"درخواست با موفقیت ایجاد و جهت بررسی برای {self.user_direct_manager.fullname} ارسال شد",
+                    "mode":'READONLY',
+                    "message": f"درخواست با موفقیت ایجاد و جهت بررسی برای {self.user_direct_manager.fullname_gender} ارسال شد",
                 }
             else:
                 # اگر next_step با خطا مواجه شد، درخواست را حذف می‌کنیم
@@ -2983,56 +2984,69 @@ class Request:
             current_status = self.request_instance.status_code
             new_status = None
             next_user = None
-
+            message = ''
             if action_code == "CON":
+                
                 if current_status == "DRAFTD":
                     new_status = "DIRMAN"
-                    next_user = (
-                        self.request_instance.direct_manager_nationalcode.national_code
+                    next_user:m.User = (
+                        self.request_instance.direct_manager_nationalcode
                     )
+                    message = f'فرم با موفقیت برای {next_user.fullname_gender} جهت بررسی مدیر مستقیم ارسال شد'
                 elif current_status == "DIRMAN":
                     new_status = "RELMAN"
                     next_user = (
-                        self.request_instance.related_manager_nationalcode.national_code
+                        self.request_instance.related_manager_nationalcode
                     )
+                    message = f'فرم با موفقیت برای {next_user.fullname_gender} جهت بررسی مدیر مربوطه ارسال شد'
+
                 elif current_status == "RELMAN":
                     if self.request_instance.need_committee:
                         new_status = "COMITE"
                         next_user = (
-                            self.request_instance.committee_user_nationalcode.national_code
+                            self.request_instance.committee_user_nationalcode
                         )
+                        message = f'فرم با موفقیت برای {next_user.fullname_gender} جهت بررسی دبیر کمیته ارسال شد'
+
                     else:
                         new_status = "DOTASK"
                         # ارسال به کارتابل مجریان
                         self.send_to_executors()
+                        message = f'فرم با موفقیت برای مجریان جهت انجام نخستین تسک ارسال گردید'
+
                 elif current_status == "COMITE":
                     new_status = "DOTASK"
                     # ارسال به کارتابل مجریان
                     self.send_to_executors()
+                    message = f'فرم با موفقیت برای مجریان جهت انجام نخستین تسک ارسال گردید'
                 elif current_status == "DOTASK":
                     new_status = "FINISH"
-
+                    message = 'فرآیند با موفقیت خاتمه یافت'
             elif action_code == "RET":
                 if current_status == "DIRMAN":
                     new_status = "DRAFTD"
                     next_user = (
-                        self.request_instance.requestor_nationalcode.national_code
+                        self.request_instance.requestor_nationalcode
                     )
+                    message = f'فرم به {next_user.fullname_gender} جهت بررسی بازگشت داده شد'
+                    
                 elif current_status == "RELMAN":
                     new_status = "DIRMAN"
                     next_user = (
-                        self.request_instance.direct_manager_nationalcode.national_code
+                        self.request_instance.direct_manager_nationalcode
                     )
+                    message = f'فرم به {next_user.fullname_gender} جهت بررسی مدیر مستقیم بازگشت داده شد'
                 elif current_status == "COMITE":
                     new_status = "RELMAN"
                     next_user = (
-                        self.request_instance.related_manager_nationalcode.national_code
+                        self.request_instance.related_manager_nationalcode
                     )
+                    message = f'فرم به {next_user.fullname_gender} جهت بررسی مدیر مربوطه بازگشت داده شد'
 
             elif action_code == "REJ":
                 if current_status in ["DRAFTD", "DIRMAN", "RELMAN", "COMITE", "DOTASK"]:
                     new_status = "FAILED"
-
+                    message = 'این نسخه از فرآیند باطل گردید'
             else:
                 return {"success": False, "message": "کد عملیات معتبر نمی‌باشد."}
 
@@ -3058,7 +3072,7 @@ class Request:
                 # ارسال به کارتابل کاربر بعدی
                 if next_user:
                     self.send_cartable(
-                        self.request_instance.id, next_user, self.status_title
+                        self.request_instance.id, next_user.national_code, self.status_title
                     )
 
                 # ذخیره اطلاعات اضافی
@@ -3069,7 +3083,7 @@ class Request:
 
                 return {
                     "success": True,
-                    "message": f'وضعیت با موفقیت به "{new_status}" تغییر یافت.',
+                    "message": message
                 }
             else:
                 return {

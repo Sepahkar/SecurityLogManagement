@@ -95,12 +95,12 @@
     <div class="row mt-4">
         <div class="col-12">
             {% if mode == 'UPDATE' %}
-                <button type="submit" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'approve')">تایید</button>
-                <button type="submit" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'reject')">رد</button>
-                <button type="button" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'back')">بازگشت</button>
+                <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-orginal-text="تایید">تایید</button>
+                <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-orginal-text="رد">رد</button>
+                <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-orginal-text="بازگشت">بازگشت</button>
             {% elif mode != 'READONLY' %}
-                <button type="submit" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')">شروع فرآیند</button>
-                <button type="button" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'back')">بازگشت</button>
+                <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-orginal-text="شروع فرآیند">شروع فرآیند</button>
+                <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-orginal-text="بازگشت">بازگشت</button>
             {% else %}
                 <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
             {% endif %}
@@ -122,10 +122,10 @@
 <script src="/static/ConfigurationChangeRequest/js/select2.min.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/message-handler.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JavaScript -->
+{% block extra_js %}{% endblock %}
 <script src="/static/ConfigurationChangeRequest/js/request.js"></script>
 
     
-    <!-- Custom JavaScript -->
-    {% block extra_js %}{% endblock %}
 
 </html>

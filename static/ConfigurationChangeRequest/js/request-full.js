@@ -1277,107 +1277,7 @@ function form_validation_tester()
 
 
 }
-function confirm(request_status) {
-    return new Promise(function(on_success,  on_failure) 
-    {
-    var error_message = []
-    //اگر مدیر باشد نیازی به ورود اطلاعات ندارد
-    //اگر کاربر کمیته باشد باید فیلدهای کاربر کمیته بررسی شوند
-    // if (request_status == 'COMITE')
-    // {
-    //     error_message = form_validation_committee()
-    // }
-    //اگر کاربر مجری باشد، باید فیلدهای کاربر مجری بررسی شوند
-    if (request_status == 'EXECUT')
-    {
-        error_message = form_validation_executor()
-    }
-    //اگر کاربر تستر باشد، باید فیلدهای کاربر تستر بررسی شوند
-    else if (request_status == 'TESTER')
-    {
-        error_message = form_validation_tester()
-    }
-    
 
-    // اگر خطا وجود دارد، نمایش پیام خطا
-    if (error_message.length > 0) {
-        $.alert({
-            title: 'خطا',
-            content: error_message.join('<br>'),
-        });
-        $('html, body').animate({
-            scrollTop: $(document).height()
-        }, 1000);
-        on_failure()
-        return; // جلوگیری از ادامه
-    }
-    
-    //شناسه درخواست را به دست می آوریم
-    var requestId = $('input[name="request_id"]').val();
-    
-    //به سراغ مرحله بعدی می رویم
-    var url = '/ConfigurationChangeRequest/request/next_step/' + requestId + '/CON/';
-
-    // جمع‌آوری داده‌های فرم
-    var formData = $('form').serialize();
-
-    // ارسال درخواست AJAX
-    $.ajax({
-        url: url,
-        method: 'POST',
-        data: formData,
-        success: function(response) 
-        {
-            if (response.success) 
-            {
-                if (response.message)
-                    msg = response.message
-                else
-                    msg = 'اطلاعات با موفقیت ذخیره شده و فرم به مرحله بعدی ارسال شد'
-                
-                $.alert({
-                    title: 'ارسال موفقیت آمیز',
-                    content: msg,
-                    buttons: {
-                        confirm: {
-                            text: 'بستن',
-                            btnClass: 'btn-blue',
-                            action: function() {
-                                window.location.href = '/ConfigurationChangeRequest/request/view/'+response.request_id+'/';
-                            }
-                        }
-                    }});                                
-            } 
-            else 
-            {
-                // در صورت بروز خطا، پیام‌های خطا را نمایش دهید
-                var errorMessage = response.message;
-                $.alert({
-                    title: 'خطا',
-                    content: errorMessage,
-                });
-                on_failure()
-            }
-        },
-        error: function(xhr) 
-        {
-            // در صورت بروز خطا، پیام خطا را نمایش می‌دهیم
-            // ایجاد یک عنصر موقتی
-            var tempDiv = $('<div>').html(xhr.responseText);
-
-            // استخراج متن از div با شناسه summary
-            var errorMessage = tempDiv.find('#summary').text().trim(); // استفاده از #summary
-            $.alert({
-                title: 'خطا',
-                content: errorMessage,
-            });
-            on_failure()
-        }
-        });
-    
-    //در صورت موفقیت آمیز بودن
-    on_success
-})}
 
 /**
 * @param {number} duration - مقدار زمان به دقیقه (باید عدد صحیح مثبت باشد)
@@ -1966,3 +1866,221 @@ $(document).ready(function() {
         reject()        
     })
 });
+
+
+function reject()
+{
+    //شناسه درخواست را به دست می آوریم
+    var requestId = $('input[name="request_id"]').val();
+    
+    //به سراغ مرحله بعدی می رویم
+    var url = '/ConfigurationChangeRequest/request/next_step/' + requestId + '/REJ/';
+
+    // جمع‌آوری داده‌های فرم
+
+
+    $.confirm({
+        title: 'دلیل رد',
+        content: '' +
+        '<form action="" class="formName">' +
+        '<div class="form-group">' +
+        '<label>دلیل رد مدرک را وارد کنید:</label>' +
+        '<input type="text" placeholder="دلیل رد مدرک" class="reject-reason form-control" required />' +
+        '</div>' +
+        '</form>',
+        buttons: {
+            formSubmit: {
+                text: 'رد مدرک',
+                btnClass: 'btn-blue',
+                action: function () {
+                    var reject_reason = this.$content.find('.reject-reason').val();
+                    if(!reject_reason){
+                        $.alert('لطفا دلیل رد را وارد کنید');
+                        return false;
+                    }
+                    var formData = {'reject_reason':reject_reason, 'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()}
+                    // ارسال درخواست AJAX
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        data: formData,
+                        success: function(response) 
+                        {
+                            if (response.success) 
+                            {
+                                if (response.message)
+                                    msg = response.message
+                                else
+                                    msg = 'فرآیند مختومه شد'
+                                
+                                $.alert({
+                                    title: 'خاتمه فرآیند',
+                                    content: msg,
+                                    buttons: {
+                                        confirm: {
+                                            text: 'بستن',
+                                            btnClass: 'btn-blue',
+                                            action: function() {
+                                                window.location.href = '/ConfigurationChangeRequest/request/view/'+response.request_id+'/';
+                                            }
+                                        }
+                                    }});                                
+                            } 
+                            else 
+                            {
+                                // در صورت بروز خطا، پیام‌های خطا را نمایش دهید
+                                var errorMessage = response.message;
+                                $.alert({
+                                    title: 'خطا',
+                                    content: errorMessage,
+                                });
+                                on_failure()
+                            }
+                        },
+                        error: function(xhr) 
+                        {
+                            // در صورت بروز خطا، پیام خطا را نمایش می‌دهیم
+                            // ایجاد یک عنصر موقتی
+                            var tempDiv = $('<div>').html(xhr.responseText);
+                
+                            // استخراج متن از div با شناسه summary
+                            var errorMessage = tempDiv.find('#summary').text().trim(); // استفاده از #summary
+                            $.alert({
+                                title: 'خطا',
+                                content: errorMessage,
+                            });
+                            on_failure()
+                        }
+                        });
+                }
+            },
+            cancel: {
+                text:'انصراف',
+                function () {
+                    //close
+                },
+    
+            }
+        },
+        onContentReady: function () {
+            // bind to events
+            var jc = this;
+            this.$content.find('form').on('submit', function (e) {
+                // if the user submits the form by pressing enter in the field.
+                e.preventDefault();
+                jc.$$formSubmit.trigger('click'); // reference the button and click it
+            });
+        }
+    });    
+
+    
+
+}
+
+
+function confirm() {
+    return new Promise(function(on_success,  on_failure) 
+    {
+    var error_message = []
+    //اگر مدیر باشد نیازی به ورود اطلاعات ندارد
+    //اگر کاربر کمیته باشد باید فیلدهای کاربر کمیته بررسی شوند
+    // if (request_status == 'COMITE')
+    // {
+    //     error_message = form_validation_committee()
+    // }
+    //اگر کاربر مجری باشد، باید فیلدهای کاربر مجری بررسی شوند
+    if (request_status == 'EXECUT')
+    {
+        error_message = form_validation_executor()
+    }
+    //اگر کاربر تستر باشد، باید فیلدهای کاربر تستر بررسی شوند
+    else if (request_status == 'TESTER')
+    {
+        error_message = form_validation_tester()
+    }
+    
+
+    // اگر خطا وجود دارد، نمایش پیام خطا
+    if (error_message.length > 0) {
+        $.alert({
+            title: 'خطا',
+            content: error_message.join('<br>'),
+        });
+        $('html, body').animate({
+            scrollTop: $(document).height()
+        }, 1000);
+        on_failure()
+        return; // جلوگیری از ادامه
+    }
+    
+    //شناسه درخواست را به دست می آوریم
+    var requestId = $('input[name="request_id"]').val();
+    
+    //به سراغ مرحله بعدی می رویم
+    var url = '/ConfigurationChangeRequest/request/next_step/' + requestId + '/CON/';
+
+    // جمع‌آوری داده‌های فرم
+    var formData = $('form').serialize();
+
+    // ارسال درخواست AJAX
+    $.ajax({
+        url: url,
+        method: 'POST',
+        data: formData,
+        success: function(response) 
+        {
+            if (response.success) 
+            {
+                if (response.message)
+                    msg = response.message
+                else
+                    msg = 'اطلاعات با موفقیت ذخیره شده و فرم به مرحله بعدی ارسال شد'
+                
+                $.alert({
+                    title: 'ارسال موفقیت آمیز',
+                    content: msg,
+                    buttons: {
+                        confirm: {
+                            text: 'بستن',
+                            btnClass: 'btn-blue',
+                            action: function() {
+                                window.location.href = '/ConfigurationChangeRequest/request/view/'+response.request_id+'/';
+                            }
+                        }
+                    }});                                
+            } 
+            else 
+            {
+                // در صورت بروز خطا، پیام‌های خطا را نمایش دهید
+                var errorMessage = response.message;
+                $.alert({
+                    title: 'خطا',
+                    content: errorMessage,
+                });
+                on_failure()
+            }
+        },
+        error: function(xhr) 
+        {
+            // در صورت بروز خطا، پیام خطا را نمایش می‌دهیم
+            // ایجاد یک عنصر موقتی
+            var tempDiv = $('<div>').html(xhr.responseText);
+
+            // استخراج متن از div با شناسه summary
+            var errorMessage = tempDiv.find('#summary').text().trim(); // استفاده از #summary
+            $.alert({
+                title: 'خطا',
+                content: errorMessage,
+            });
+            on_failure()
+        }
+        });
+    
+    //در صورت موفقیت آمیز بودن
+    on_success
+})}
+
+function return_form()
+{
+
+}

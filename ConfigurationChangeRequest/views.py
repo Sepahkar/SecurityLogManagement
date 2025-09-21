@@ -11,7 +11,7 @@ rel_manger = '0081578091'
 commitee = '5228300880'
 executor = '6309920952'
 tester = '0063425750'
-current_user = requestor
+current_user = rel_manger
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -413,7 +413,7 @@ def request_create(request):
                 return JsonResponse({
                     'success': True, 
                     'request_id': result['request_id'],
-                    'message': 'درخواست تغییر با موفقیت ایجاد شد و برای بررسی مدیر ارسال گردید'
+                    'message': result.get('message','درخواست تغییر با موفقیت ایجاد شد و برای بررسی مدیر ارسال گردید')
                 })
             else:
                 return JsonResponse({'success': False, 'message': result['message']})
@@ -422,6 +422,9 @@ def request_create(request):
     
     # بارگذاری داده‌های فرم
     data = form_manager.load_form_data(-1, current_user_nationalcode)
+    if data['success'] == False:
+        return JsonResponse({'success': False, 'message': data['message']})
+    
     return render(request, 'ConfigurationChangeRequest/request-simple.html', data)
 
 def request_view(request, request_id):
@@ -487,18 +490,22 @@ def request_view(request, request_id):
             result = request_obj.update_request(form_data, current_user_nationalcode)
             
             if result['success']:
+                # عملیات را به دست می آوریم
+                action = form_data.get('action', 'CON')
+                # اگر عملیات به جز ذخیره سازی باشد
                 # فرم باید به مرحله بعد ارسال شود
-                result = request_obj.next_step(
-                    action_code=form_data.get('action', 'CON'), user_nationalcode=current_user_nationalcode
-                )                    
-                if result['success']:
-                    return JsonResponse({
-                        'success': True, 
-                        'request_id': request_id,
-                        'message': 'اطلاعات با موفقیت ذخیره شد'
-                    })
-                else:
-                    return JsonResponse({'success': False, 'message': result['message']})        
+                if action and action!='SAV':
+                    result = request_obj.next_step(
+                        action_code= action, user_nationalcode=current_user_nationalcode
+                    )                    
+                    if result['success']:
+                        return JsonResponse({
+                            'success': True, 
+                            'request_id': request_id,
+                            'message':result.get('message', 'اطلاعات با موفقیت ذخیره شد')
+                        })
+                    else:
+                        return JsonResponse({'success': False, 'message': result['message']})        
 
             else:
                 return JsonResponse({'success': False, 'message': result['message']})        

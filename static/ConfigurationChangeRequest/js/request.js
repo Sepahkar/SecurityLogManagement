@@ -1,110 +1,95 @@
-// 
+// کدهای عمومی که در تمامی فرم ها اجرا می شوند
 
-function reject()
-{
-    //شناسه درخواست را به دست می آوریم
-    var requestId = $('input[name="request_id"]').val();
+
+
     
-    //به سراغ مرحله بعدی می رویم
-    var url = '/ConfigurationChangeRequest/request/next_step/' + requestId + '/REJ/';
-
-    // جمع‌آوری داده‌های فرم
-
-
-    $.confirm({
-        title: 'دلیل رد',
-        content: '' +
-        '<form action="" class="formName">' +
-        '<div class="form-group">' +
-        '<label>دلیل رد مدرک را وارد کنید:</label>' +
-        '<input type="text" placeholder="دلیل رد مدرک" class="reject-reason form-control" required />' +
-        '</div>' +
-        '</form>',
-        buttons: {
-            formSubmit: {
-                text: 'رد مدرک',
-                btnClass: 'btn-blue',
-                action: function () {
-                    var reject_reason = this.$content.find('.reject-reason').val();
-                    if(!reject_reason){
-                        $.alert('لطفا دلیل رد را وارد کنید');
-                        return false;
-                    }
-                    var formData = {'reject_reason':reject_reason, 'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()}
-                    // ارسال درخواست AJAX
-                    $.ajax({
-                        url: url,
-                        method: 'POST',
-                        data: formData,
-                        success: function(response) 
-                        {
-                            if (response.success) 
-                            {
-                                if (response.message)
-                                    msg = response.message
-                                else
-                                    msg = 'فرآیند مختومه شد'
-                                
-                                $.alert({
-                                    title: 'خاتمه فرآیند',
-                                    content: msg,
-                                    buttons: {
-                                        confirm: {
-                                            text: 'بستن',
-                                            btnClass: 'btn-blue',
-                                            action: function() {
-                                                window.location.href = '/ConfigurationChangeRequest/request/view/'+response.request_id+'/';
-                                            }
-                                        }
-                                    }});                                
-                            } 
-                            else 
-                            {
-                                // در صورت بروز خطا، پیام‌های خطا را نمایش دهید
-                                var errorMessage = response.message;
-                                $.alert({
-                                    title: 'خطا',
-                                    content: errorMessage,
-                                });
-                                on_failure()
-                            }
-                        },
-                        error: function(xhr) 
-                        {
-                            // در صورت بروز خطا، پیام خطا را نمایش می‌دهیم
-                            // ایجاد یک عنصر موقتی
-                            var tempDiv = $('<div>').html(xhr.responseText);
-                
-                            // استخراج متن از div با شناسه summary
-                            var errorMessage = tempDiv.find('#summary').text().trim(); // استفاده از #summary
-                            $.alert({
-                                title: 'خطا',
-                                content: errorMessage,
-                            });
-                            on_failure()
-                        }
-                        });
-                }
-            },
-            cancel: {
-                text:'انصراف',
-                function () {
-                    //close
-                },
-    
+    function processContextMessages() {
+        const contextMessage = $('meta[name="context-message"]').attr('content');
+        const contextSuccess = $('meta[name="context-success"]').attr('content');
+        const contextSuccessMessage = $('meta[name="context-success-message"]').attr('content');
+        const contextWarningMessage = $('meta[name="context-warning-message"]').attr('content');
+        
+        if (contextMessage) {
+            if (contextSuccess === 'false') {
+                showErrorMessage(contextMessage);
+            } else {
+                showSuccessMessage(contextMessage);
             }
-        },
-        onContentReady: function () {
-            // bind to events
-            var jc = this;
-            this.$content.find('form').on('submit', function (e) {
-                // if the user submits the form by pressing enter in the field.
-                e.preventDefault();
-                jc.$$formSubmit.trigger('click'); // reference the button and click it
-            });
         }
-    });    
+        
+        if (contextSuccessMessage) {
+            showSuccessMessage(contextSuccessMessage);
+        }
+        
+        if (contextWarningMessage) {
+            showWarningMessage(contextWarningMessage);
+        }
+    }
+    
+    function initializeForm() {
+        let formMode = $('form').hasClass('readonly-form') ? 'READONLY' : 'EDIT';        
+        console.log('فرم در حال بارگذاری...');
+        console.log('حالت فرم:', formMode);
 
+    }
+
+
+    function showSuccessMessage(message) {
+        if (typeof showSuccess === 'function') {
+            showSuccess(message, 'موفقیت');
+        } else {
+            alert(message);
+        }
+    }
+    
+    function showErrorMessage(message) {
+        if (typeof showError === 'function') {
+            showError(message, 'خطا');
+        } else {
+            alert(message);
+        }
+    }
+    
+    function showWarningMessage(message) {
+        if (typeof showWarning === 'function') {
+            showWarning(message, 'هشدار');
+        } else {
+            alert(message);
+        }
+    }
     
 
-}
+    $(document).ready(function() 
+    {
+        'use strict';
+        let isSubmitting = false;
+        let hasTriedSubmit = false; // آیا کاربر تلاش به ثبت کرده است؟
+
+        // اضافه کردن console.log برای تست لود شدن فایل
+        console.log('request.js loaded successfully!');    
+    
+        // مقداردهی اولیه
+        initializeForm();
+        
+        // پردازش پیام‌های context (اگر وجود داشته باشند)
+        processContextMessages();
+
+        // Event listener برای دکمه‌های فرم - فقط اگر handleFormSubmit تعریف شده باشد
+        if (typeof handleFormSubmit === 'function') {
+            $('button[type="button"]').click(
+                function(e)
+                {
+                    var action = $(this).val()
+                    if (e) e.preventDefault();
+            
+                    if (isSubmitting) {
+                        return; // جلوگیری از ارسال چندباره
+                    }
+                    
+                    hasTriedSubmit = true;
+
+                    handleFormSubmit(e, action)
+                }
+            )
+        }
+    });
