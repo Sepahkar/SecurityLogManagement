@@ -3,18 +3,24 @@
 {% load custom_filters %}
 <head>
     <meta charset="utf-8">
+    <link rel="icon" href="static/ConfigurationChangeRequest/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.min.css" >
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/jquery-confirm.min.css" >
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/all.min.css" >
-    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/select2.scss">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/select2.min.css">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/request.css">
     <!-- Extra CSS -->
     {% block extra_css %}{% endblock %}
 
-    <title>درخواست تغییرات</title>
-    <subtitle>{{ page_title }}</subtitle>
-
+    <title>
+        درخواست تغییرات
+        {% if mode != 'READONLY' %}
+            - {% if status_title %}{{ status_title }}{% else %}ثبت درخواست{% endif %}
+        {% else %}
+            (فقط خواندنی)
+        {% endif %}
+    </title>
 <!-- Meta tags برای انتقال پیام‌های context به JavaScript -->
 {% if message %}
     <meta name="context-message" content="{{ message }}">
@@ -44,31 +50,21 @@
             <div class="col-2">
                 <img src="{% static 'ConfigurationChangeRequest/images/EIT.png' %}" alt="فناوران اطلاعات خبره" title="فناوران اطلاعات خبره" class="logo">
             </div>
-            <div class='button-container right col-2'>
-                {% if status == 'INSERT' %}
-                <button type="submit" class="btn btn-primary" id="save">شروع فرآیند</button>
-                {% elif status == 'UPDATE' %}
-                <button type="submit" class="btn btn-primary confirm" data-status="{{ request.status_code }}">تایید</button>
-                {% endif %}
-            </div>
-            <div class="title col-4">
-                {% if page_title %}{{ page_title }}{% else %}درخواست تغییرات{% endif %}
-                <div class="step-button">
-                    <span class="step">{{bc}}</span>
-                </div> 
-            </div>
-            <div class='button-container left col-2'>
-                {% if status == 'INSERT' %}
-                <button type="reset" class="btn btn-warning">لغو</button>
-                {% elif status == 'UPDATE' %}
-                <button type="button" class="btn btn-danger" id="reject">رد مدرک</button>
-                {% endif %}
+            <div class="title-text col-4">
+                <div class="title">درخواست تغییرات</div>
+                <div class="subtitle">
+                    {% if mode != 'READONLY' %}
+                    {% if status_title %}{{ status_title }}{% else %}ثبت درخواست{% endif %}
+                    {% else %}
+                        (فقط خواندنی)
+                    {% endif %}
+                </div>
             </div>
             <div class='info col-2'>
                 <p><b>شماره درخواست: </b>
                     <span>
-                        {% if request_number and request_number|to_int > 1 %}
-                            {{ request_number }}
+                        {% if request.id and request.id|to_int > 1 %}
+                            {{ request.id }}
                         {% else %}
                             -
                         {% endif %}
@@ -87,23 +83,25 @@
             </div>
 
     </div>
-
-    {% block main_content%}
-    {% endblock %}
     
-    <!--form buttons -->
-    <div class="row mt-4">
-        <div class="col-12">
-            {% if mode == 'UPDATE' %}
-                <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-orginal-text="تایید">تایید</button>
-                <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-orginal-text="رد">رد</button>
-                <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-orginal-text="بازگشت">بازگشت</button>
-            {% elif mode != 'READONLY' %}
-                <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-orginal-text="شروع فرآیند">شروع فرآیند</button>
-                <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-orginal-text="بازگشت">بازگشت</button>
-            {% else %}
-                <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
-            {% endif %}
+    <div class="container mt-4">
+        {% block main_content%}
+        {% endblock %}
+
+        <!--form buttons -->
+        <div class="row mt-4 form-button">
+            <div class="col-12">
+                {% if mode == 'UPDATE' %}
+                    <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-orginal-text="تایید">تایید</button>
+                    <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-orginal-text="رد">رد</button>
+                    <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-orginal-text="بازگشت">بازگشت</button>
+                {% elif mode != 'READONLY' %}
+                    <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-orginal-text="شروع فرآیند">شروع فرآیند</button>
+                    <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-orginal-text="بازگشت">بازگشت</button>
+                {% else %}
+                    <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -122,9 +120,9 @@
 <script src="/static/ConfigurationChangeRequest/js/select2.min.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/message-handler.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/bootstrap.bundle.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/request.js"></script>
 <!-- Custom JavaScript -->
 {% block extra_js %}{% endblock %}
-<script src="/static/ConfigurationChangeRequest/js/request.js"></script>
 
     
 

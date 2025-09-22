@@ -263,8 +263,7 @@ def get_simple_form_data(request):
     request_id = int(request.POST.get('request_id')) if request.POST.get('request_id') else -1
 
     # یک نمونه از شی فرم ایجاد می کنیم
-    objFormManager = FormManager(request_id=request_id)
-
+    objFormManager = FormManager(current_user_national_code=current_user_nationalcode, request_id=request_id)
 
 
     form_data = {
@@ -395,7 +394,7 @@ def request_create(request):
     برای ایجاد یک درخواست جدید از این تابع استفاده می شود
     """
     current_user_nationalcode = current_user
-    form_manager = FormManager()
+    form_manager = FormManager(current_user_nationalcode)
     
     if request.method == 'POST':
         # دریافت اطلاعات فرم
@@ -406,7 +405,7 @@ def request_create(request):
         
         if validation_result['success']:
             # ایجاد درخواست
-            request_obj = Request(-1)
+            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=-1)
             result = request_obj.create_request(form_data, current_user_nationalcode)
             
             if result['success']:
@@ -439,7 +438,7 @@ def request_view(request, request_id):
     data = {}
 
     # ابتدا یک نمونه از شی درخواست ایجاد می کنیم
-    request_obj = Request(request_id=request_id)    
+    request_obj = Request(current_user_national_code=current_user_nationalcode,request_id=request_id)    
     
     # اگر چنین درخواستی وجود نداشته باشد، باید پیام خطا به کاربر بدهیم
     if request_obj.request_id is None or request_obj.request_id < 0:
@@ -450,7 +449,7 @@ def request_view(request, request_id):
         return JsonResponse({'success': False, 'message': request_obj.error_message})
     
     # اگر درخواست معتبر باشد، باید بررسی کنیم که کدام فرم باید برای این کاربر باز شود
-    form_manager = FormManager(request_id=request_id)   
+    form_manager = FormManager(current_user_national_code=current_user_nationalcode, request_id=request_id)   
     result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
     
     # وضعیت فرم را به دست می آوریم. وضعیت پیش فرض درج است
@@ -485,7 +484,7 @@ def request_view(request, request_id):
         validation_result = form_manager.form_validation(form_data)
         if validation_result['success']:
             # ایجاد درخواست
-            request_obj = Request(request_id=request_id)
+            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id)
             # اطلاعات جدید درخواست به روزرسانی می شود
             result = request_obj.update_request(form_data, current_user_nationalcode)
             
@@ -539,7 +538,7 @@ def request_full_view(request, request_id, data):
     فرم درخواست کامل (مرحله دوم)
     """
     current_user_nationalcode = current_user
-    form_manager = FormManager()
+    form_manager = FormManager(current_user_nationalcode)
     
     if request.method == 'POST':
         # دریافت اطلاعات فرم کامل
@@ -551,7 +550,7 @@ def request_full_view(request, request_id, data):
         
         if validation_result['success']:
             # به‌روزرسانی درخواست
-            request_obj = Request(request_id)
+            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id)
             result = request_obj.update_request(form_data)
             
             if result['success']:
@@ -576,11 +575,11 @@ def task_select_view(request, request_id, task_id):
     انتخاب تسک (برای مجری/تستر)
     """
     current_user_nationalcode = current_user
-    form_manager = FormManager()
+    form_manager = FormManager(current_user_nationalcode)
     
     if request.method == 'POST':
         # انتخاب تسک
-        request_obj = Request(request_id)
+        request_obj = Request(current_user_national_code=current_user_nationalcode,request_id=request_id)
         result = request_obj.select_task(task_id, current_user_nationalcode)
         
         if result['success']:
@@ -597,7 +596,7 @@ def task_report_view(request, request_id, task_id):
     گزارش تسک (برای مجری/تستر)
     """
     current_user_nationalcode = current_user
-    form_manager = FormManager()
+    form_manager = FormManager(current_user_nationalcode)
     
     if request.method == 'POST':
         # دریافت گزارش تسک
@@ -610,7 +609,7 @@ def task_report_view(request, request_id, task_id):
         
         if validation_result['success']:
             # ذخیره گزارش تسک
-            request_obj = Request(request_id)
+            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id)
             result = request_obj.save_task_report(task_id, form_data, current_user_nationalcode)
             
             if result['success']:
@@ -629,7 +628,7 @@ def request_action_view(request, request_id, action):
     عملیات روی درخواست (تایید/رد/بازگشت)
     """
     current_user_nationalcode = current_user
-    request_obj = Request(request_id)
+    request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id)
     
     if request.method == 'POST':
         form_data = request.POST.dict()
@@ -647,7 +646,7 @@ def task_action_view(request, request_id, task_id, action):
     عملیات روی تسک (تایید/رد/بازگشت)
     """
     current_user_nationalcode = current_user
-    request_obj = Request(request_id)
+    request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id)
     
     if request.method == 'POST':
         form_data = request.POST.dict()
@@ -665,7 +664,7 @@ def request_view_view(request, request_id):
     مشاهده درخواست (فقط خواندنی)
     """
     current_user_nationalcode = current_user
-    form_manager = FormManager()
+    form_manager= FormManager( current_user_nationalcode)
     
     # بارگذاری داده‌های درخواست
     data = form_manager.load_form_data(request_id, current_user_nationalcode)

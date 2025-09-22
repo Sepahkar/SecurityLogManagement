@@ -1,9 +1,13 @@
 // کدهای عمومی که در تمامی فرم ها اجرا می شوند
+'use strict';
+const touchedFields = new Set(); // فیلدهایی که کاربر با آن‌ها تعامل داشته است
+let isSubmitting = false; // وضعیت ارسال فرم
 
 
-
-    
-    function processContextMessages() {
+    /******************************توابع مربوط به نمایش پیامها******************/
+class message_manager
+{
+    processContextMessages() {
         const contextMessage = $('meta[name="context-message"]').attr('content');
         const contextSuccess = $('meta[name="context-success"]').attr('content');
         const contextSuccessMessage = $('meta[name="context-success-message"]').attr('content');
@@ -11,22 +15,22 @@
         
         if (contextMessage) {
             if (contextSuccess === 'false') {
-                showErrorMessage(contextMessage);
+                this.showErrorMessage(contextMessage);
             } else {
-                showSuccessMessage(contextMessage);
+                this.showSuccessMessage(contextMessage);
             }
         }
         
         if (contextSuccessMessage) {
-            showSuccessMessage(contextSuccessMessage);
+            this.showSuccessMessage(contextSuccessMessage);
         }
         
         if (contextWarningMessage) {
-            showWarningMessage(contextWarningMessage);
+            this.showWarningMessage(contextWarningMessage);
         }
     }
     
-    function initializeForm() {
+    initializeForm() {
         let formMode = $('form').hasClass('readonly-form') ? 'READONLY' : 'EDIT';        
         console.log('فرم در حال بارگذاری...');
         console.log('حالت فرم:', formMode);
@@ -34,7 +38,7 @@
     }
 
 
-    function showSuccessMessage(message) {
+    showSuccessMessage(message) {
         if (typeof showSuccess === 'function') {
             showSuccess(message, 'موفقیت');
         } else {
@@ -42,7 +46,7 @@
         }
     }
     
-    function showErrorMessage(message) {
+    showErrorMessage(message) {
         if (typeof showError === 'function') {
             showError(message, 'خطا');
         } else {
@@ -50,32 +54,217 @@
         }
     }
     
-    function showWarningMessage(message) {
+    showWarningMessage(message) {
         if (typeof showWarning === 'function') {
             showWarning(message, 'هشدار');
         } else {
             alert(message);
         }
     }
+}
+    /********************توابع مدیریت نمایش المان های فرم و بارگذاری فرم*********** */
     
+    // این تابع برای پیاده سازی رخدادهای سفارشی المان ها در هر فرم پیاده سازی می شود
+    // در اینجا به جهت جلوگیری از بروز خطا آورده شده است
+    function setupSpecialFromEventListeners()
+    {
 
+    }
+
+class form_manager
+{
+    markTouched(selector) {
+        touchedFields.add(selector);
+    }
+    
+    showLoading(action) {
+        isSubmitting = true;
+        $('form').addClass('loading');
+        $('button[type="button"][value="'+action+'"]').prop('disabled', true).text('در حال ارسال...');
+    }
+    
+    hideLoading(action) {
+        isSubmitting = false;
+        $('form').removeClass('loading');
+        if (action) {
+            btn = $('button[type="button"][value="'+action+'"]')
+            txt = btn.data('orginal-text')
+            btn.prop('disabled', false).text(txt);
+        }
+    }
+
+    // مدیریت اختصاصی عمومی
+    setupEventListeners() {
+        var formMode = $('form').hasClass('readonly-form') ? 'READONLY' : 'EDIT';
+        if (formMode === 'READONLY') {
+            return; // در حالت READONLY نیازی به event listeners نیست
+        }
+        
+        // مدیریت رخدادهای اختصاصی فرم ها فراخوانی می شود
+        setupSpecialFromEventListeners()
+
+        // جلوگیری از submit خودکار فرم
+        $('#requestForm').on('submit', function(e) { 
+            e.preventDefault(); 
+            return false; 
+        });
+    }    
+}   
+/********************************توابع صحت سنجی فرم********************** */
+
+// این تابع در کد مخصوص هر فرم مجددا پیاده سازی می شود و وظیفه اعتبارسنجی فیلدهای آن فرم را برعهده دارد
+// تعریف این تابع به این دلیل انجام شده که از بروز خطا جلوگیری شود
+function validateSpecialForm(showErrors = false) {
+
+}
+
+function validateForm(showErrors = false) {
+    let isValid = true;
+    // بعدا باید اینجا کدی بنویسیم که اعتبارسنجی عمومی (مثل فیلدهای اجباری یا تاریخ و ...) را انجام دهد
+    isValid = validateSpecialForm(showErrors) && isValid;
+    
+    return isValid;
+}
+
+function toggleFieldValidation(selector, isValid, errorMessage, showError) {
+    const field = $(selector);
+    const errorElement = field.siblings('.invalid-feedback');
+    
+    // پاکسازی اولیه اگر نباید خطا نمایش داده شود
+    if (!showError) {
+        field.removeClass('is-invalid');
+        // در صورت درست بودن، می‌توانیم کلاس معتبر را بگذاریم
+        if (isValid) {
+            field.addClass('is-valid');
+        } else {
+            field.removeClass('is-valid');
+        }
+        if (errorElement.length) {
+            errorElement.remove();
+        }
+        return;
+    }
+    
+    if (isValid) {
+        field.removeClass('is-invalid').addClass('is-valid');
+        if (errorElement.length) errorElement.remove();
+    } else {
+        field.removeClass('is-valid').addClass('is-invalid');
+        if (errorElement.length === 0) {
+            field.after('<div class="invalid-feedback">' + errorMessage + '</div>');
+        }
+    }
+}
+
+/************************توابع مربوط به ارسال فرم به سرور******************/
+    // این تابع در اسکریپت های مربوط به هر فرم پیاده سازی می شود
+    // اینجا صرفا آورده شده که به خطا نخوریم
+    function handleSpecialFormSubmit(e, actionType = null) 
+    {
+        
+    };
+
+function handleFormSubmit(e, actionType = null) 
+{
+
+    // جلوگیری از ارسال چندباره
+    if (typeof isSubmitting !== 'undefined' && isSubmitting) {
+        return;
+    }
+    
+    const message_manager_obj = new message_manager()
+    // اعتبارسنجی فرم (با نمایش خطاها)
+    if (!validateForm(true)) {
+        // toggleSubmitButton(false);
+        message_manager_obj.showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
+        return;
+    }
+    
+    const form_manager_obj = new form_manager()
+    // نمایش loading
+    form_manager_obj.showLoading(actionType);
+    
+    // داده های فرم را دریافت می کنیم
+    const formEl = $('#requestForm')[0];
+    const formData = new FormData(formEl);
+
+    // در صورتی که action
+    // نامعلوم باشد از مقدار پیش فرض استفاده می کنیم
+    const resolvedAction = actionType || 'start';
+    // action را در داده ها قرار می دهیم
+    formData.set('action', resolvedAction);
+    
+    // فرم را ارسال می کنیم
+    fetch('', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    // در صورتی که جوابی از سرور دریافت نشود
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('خطا در ارتباط با سرور');
+        }
+        return response.json();
+    })
+    // در صورتی که جواب دریافت شود
+    .then(data => {
+
+        form_manager_obj.hideLoading();
+        // در صورتی که عملیات موفقیت آمیز باشد
+        if (data.success) {
+            // پیام موفقیت آمیز را نمایش می دهیم
+            const message = data.message
+            message_manager_obj.showSuccessMessage(message);
+            // حالت فرم را می خوانیم
+            var formMode = data.mode
+            // در صورتی که شناسه درخواست وجود داشته باشد
+            if (data.request_id) {
+                setTimeout(() => {
+                    window.location.href = '/ConfigurationChangeRequest/' + data.request_id + '/';
+                }, 2000);
+            }
+        } 
+        // اگر خطا بازگشت شده باشد
+        else {
+            showErrorMessage('خطا: ' + data.message);
+        }
+    })
+    // اگر خطای مدیریت نشده ای رخ داده باشد
+    .catch(error => {
+        hideLoading(actionType);
+        console.error('Error:', error);
+        showErrorMessage('خطا در ارسال درخواست: ' + error.message);
+    });
+}
+
+
+
+/***********************مدیریت رخدادهای اصلی و بارگذاری اولیه فرم******************/
     $(document).ready(function() 
     {
-        'use strict';
+
         let isSubmitting = false;
         let hasTriedSubmit = false; // آیا کاربر تلاش به ثبت کرده است؟
 
         // اضافه کردن console.log برای تست لود شدن فایل
         console.log('request.js loaded successfully!');    
     
-        // مقداردهی اولیه
-        initializeForm();
+       
+        // متغیرهای سراسری
+        let formMode = $('form').hasClass('readonly-form') ? 'READONLY' : 'EDIT';
         
+        const form_manager_obj = new form_manager()
+        form_manager_obj.setupEventListeners();
+
         // پردازش پیام‌های context (اگر وجود داشته باشند)
-        processContextMessages();
+        const message_manager_obj = new message_manager();
+        message_manager_obj.processContextMessages();
 
         // Event listener برای دکمه‌های فرم - فقط اگر handleFormSubmit تعریف شده باشد
-        if (typeof handleFormSubmit === 'function') {
+        if (typeof handleGeneralFormSubmit === 'function') {
             $('button[type="button"]').click(
                 function(e)
                 {
@@ -88,7 +277,7 @@
                     
                     hasTriedSubmit = true;
 
-                    handleFormSubmit(e, action)
+                    handleGeneralFormSubmit(e, action)
                 }
             )
         }

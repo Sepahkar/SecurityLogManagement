@@ -8,13 +8,15 @@
 {% endblock %}
 
 {% block main_content %}
-<div class="container mt-4">
     <div class="user-info">
         <div class="user-avatar" >
             
             {%if request.id%}
                 <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.requestor_nationalcode.username|split:'@' }}.jpg" 
-                alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}" class="personnel-avatar">
+                alt="{{ request.requestor_nationalcode.fullname }}" 
+                title="{{ request.requestor_nationalcode.fullname }}" 
+                class="personnel-avatar"
+                onerror="this.onerror=null;this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';">
             {% else %}
                 <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ current_user.username|split:'@' }}.jpg" 
                 alt="{{ current_user.fullname }}" title="{{ current_user.fullname }}" class="personnel-avatar">
@@ -38,14 +40,14 @@
             </div>
             <div class="field-row">
                 <label>سمت درخواست دهنده:</label>
-                {%if mode != 'READONLY' or not request%}
-                    {% if current_user.team_roles|length == 1 %}
-                        <span class='single-role'>{{ current_user.team_roles.0.role_title }} {{current_user.team_roles.0.team_name}}</span>
-                        <input type="hidden" name="requestor_user_team_role" value="{{ current_user.team_roles.0.team_code }}-{{ current_user.team_roles.0.role_id }}"/>
-                    {% elif current_user.team_roles|length > 1 %}
+                {%if mode == 'INSERT' %}
+                    {% if current_user_team_roles|length == 1 %}
+                        <span class='single-role'>{{ current_user_team_roles.0.role_id.role_title }} {{current_user_team_roles.0.team_code.team_name}}</span>
+                        <input type="hidden" name="requestor_user_team_role" value="{{ current_user_team_roles.0.team_code.team_code }}-{{ current_user_team_roles.0.role_id.role_id }}"/>
+                    {% elif current_user_team_roles|length > 1 %}
                         <select class='role-select' name="requestor_user_team_role"  id="user_team_role" required>
-                            {% for team_role in current_user.team_roles %}
-                                <option value="{{ team_role.team_code }}-{{ team_role.role_id }}">{{ team_role.role_title }} {{team_role.0.team_name}}</option>
+                            {% for team_role in current_user_team_roles %}
+                                <option value="{{ team_role.team_code.team_code }}-{{ team_role.role_id.role_id }}">{{ team_role.role_id.role_title }} تیم {{team_role.team_code.team_name}}</option>
                             {% endfor %}
                         </select>
                     {% else %}
@@ -54,7 +56,6 @@
                 {% else %}
                     <span>{{request.requestor_role_id.role_title}} تیم {{request.requestor_team_code.team_name}}</span>
                 {%endif%}
-
             </div>
         </div>
     </div>
@@ -107,7 +108,6 @@
             </div>
         </div>
     </div>
-    
     
 
 {% endblock %}

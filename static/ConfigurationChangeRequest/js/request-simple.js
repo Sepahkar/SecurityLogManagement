@@ -2,49 +2,42 @@
  * اسکریپت‌های فرم درخواست ساده
  * مدیریت حالت‌های مختلف فرم (INSERT, UPDATE, READONLY)
  */
-const touchedFields = new Set(); // فیلدهایی که کاربر با آن‌ها تعامل داشته است
-let isSubmitting = false; // وضعیت ارسال فرم
 
-function setupEventListeners() {
-    var formMode = $('form').hasClass('readonly-form') ? 'READONLY' : 'EDIT';
-    if (formMode === 'READONLY') {
-        return; // در حالت READONLY نیازی به event listeners نیست
-    }
-    
+function setupSpecialFromEventListeners() {
+
     $('#change_type').on('change', function() {
-        markTouched('#change_type');
+        const form_manager_obj = new form_manager()
+        form_manager_obj.markTouched('#change_type');
         validateChangeType();
     });
     
     $('#change_title').on('input', function() {
-        markTouched('#change_title');
+        const form_manager_obj = new form_manager()
+        form_manager_obj.markTouched('#change_title');
         validateChangeTitle();
     });
     
     $('#change_description').on('input', function() {
-        markTouched('#change_description');
+        const form_manager_obj = new form_manager()
+        form_manager_obj.markTouched('#change_description');
         validateChangeDescription();
     });
     
     if ($('#user_team_role').length > 0) {
         $('#user_team_role').on('change', function() {
-            markTouched('#user_team_role');
+            const form_manager_obj = new form_manager()
+            form_manager_obj.markTouched('#user_team_role');
             validateUserTeamRole();
         });
     }
     
-    // جلوگیری از submit خودکار فرم
-    $('#requestForm').on('submit', function(e) { 
-        e.preventDefault(); 
-        return false; 
-    });
 }
 
 
 // validateForm(showErrors)
 // اگر showErrors = true باشد، خطاها نمایش داده می‌شوند
 // اگر false باشد، فقط اعتبارسنجی منطقی انجام می‌شود بدون نمایش خطا برای فیلدهای لمس‌نشده
-function validateForm(showErrors = false) {
+function validateSpecialForm(showErrors = false) {
     let isValid = true;
     
     isValid = validateChangeTitle(showErrors) && isValid;
@@ -91,155 +84,79 @@ function validateUserTeamRole(showErrors = false) {
     return isValid;
 }
 
-function toggleFieldValidation(selector, isValid, errorMessage, showError) {
-    const field = $(selector);
-    const errorElement = field.siblings('.invalid-feedback');
-    
-    // پاکسازی اولیه اگر نباید خطا نمایش داده شود
-    if (!showError) {
-        field.removeClass('is-invalid');
-        // در صورت درست بودن، می‌توانیم کلاس معتبر را بگذاریم
-        if (isValid) {
-            field.addClass('is-valid');
-        } else {
-            field.removeClass('is-valid');
-        }
-        if (errorElement.length) {
-            errorElement.remove();
-        }
-        return;
-    }
-    
-    if (isValid) {
-        field.removeClass('is-invalid').addClass('is-valid');
-        if (errorElement.length) errorElement.remove();
-    } else {
-        field.removeClass('is-valid').addClass('is-invalid');
-        if (errorElement.length === 0) {
-            field.after('<div class="invalid-feedback">' + errorMessage + '</div>');
-        }
-    }
-}
 
-// function toggleSubmitButton(enabled) {
-//     const submitButton = $('button[type="button"]');
-    
-//     // دکمه‌ها در ابتدا باید فعال باشند؛ فقط زمانی غیرفعال شوند که بعد از سابمیت نامعتبر باشند
-//     if (enabled) {
-//         submitButton.prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
-//     } else {
-//         // فقط بعد از تلاش برای ثبت، غیرفعال شود
-//         if (hasTriedSubmit) {
-//             submitButton.prop('disabled', true).removeClass('btn-primary').addClass('btn-secondary');
-//         } else {
-//             submitButton.prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
-//         }
+// function handleFormSubmit(e, actionType = null) {
+//     // جلوگیری از ارسال چندباره
+//     if (typeof isSubmitting !== 'undefined' && isSubmitting) {
+//         return;
 //     }
-// }
-
-function markTouched(selector) {
-    touchedFields.add(selector);
-}
-
-function showLoading(action) {
-    isSubmitting = true;
-    $('form').addClass('loading');
-    $('button[type="button"][value="'+action+'"]').prop('disabled', true).text('در حال ارسال...');
-}
-
-function hideLoading(action) {
-    isSubmitting = false;
-    $('form').removeClass('loading');
-    if (action) {
-        btn = $('button[type="button"][value="'+action+'"]')
-        txt = btn.data('orginal-text')
-        btn.prop('disabled', false).text(txt);
-    }
-}
-
-// // توابع عمومی برای استفاده خارجی
-// window.RequestSimpleForm = {
-//     validateForm: validateForm,
-//     showSuccessMessage: showSuccessMessage,
-//     showErrorMessage: showErrorMessage,
-//     showWarningMessage: showWarningMessage
-// };
-
-function handleFormSubmit(e, actionType = null) {
-    // جلوگیری از ارسال چندباره
-    if (typeof isSubmitting !== 'undefined' && isSubmitting) {
-        return;
-    }
     
-    // اعتبارسنجی فرم (با نمایش خطاها)
-    if (!validateForm(true)) {
-        toggleSubmitButton(false);
-        showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
-        return;
-    }
+//     // اعتبارسنجی فرم (با نمایش خطاها)
+//     if (!validateForm(true)) {
+//         toggleSubmitButton(false);
+//         showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
+//         return;
+//     }
     
-    // نمایش loading
-    showLoading(actionType);
+//     // نمایش loading
+//     showLoading(actionType);
     
-    const formEl = document.getElementById('requestForm');
-    const formData = new FormData(formEl);
-    const resolvedAction = actionType || 'start';
-    formData.set('action', resolvedAction);
+//     const formEl = document.getElementById('requestForm');
+//     const formData = new FormData(formEl);
+//     const resolvedAction = actionType || 'start';
+//     formData.set('action', resolvedAction);
     
-    fetch('', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('خطا در ارتباط با سرور');
-        }
-        return response.json();
-    })
-    .then(data => {
-        hideLoading();
-        if (data.success) {
-            const message = data.message
+//     fetch('', {
+//         method: 'POST',
+//         body: formData,
+//         headers: {
+//             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+//         }
+//     })
+//     .then(response => {
+//         if (!response.ok) {
+//             throw new Error('خطا در ارتباط با سرور');
+//         }
+//         return response.json();
+//     })
+//     .then(data => {
+//         hideLoading();
+//         if (data.success) {
+//             const message = data.message
             
-            showSuccessMessage(message);
-            var formMode = data.mode
-            // در صورتی که update باشد، باید به صفحه درخواست برود
-            if (formMode === 'UPDATE') {
-                let targetUrl = '/ConfigurationChangeRequest/' + data.request_id + '/';
-                setTimeout(() => {
-                    window.location.href = targetUrl;
-                }, 2000);
-            } else if (data.request_id) {
-                setTimeout(() => {
-                    window.location.href = '/ConfigurationChangeRequest/' + data.request_id + '/';
-                }, 2000);
-            }
-        } else {
-            showErrorMessage('خطا: ' + data.message);
-        }
-    })
-    .catch(error => {
-        hideLoading(actionType);
-        console.error('Error:', error);
-        showErrorMessage('خطا در ارسال درخواست: ' + error.message);
-    });
-}
+//             showSuccessMessage(message);
+//             var formMode = data.mode
+//             // در صورتی که update باشد، باید به صفحه درخواست برود
+//             if (formMode === 'UPDATE') {
+//                 let targetUrl = '/ConfigurationChangeRequest/' + data.request_id + '/';
+//                 setTimeout(() => {
+//                     window.location.href = targetUrl;
+//                 }, 2000);
+//             } else if (data.request_id) {
+//                 setTimeout(() => {
+//                     window.location.href = '/ConfigurationChangeRequest/' + data.request_id + '/';
+//                 }, 2000);
+//             }
+//         } else {
+//             showErrorMessage('خطا: ' + data.message);
+//         }
+//     })
+//     .catch(error => {
+//         hideLoading(actionType);
+//         console.error('Error:', error);
+//         showErrorMessage('خطا در ارسال درخواست: ' + error.message);
+//     });
+// }
 
 
 
 $(document).ready(function() {
-    'use strict';
+
     
     // اضافه کردن console.log برای تست لود شدن فایل
     console.log('request-simple.js loaded successfully!');
     
-    // متغیرهای سراسری
-    let formMode = $('form').hasClass('readonly-form') ? 'READONLY' : 'EDIT';
-    
-    setupEventListeners();
+
 
 
     $('#change_type').change(function() {

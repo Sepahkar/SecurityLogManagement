@@ -155,12 +155,14 @@ class FormManager:
     request_obj: Any = None
     error_message: str = None
     request_id: int = -1
+    current_user_natioanl_code:str=''
 
-    def __init__(self, request_id: int = -1):
-        if request_id > 0:
-            self.request_obj = Request(request_id=request_id)
-            self.error_message = self.request_obj.error_message
-            self.request_id = request_id
+    def __init__(self,current_user_national_code:str, request_id: int = -1):
+        self.current_user_natioanl_code = current_user_national_code
+        # از ایجاد Request در اینجا خودداری می‌کنیم تا وابستگی دوری ایجاد نشود
+        self.request_obj = None
+        self.error_message = None
+        self.request_id = request_id if request_id and request_id > 0 else -1
 
     def __get_team_role(self, team_role: str, value: str):
         """
@@ -274,7 +276,7 @@ class FormManager:
             form_data.update(result)
 
             # اطلاعات کاربران را دریافت می کنیم
-            result = self.get_user_data()
+            result = self.get_all_user_data()
             # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
             if not result.get("success", False):
                 return result
@@ -321,10 +323,11 @@ class FormManager:
         """
 
         # اگر شناسه درخواست نامعتبر باشد  در حالت درج باید باز شود
-        if not self.request_obj or not self.request_obj.request_instance:
+        if not self.request_id or request_id <= 0:
             return {"mode": "INSERT", "form": "RequestSimple"}
 
         # بررسی اعتبار request_id
+        self.request_obj = Request(current_user_national_code=self.current_user_natioanl_code, request_id=self.request_id)
         request_instance = self.request_obj.request_instance
 
         # مقادیر پیش فرض
@@ -1311,142 +1314,54 @@ class FormManager:
 
         return data
 
-    def get_user_data(self):
+    def __get_user_data(self, user_natioal_code:str)->dict:
+        # اطلاعات کاربر جاری را استخراج می کنیم
+        obj_user:m.User = m.User.objects.filter(national_code=user_natioal_code).first()
+        user_info = {
+            "fullname": obj_user.fullname,
+            "username": obj_user.username,
+            "national_code": obj_user.national_code,
+            "gender": obj_user.gender
+        }
+
+        # اطلاعات سمت های کاربر جاری را استخراج می کنیم
+        obj_team_role:m.UserTeamRole = m.UserTeamRole.objects.filter(national_code=user_natioal_code)
+        team_roles = []
+        for tr in obj_team_role:
+            team_role = {
+                    "role_title": tr.role_id.role_title,
+                    "role_id": tr.role_id.role_id,
+                    "team_name": tr.team_code.team_name,
+                    "team_code":  tr.team_code.team_code,
+                    "manager_national_code": tr.manager_national_code.national_code,
+                }
+            team_roles.append(team_role)
+        user_info['team_roles'] = team_roles
+        
+        return user_info
+
+    def get_all_user_data(self):
         """
         این تابع اطلاعات کاربر جاری و سایر کاربران مرتبط را بازگشت می دهد
         """
         data = {"success": True, "message": ""}
 
         try:
-            current_user = {
-                "fullname": "محمد سپه کار",
-                "username": "m.sepahkar",
-                "national_code": "1280419180",
-                "gender": "M",
-                "is_active": True,
-                "team_roles": [
-                    {
-                        "role_title": "برنامه نویس",
-                        "role_id": 132,
-                        "team_name": "خودرو",
-                        "team_code": "MIS",
-                        "manager_national_code": "0063967782",
-                        "Level_id": 4,
-                        "level_title": "",
-                        "is_suprior": True,
-                        "start_date": "",
-                        "end_date": "",
-                    },
-                    {
-                        "role_title": "پشتیبان",
-                        "role_id": 121,
-                        "team_name": "عمر",
-                        "team_code": "EVA",
-                        "manager_national_code": "0029893003",
-                    },
-                ],
-            }
-            data["current_user"] = current_user
+           
+            # data["current_user"] = self.__get_user_data(self.current_user_natioanl_code)
 
-            all_users = [
-                {
-                    "fullname": "مجید خاکور",
-                    "username": "m.khakvar@eit",
-                    "national_code": "0017901030",
-                    "gender": "M",
-                    "team_roles": [
-                        {
-                            "role_title": "مدیر عامل",
-                            "role_id": 98,
-                            "team_name": "مدیریت عامل",
-                            "team_code": "CTO",
-                            "manager_national_code": "",
-                        }
-                    ],
-                },
-                {
-                    "fullname": "مریم سلطانی",
-                    "username": "m.soltani@eit",
-                    "national_code": "6309920952",
-                    "gender": "F",
-                    "team_roles": [
-                        {
-                            "role_title": "پشتیبان",
-                            "role_id": 53,
-                            "team_name": "عمر",
-                            "team_code": "LIF",
-                            "manager_national_code": "0029893003",
-                        }
-                    ],
-                },
-                {
-                    "fullname": "امید مشعشعی",
-                    "username": "o.moshashai@eit",
-                    "national_code": "0010748148",
-                    "gender": "M",
-                    "team_roles": [
-                        {
-                            "role_title": "مدیر ادمین",
-                            "role_id": 63,
-                            "team_name": "ادمین",
-                            "team_code": "ADM",
-                            "manager_national_code": "0029893003",
-                        },
-                        {
-                            "role_title": "مدیر نسخه",
-                            "role_id": 53,
-                            "team_name": "نسخه",
-                            "team_code": "VER",
-                            "manager_national_code": "0029893003",
-                        },
-                        {
-                            "role_title": "معاون عملیات",
-                            "role_id": 53,
-                            "team_name": "معاونت عملیات",
-                            "team_code": "OAS",
-                            "manager_national_code": "0029893003",
-                        },
-                    ],
-                },
-                {
-                    "fullname": "مینا ضیائی",
-                    "username": "m.ziyaei@eit",
-                    "national_code": "0063425750",
-                    "gender": "F",
-                    "team_roles": [
-                        {
-                            "role_title": "تستر",
-                            "role_id": 53,
-                            "team_name": "عمر",
-                            "team_code": "LIF",
-                            "manager_national_code": "0029893003",
-                        }
-                    ],
-                },
-                {
-                    "fullname": "سعید فیضی",
-                    "username": "s.feizi@eit",
-                    "national_code": "3979843076",
-                    "gender": "M",
-                    "team_roles": [
-                        {
-                            "role_title": "برنامه نویس",
-                            "role_id": 63,
-                            "team_name": "خودرو",
-                            "team_code": "WEB",
-                            "manager_national_code": "0029893003",
-                        },
-                        {
-                            "role_title": "برنامه نویس",
-                            "role_id": 63,
-                            "team_name": "عمر",
-                            "team_code": "LIF",
-                            "manager_national_code": "0029893003",
-                        },
-                    ],
-                },
-            ]
-            data["all_users"] = all_users
+            # all_users = []
+            # users = m.User.objects.all()
+            # for u in users:
+            #     user_info = self.__get_user_data(u.national_code)
+            #     all_users.append(user_info)
+
+            # data["all_users"] = all_users
+
+            data["current_user"] = m.User.objects.filter(national_code=self.current_user_natioanl_code).first()
+            data["current_user_team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_natioanl_code)
+            data["all_users"] = m.UserTeamRole.objects.all()
+
 
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -1653,12 +1568,13 @@ class Request:
     obj_form_manager: FormManager
     obj_cartable: Cartable
 
-    error_message: str
+    current_user_national_code: str = ''
+    error_message: str = ''
 
-    request_id: int
+    request_id: int  = -1
     request_instance: m.ConfigurationChangeRequest
     change_type_instance: m.ChangeType
-    status_code: str
+    status_code: str = ''
     # ('DRAFTD', 'پیش نویس'): CON->DIRMAN, RET->FAILED, REJ->FAILED
     # ('DIRMAN', 'اظهار نظر مدیر مستقیم'): CON->RELMAN, RET->DRAFTD, REJ->FAILED
     # ('RELMAN', 'اظهار نظر مدیر مربوطه'): CON->(if need_committee: COMITE else : DOTASK), RET->DIRMAN, REJ->FAILED
@@ -1668,8 +1584,8 @@ class Request:
     # ('FAILED', 'خاتمه ناموفقیت آمیز'):
 
     
-    status_title: str
-    need_committee: bool
+    status_title: str = ''
+    need_committee: bool = False
 
     # اطلاعات افراد درگیر
     user_requestor: m.User
@@ -1689,11 +1605,20 @@ class Request:
     # اطلاعات تسک ها
     tasks = List[Task]
     current_task: Task
-    has_any_task_left: bool
+    has_any_task_left: bool = False
 
-    def __init__(self, request_id):
+    def _sync_status_title(self, status_code: str = None):
+        code = status_code if status_code is not None else self.status_code
+        try:
+            self.status_title = dict(
+                m.ConfigurationChangeRequest.STATUS_CHOICES
+            ).get(code, code)
+        except Exception:
+            self.status_title = code
+
+    def __init__(self, current_user_national_code, request_id):
         # یک نمونه از شی FormManager را ایجاد می کنیم
-        self.obj_form_manager = FormManager()
+        self.obj_form_manager = FormManager(current_user_national_code, request_id)
         self.obj_cartable = Cartable()
 
         self.error_message = None
@@ -1705,6 +1630,11 @@ class Request:
         self.task_selected_executors = []
         self.task_testers = []
         self.task_selected_testers = []
+
+        # پیوند دوطرفه بدون ایجاد وابستگی دوری
+        self.obj_form_manager.request_obj = self
+        self.obj_form_manager.request_id = request_id
+        self.obj_form_manager.error_message = None
 
         # در صورتی که تازه قصد ایجاد درخواست را داشته باشیم
         if request_id == -1:
@@ -1726,6 +1656,9 @@ class Request:
                 self.request_id = request_id
                 self.status_code = self.request_instance.status_code
                 self.need_committee = self.request_instance.need_committee
+
+                # مقداردهی عنوان وضعیت متناسب با کد وضعیت فعلی
+                self._sync_status_title()
 
                 # اطلاعات کاربران درگیر را به روزرسانی می کنیم
 
@@ -1831,7 +1764,7 @@ class Request:
                 self.has_any_task_left = any(
                     t.status_code != "FINISH" for t in self.tasks
                 )
-
+                
             except m.ConfigurationChangeRequest.DoesNotExist as e:
                 self.request_instance = None
                 self.request_id = None
@@ -2432,6 +2365,9 @@ class Request:
             # کد وضعیت
             if 'status_code' in form_data:
                 request_instance.status_code = form_data['status_code']
+                # همگام‌سازی وضعیت و عنوان متناظر شی جاری
+                self.status_code = request_instance.status_code
+                self._sync_status_title()
             # عنوان تغییر
             if 'change_title' in form_data:
                 request_instance.change_title = form_data['change_title']
@@ -2952,11 +2888,6 @@ class Request:
         ):
             errors.append("کد ملی درخواست کننده نامعتبر است.")
 
-    def save(self, data): ...
-
-    def create_tasks(self): ...
-
-    def get_data(self) -> dict: ...
 
     def next_step(
         self, action_code: str, user_nationalcode: str, form_data: dict = None
@@ -3057,18 +2988,8 @@ class Request:
                 self.request_instance.save()
 
                 self.status_code = new_status
-                # می خواهیم عنوان وضعیت جدید را پیدا کنیم که در پیام خروجی به کاربر اعلام کنیم
-                # دریافت عنوان وضعیت از جدول ConstValue
-                try:
-                    status_const_value = m.ConstValue.objects.get(
-                        Code=f"STATUS_{new_status}"
-                    )
-                    self.status_title = status_const_value.Caption
-                except m.ConstValue.DoesNotExist:
-                    # اگر رکورد پیدا نشد، از choices مدل استفاده کن
-                    self.status_title = dict(
-                        m.ConfigurationChangeRequest.STATUS_CHOICES
-                    ).get(new_status, new_status)
+                # عنوان وضعیت بر اساس STATUS_CHOICES مدل
+                self._sync_status_title(new_status)
 
                 # ارسال به کارتابل کاربر بعدی
                 if next_user:
@@ -3220,6 +3141,9 @@ class Request:
                 # همه تسک‌ها تکمیل شده‌اند
                 self.request_instance.status_code = "FINISH"
                 self.request_instance.save()
+                # همگام‌سازی وضعیت و عنوان متناظر
+                self.status_code = "FINISH"
+                self._sync_status_title()
 
         except Exception as e:
             pass
@@ -3261,6 +3185,8 @@ class Request:
                 # اطلاعات تسک ها
                 tasks = m.RequestTask.objects.filter(request_id=self.request_id)
                 data["request_tasks"] = tasks
+                
+                data["status_title"] = self.status_title
             else:
                 return {"success": False, "message": "درخواست مورد نظر وجود ندارد"}
 

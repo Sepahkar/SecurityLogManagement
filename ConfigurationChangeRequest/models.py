@@ -67,6 +67,41 @@ class User(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.national_code})"
 
+class Team(models.Model):
+    """
+    اطلاعات کلیه تیم ها در این جدول ذخیره می شود
+    این جدول به صورت خودکار از HR مقدار می گیرد
+    این امکان وجود دارد که یک تیم فعال یا غیر فعال شود
+
+    """
+    team_code = models.CharField(max_length=3, primary_key=True, verbose_name='کد تیم', null=False, help_text='کد منحصر به فرد تیم را وارد کنید.')
+    team_name = models.CharField(max_length=100, verbose_name='نام تیم', null=False, help_text='نام تیم را وارد کنید.')
+    is_active = models.BooleanField(default=True, verbose_name='فعال است')
+    class Meta:
+        verbose_name = 'تیم'
+        verbose_name_plural = 'تیم‌ها'
+        managed = True
+
+    def __str__(self):
+        return self.team_name
+
+class Role(models.Model):
+    """
+    این جدول حاوی اطلاعات سمت های سازمانی است
+    این اطلاعات از جدول سمت ها در سیستم منابع انسانی به صورت خودکار تکمیل می شود
+    نیازی به تغییر اطلاعات این جدول نیست
+    """
+    role_id = models.IntegerField(primary_key=True, verbose_name='شناسه سمت')
+    role_title = models.CharField(max_length=150, verbose_name='عنوان سمت')
+
+    class Meta:
+        verbose_name = 'سمت'
+        verbose_name_plural = 'سمت‌ها'
+        managed = True
+
+    def __str__(self):
+        return self.role_title
+
 class UserTeamRole(models.Model):
     """
     در این جدول سمت های جاری کلیه کاربران قرار دارد
@@ -75,8 +110,8 @@ class UserTeamRole(models.Model):
 
     """
     national_code = models.ForeignKey(to='user', db_column='national_code', verbose_name='کد ملی کاربر', related_name='user', on_delete=models.CASCADE)    
-    role_id = models.IntegerField(verbose_name="شناسه سمت")
-    team_code = models.ForeignKey('Team', on_delete=models.SET_NULL, verbose_name='تیم کاربر', null=True, blank=True, help_text='تیم مربوط به کاربر را انتخاب کنید.', db_column='team_code')
+    role_id = models.ForeignKey(to=Role,on_delete=models.SET_NULL,verbose_name="شناسه سمت", db_column='role_id', null=True)
+    team_code = models.ForeignKey(to=Team, on_delete=models.SET_NULL, verbose_name='تیم کاربر', null=True, blank=True, help_text='تیم مربوط به کاربر را انتخاب کنید.', db_column='team_code')
     manager_national_code = models.ForeignKey(to='user', db_column='manager_national_code', null=True, 
                                               verbose_name='کد ملی مدیر مستقیم', related_name='direct_manager',on_delete=models.SET_NULL)    
 
@@ -138,41 +173,6 @@ class Corp(models.Model):
     def __str__(self):
         
         return self.corp_name
-
-class Team(models.Model):
-    """
-    اطلاعات کلیه تیم ها در این جدول ذخیره می شود
-    این جدول به صورت خودکار از HR مقدار می گیرد
-    این امکان وجود دارد که یک تیم فعال یا غیر فعال شود
-
-    """
-    team_code = models.CharField(max_length=3, primary_key=True, verbose_name='کد تیم', null=False, help_text='کد منحصر به فرد تیم را وارد کنید.')
-    team_name = models.CharField(max_length=100, verbose_name='نام تیم', null=False, help_text='نام تیم را وارد کنید.')
-    is_active = models.BooleanField(default=True, verbose_name='فعال است')
-    class Meta:
-        verbose_name = 'تیم'
-        verbose_name_plural = 'تیم‌ها'
-        managed = True
-
-    def __str__(self):
-        return self.team_name
-
-class Role(models.Model):
-    """
-    این جدول حاوی اطلاعات سمت های سازمانی است
-    این اطلاعات از جدول سمت ها در سیستم منابع انسانی به صورت خودکار تکمیل می شود
-    نیازی به تغییر اطلاعات این جدول نیست
-    """
-    role_id = models.IntegerField(primary_key=True, verbose_name='شناسه سمت')
-    role_title = models.CharField(max_length=150, verbose_name='عنوان سمت')
-
-    class Meta:
-        verbose_name = 'سمت'
-        verbose_name_plural = 'سمت‌ها'
-        managed = True
-
-    def __str__(self):
-        return self.role_title
 
 class Committee(models.Model):
     """

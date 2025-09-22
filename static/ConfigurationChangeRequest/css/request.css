@@ -107,7 +107,10 @@ body {
     direction: rtl;
     font-family: 'Defined-IranSans';
 }
-
+.form-button
+{
+  text-align: left;
+}
 
 /************** General style end***************/
 
@@ -130,10 +133,18 @@ body {
     width: 100%;
     margin-block-end: auto;
 }
-.header .title {
-    font-size: 30px;
-    font-weight: bold;
-    font-family: 'Defined-Titr';
+.header .title-text
+{
+  font-weight: bold;
+  font-family: 'Defined-Titr';
+  text-align: center;
+}
+.header .title-text .title {
+    font-size: 25px;
+}
+.header .title-text .subtitle {
+  font-size: 20px;
+
 }
 .header .logo
 {

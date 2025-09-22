@@ -791,8 +791,7 @@ function showFormDataDebug() {
     return summary;
 }
 
-// مقداردهی اولیه قدیمی مبتنی بر DOMContentLoaded غیرفعال شد تا دوباره‌سازی رخ ندهد
-// document.addEventListener('DOMContentLoaded', function() { ... });
+
 
 function toBoolean(value) {
     return value === true || value === 'True' || value === 1;
@@ -844,6 +843,7 @@ function toJalaali(year, month, day) {
     j_year = j_year + 621; // تبدیل سال میلادی به جلالی
     return [j_year, j_month, j_day_no]; // بازگشت تاریخ جلالی
 }
+
 function IsValidPersianDate(dateString) {
     // الگوی عبارات منظم برای بررسی فرمت YYYY/MM/DD
     var regex = /^(140[0-3]|139[0-9])\/(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])$/;
@@ -1121,6 +1121,18 @@ function form_validation() {
     return errors;
 }
 
+function validateSpecialForm(showErrors = false) {
+    msg = form_validation()
+    // اگر خطایی وجود نداشته باشد
+    if (msg==='')
+        return true
+
+    // اگر خطایی داشته یاشیم باید نمایش داده شود
+    const message_manager_obj = new message_manager()
+    message_manager_obj.showErrorMessage(msg)
+    return false
+
+}
 
 function ChangeLocation(list, list_class)
 {
