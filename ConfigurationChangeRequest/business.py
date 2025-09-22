@@ -1277,34 +1277,34 @@ class FormManager:
             change_type = m.ChangeType.objects.all()
             data["change_type"] = change_type
 
-            # شرکت های مربوط به انواع تغییر
-            change_type_request_corp = m.RequestCorp_ChangeType.objects.all()
-            data["change_type_request_corp"] = change_type_request_corp
+            # # شرکت های مربوط به انواع تغییر
+            # change_type_request_corp = m.RequestCorp_ChangeType.objects.all()
+            # data["change_type_request_corp"] = change_type_request_corp
 
-            # تیم های مربوط به انواع تغییر
-            change_type_request_team = m.RequestTeam_ChangeType.objects.all()
-            data["change_type_request_team"] = change_type_request_team
+            # # تیم های مربوط به انواع تغییر
+            # change_type_request_team = m.RequestTeam_ChangeType.objects.all()
+            # data["change_type_request_team"] = change_type_request_team
 
-            change_type_data_center_list = (
-                m.RequestExtraInformation_ChangeType.objects.filter(
-                    extra_info__Code__startswith="DataCenter_"
-                )
-            )
-            data["change_type_data_center_list"] = change_type_data_center_list
+            # change_type_data_center_list = (
+            #     m.RequestExtraInformation_ChangeType.objects.filter(
+            #         extra_info__Code__startswith="DataCenter_"
+            #     )
+            # )
+            # data["change_type_data_center_list"] = change_type_data_center_list
 
-            change_type_database_list = (
-                m.RequestExtraInformation_ChangeType.objects.filter(
-                    extra_info__Code__startswith="Database_"
-                )
-            )
-            data["change_type_database_list"] = change_type_database_list
+            # change_type_database_list = (
+            #     m.RequestExtraInformation_ChangeType.objects.filter(
+            #         extra_info__Code__startswith="Database_"
+            #     )
+            # )
+            # data["change_type_database_list"] = change_type_database_list
 
-            change_type_systems_list = (
-                m.RequestExtraInformation_ChangeType.objects.filter(
-                    extra_info__Code__startswith="SystemsServices_"
-                )
-            )
-            data["change_type_systems_list"] = change_type_systems_list
+            # change_type_systems_list = (
+            #     m.RequestExtraInformation_ChangeType.objects.filter(
+            #         extra_info__Code__startswith="SystemsServices_"
+            #     )
+            # )
+            # data["change_type_systems_list"] = change_type_systems_list
 
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -1906,6 +1906,7 @@ class Request:
         # این اتفاق زمانی رخ می دهد که کاربر جاری مدیر مستقیم، مدیر مربوطه یا کاربر کمیته و ... باشد
         user_requestor = self.user_requestor.national_code if self.user_requestor else form_data.get("user_nationalcode", "")
         
+        # اگر نتوانسته باشیم مدیر مستقیم را پیدا کنیم.
         if not manager_obj or not manager_obj.national_code:
             return {"success": False, "message": "مدیر مستقیم کاربر پیدا نشد"}
         form_data['direct_manager_nationalcode'] = manager_obj.national_code
@@ -3239,14 +3240,22 @@ class Request:
                 extra_info = m.RequestExtraInformation.objects.filter(
                     request_id=self.request_id
                 )
-                data["extra_info"] = extra_info
+                data["data_center_selected"] = list(
+                    extra_info.filter(extra_info__Code__startswith='DataCenter_').values_list('extra_info__Code', flat=True)
+                )
+                data["database_selected"] = list(
+                    extra_info.filter(extra_info__Code__startswith='Database_').values_list('extra_info__Code', flat=True)
+                )
+                data["system_selected"] = list(
+                    extra_info.filter(extra_info__Code__startswith='SystemsServices_').values_list('extra_info__Code', flat=True)
+                )
 
                 # اطلاعات تیم های مرتبط
-                teams = m.RequestTeam.objects.filter(request_id=self.request_id)
+                teams = m.RequestTeam.objects.filter(request_id=self.request_id).values_list('team_code__team_code',flat=True)
                 data["request_teams"] = teams
 
                 # اطلاعات شرکت های مرتبط
-                corps = m.RequestCorp.objects.filter(request_id=self.request_id)
+                corps = m.RequestCorp.objects.filter(request_id=self.request_id).values_list('corp_code__corp_code',flat=True)
                 data["request_corps"] = corps
 
                 # اطلاعات تسک ها
