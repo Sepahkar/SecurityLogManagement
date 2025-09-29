@@ -87,8 +87,8 @@ class form_manager
         isSubmitting = false;
         $('form').removeClass('loading');
         if (action) {
-            btn = $('button[type="button"][value="'+action+'"]')
-            txt = btn.data('orginal-text')
+            let btn = $('button[type="button"][value="'+action+'"]')
+            let txt = btn.data('original-text')
             btn.prop('disabled', false).text(txt);
         }
     }
@@ -115,7 +115,7 @@ class form_manager
 // این تابع در کد مخصوص هر فرم مجددا پیاده سازی می شود و وظیفه اعتبارسنجی فیلدهای آن فرم را برعهده دارد
 // تعریف این تابع به این دلیل انجام شده که از بروز خطا جلوگیری شود
 function validateSpecialForm(showErrors = false) {
-
+    return true;
 }
 
 function validateForm(showErrors = false) {
@@ -164,82 +164,150 @@ function toggleFieldValidation(selector, isValid, errorMessage, showError) {
         
     };
 
-function handleFormSubmit(e, actionType = null) 
-{
+// function handleFormSubmit(e, actionType = null) 
+// {
+
+//     // جلوگیری از ارسال چندباره
+//     if (typeof isSubmitting !== 'undefined' && isSubmitting) {
+//         return;
+//     }
+    
+//     const message_manager_obj = new message_manager()
+//     // اعتبارسنجی فرم (با نمایش خطاها)
+//     if (!validateForm(true)) {
+//         // toggleSubmitButton(false);
+//         message_manager_obj.showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
+//         return;
+//     }
+    
+//     const form_manager_obj = new form_manager()
+//     // نمایش loading
+//     form_manager_obj.showLoading(actionType);
+    
+//     // داده های فرم را دریافت می کنیم
+//     const formEl = $('#requestForm')[0];
+//     const formData = new FormData(formEl);
+
+//     // در صورتی که action
+//     // نامعلوم باشد از مقدار پیش فرض استفاده می کنیم
+//     const resolvedAction = actionType || 'start';
+//     // action را در داده ها قرار می دهیم
+//     formData.set('action', resolvedAction);
+    
+//     // فرم را ارسال می کنیم
+//     fetch('', {
+//         method: 'POST',
+//         body: formData,
+//         headers: {
+//             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+//         }
+//     })
+//     // در صورتی که جوابی از سرور دریافت نشود
+//     .then(response => {
+//         if (!response.ok) {
+//             throw new Error('خطا در ارتباط با سرور');
+//         }
+//         return response.json();
+//     })
+//     // در صورتی که جواب دریافت شود
+//     .then(data => {
+
+//         form_manager_obj.hideLoading();
+//         // در صورتی که عملیات موفقیت آمیز باشد
+//         if (data.success) {
+//             // پیام موفقیت آمیز را نمایش می دهیم
+//             const message = data.message
+//             message_manager_obj.showSuccessMessage(message);
+//             // حالت فرم را می خوانیم
+//             var formMode = data.mode
+//             // در صورتی که شناسه درخواست وجود داشته باشد
+//             if (data.request_id) {
+//                 setTimeout(() => {
+//                     window.location.href = '/ConfigurationChangeRequest/' + data.request_id + '/';
+//                 }, 2000);
+//             }
+//         } 
+//         // اگر خطا بازگشت شده باشد
+//         else {
+//             message_manager_obj.showErrorMessage('خطا: ' + data.message);
+//         }
+//     })
+//     // اگر خطای مدیریت نشده ای رخ داده باشد
+//     .catch(error => {
+//         form_manager_obj.hideLoading();
+//         console.error('Error:', error);
+//         message_manager_obj.showErrorMessage('خطا در ارسال درخواست: ' + error.message);
+//     });
+// }
+
+function handleFormSubmit(e, actionType = null) {
+    e.preventDefault(); // جلوگیری از رفتار پیش‌فرض فرم
 
     // جلوگیری از ارسال چندباره
     if (typeof isSubmitting !== 'undefined' && isSubmitting) {
         return;
     }
-    
-    const message_manager_obj = new message_manager()
-    // اعتبارسنجی فرم (با نمایش خطاها)
+    isSubmitting = true; // تنظیم پرچم ارسال
+
+    const message_manager_obj = new message_manager();
+    // اعتبارسنجی فرم
     if (!validateForm(true)) {
-        // toggleSubmitButton(false);
         message_manager_obj.showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
+        isSubmitting = false;
         return;
     }
-    
-    const form_manager_obj = new form_manager()
+
+    const form_manager_obj = new form_manager();
     // نمایش loading
     form_manager_obj.showLoading(actionType);
-    
-    // داده های فرم را دریافت می کنیم
+
+    // داده‌های فرم
     const formEl = $('#requestForm')[0];
     const formData = new FormData(formEl);
 
-    // در صورتی که action
-    // نامعلوم باشد از مقدار پیش فرض استفاده می کنیم
+    // تنظیم action
     const resolvedAction = actionType || 'start';
-    // action را در داده ها قرار می دهیم
     formData.set('action', resolvedAction);
-    
-    // فرم را ارسال می کنیم
-    fetch('', {
+
+    // تنظیم URL (یا خالی برای URL فعلی یا از متغیر جنگو)
+    const submitUrl = window.submitUrl || ''; // فرض می‌کنیم submitUrl توی HTML تعریف شده
+    // ارسال درخواست
+    fetch(submitUrl, {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
         }
     })
-    // در صورتی که جوابی از سرور دریافت نشود
     .then(response => {
         if (!response.ok) {
-            throw new Error('خطا در ارتباط با سرور');
+            throw new Error('خطا در ارتباط با سرور: ' + response.status);
         }
         return response.json();
     })
-    // در صورتی که جواب دریافت شود
     .then(data => {
-
-        form_manager_obj.hideLoading();
-        // در صورتی که عملیات موفقیت آمیز باشد
+        form_manager_obj.hideLoading(actionType);
         if (data.success) {
-            // پیام موفقیت آمیز را نمایش می دهیم
-            const message = data.message
-            message_manager_obj.showSuccessMessage(message);
-            // حالت فرم را می خوانیم
-            var formMode = data.mode
-            // در صورتی که شناسه درخواست وجود داشته باشد
+            message_manager_obj.showSuccessMessage(data.message);
+
             if (data.request_id) {
                 setTimeout(() => {
-                    window.location.href = '/ConfigurationChangeRequest/' + data.request_id + '/';
+                    window.location.href = window.location.origin + '/ConfigurationChangeRequest/' + data.request_id + '/';
                 }, 2000);
             }
-        } 
-        // اگر خطا بازگشت شده باشد
-        else {
-            showErrorMessage('خطا: ' + data.message);
+        } else {
+            message_manager_obj.showErrorMessage('خطا: ' + data.message);
         }
     })
-    // اگر خطای مدیریت نشده ای رخ داده باشد
     .catch(error => {
-        hideLoading(actionType);
-        console.error('Error:', error);
-        showErrorMessage('خطا در ارسال درخواست: ' + error.message);
+        form_manager_obj.hideLoading(actionType);
+        console.log('Error during fetch:', error);
+        message_manager_obj.showErrorMessage('خطا در ارسال درخواست: ' + error.message);
+    })
+    .finally(() => {
+        isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
     });
 }
-
 
 
 /***********************مدیریت رخدادهای اصلی و بارگذاری اولیه فرم******************/

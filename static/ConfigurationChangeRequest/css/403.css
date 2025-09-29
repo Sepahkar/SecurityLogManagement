@@ -1,0 +1,125 @@
+/*======================
+    403 page
+=======================*/
+@font-face {
+  font-family: Defined-Titr;
+  src: url("../font/BTitrBd.TTF") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: Defined-FarBaseet;
+  src: url("../font/FarBaseet.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: Defined-Arshia;
+  src: url("../font/BArshia.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.page_403 {
+  padding: 40px 0;
+  background: #fff;
+  font-family: Defined-Arshia, "Arvo", serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.page_403 img {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+}
+
+.four_zero_four_bg {
+  background-image: url(../images/403.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 90vw;
+  height: 90vh;
+  margin: 0;
+}
+
+.four_zero_four_bg h1 {
+  font-size: 80px;
+  font-family: Defined-Titr, "Arvo", serif;
+  margin: 0;
+  color: #333;
+}
+
+.contant_box_403 h3 {
+  font-size: 50px;
+  font-family: Defined-FarBaseet, "Arvo", serif;
+  margin: 0;
+  color: #333;
+}
+
+.link_403 {
+  color: #fff !important;
+  padding: 10px 20px;
+  background: #39ac31;
+  margin: 20px 0;
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.link_403:hover {
+  background: #2d8a26;
+  color: #fff !important;
+  text-decoration: none;
+}
+
+.contant_box_403 {
+  text-align: center;
+  width: 90%;
+  max-width: 900px;
+}
+
+.contant_box_403 p {
+  font-family: Defined-Arshia;
+  font-size: 25pt;
+  color: #666;
+  margin: 20px 0;
+}
+.contant_box_403 a {
+  font-family: Defined-Titr;
+}
+
+/* اضافه کردن responsive design */
+@media (max-width: 768px) {
+  .four_zero_four_bg h1,
+  .four_zero_four_bg h3 {
+    font-size: 60px;
+  }
+  
+  .four_zero_four_bg {
+    height: 50vh;
+    width: 95%;
+  }
+  
+  .page_403 {
+    padding: 20px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .four_zero_four_bg h1,
+  .four_zero_four_bg h3 {
+    font-size: 40px;
+  }
+  
+  .four_zero_four_bg {
+    height: 40vh;
+    width: 98%;
+  }
+}

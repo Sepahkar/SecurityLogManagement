@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'Config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',  # 'mssql',
-        'NAME': 'SecutiryLogManagement',
+        'NAME': 'SecurityLogManagement',
         'USER': 'sa',
         'PASSWORD': 'mohammad',
         'HOST': '127.0.0.1',

@@ -1,0 +1,134 @@
+{% extends 'ConfigurationChangeRequest/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}درخواست تغییرات - انتخاب تسک{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'ConfigurationChangeRequest/css/request-task-list.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block main_content %}
+<div class="request-task-list-container">
+    {% if success %}
+        {% include 'ConfigurationChangeRequest/request-info.html' %}
+        <div class="title">اطلاعات تسک ها</div>
+        <hr/>        
+
+
+        <div class="task-info-box fieldBox">
+            <table class="task-table table table-bordered table-striped align-middle">
+                <thead>
+                    <tr class="task-table-header">
+                        <th class="col-task-id">
+                            شناسه تسک
+                        </th>
+                        <th class="col-task-order">
+                            ترتیب تسک
+                        </th>
+                        <th class="col-task-title">
+                            عنوان تسک
+                        </th>
+                        <th class="col-task-status">
+                            وضعیت
+                        </th>
+                        <th class="col-task-executor">
+                            مجری
+                        </th>
+                        <th class="col-task-tester">
+                            تستر
+                        </th>
+                        <th class="col-task-date">
+                            تاریخ انجام
+                        </th>
+                        <th class="col-task-report">
+                            گزارش
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                        <tr>
+                            <td class="col-task-id">
+                                {{ task.task_id }}
+                            </td>
+                            <td class="col-task-order">
+                                {{ task.task_order }}
+                            </td>
+                            <td class="col-task-title">
+                                {{ task.task_title }}
+                            </td>
+                            <td class="col-task-status">
+                                {{ task.status_title }}
+                            </td>
+                            <td class="col-task-executor">
+                                <div class="user-list">
+                                    {% for executor in task.executors %}
+                                        <div class="user-info" title="{{ executor.fullname }}">
+                                            <div class="user-avatar">
+                                                <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ executor.username|split:'@' }}.jpg"
+                                                     onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
+                                                     alt="{{ executor.fullname }}"
+                                                     {% if executor.national_code == current_user %}
+                                                     class="active"
+                                                     {% else %}
+                                                     class="inactive"
+                                                     {% endif %}>
+                                            </div>
+                                            <div class="user-name">{{ executor.fullname }}</div>
+                                        </div>
+                                    {% empty %}
+                                        <span>مجری ثبت نشده است</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            
+                            <td class="col-task-tester">
+                                <div class="user-list">
+                                    {% for tester in task.testers %}
+                                        <div class="user-info" title="{{ tester.fullname }}">
+                                            <div class="user-avatar">
+                                                <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ tester.username|split:'@' }}.jpg"
+                                                     onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
+                                                     alt="{{ tester.fullname }}"
+                                                     {% if tester.national_code == current_user %}
+                                                     class="active"
+                                                     {% else %}
+                                                     class="inactive"
+                                                     {% endif %}>
+                                            </div>
+                                            <div class="user-name">{{ tester.fullname }}</div>
+                                        </div>
+                                    {% empty %}
+                                        <span>تستری ثبت نشده است</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                           
+                            <td class="col-task-date">
+                                {{ task.executor_done_date|default:"-" }}
+                                {{ task.executor_done_time }}
+                            </td>
+                            <td class="col-task-report">
+                                <i class="fa fa-clipboard-list
+                                {% if task.executor_report%}active{% endif %}
+                                " aria-hidden="true" title="گزارش" 
+                                data-report="{{task.executor_report}}"></i>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8">
+                                تسکی تعریف نشده است
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    {% endif %}
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'ConfigurationChangeRequest/js/request-task-list.js' %}"></script>
+{% endblock %}

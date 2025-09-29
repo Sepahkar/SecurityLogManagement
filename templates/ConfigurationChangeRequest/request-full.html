@@ -13,8 +13,8 @@
         {% if success %}
             <div class='panel-row'><!--اطلاعات درخواست، ویژگی های تغییر -->
                 <div class='col-6 fieldBox user-list'>
-                    <div class="col-12 requestor user-info">
-                        <div class="title">اطلاعات درخواست</div>
+                    <div class="col-12 requestor user-info"><div class="title">اطلاعات درخواست</div>
+                        
                         <hr/>
                         <div class="content">
                             <div class="row">
@@ -28,6 +28,7 @@
                                     <span>{{request.requestor_role_id.role_title}}</span> تیم
                                     {{request.requestor_team_code.team_name}}</span>
                                 </div>
+
                             </div>
                             <div class="col-12">
                                 <div>
@@ -186,7 +187,7 @@
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in data_center_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}">
-                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="data_center_items"
+                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="data_center_items_{{value.Code}}"
                                         {% if value.Code in data_center_selected %}checked="checked"{% endif %}>
                                     </div>
                                     <div class='check-list-caption'>            
@@ -208,7 +209,7 @@
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in database_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}">
-                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="database_items"
+                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="database_items_{{value.Code}}"
                                         {% if value.Code in database_selected %}checked="checked"{% endif %}>
                                     </div>
                                     <div class='check-list-caption'>            
@@ -220,18 +221,18 @@
                         </div>
                         <div class="content-row col-12 systems-list">
                             <div class="col-3 check-list-main-checkbox">
-                                <input class="form-check-input" type="checkbox" name="change_location_systems" id="systems" value=true
-                                    {% if crequest.hange_location_systems %}checked="checked"{% endif %}>
-                                <label class="form-check-label" for="change_location_systems">سیستم ها</label>
+                                <input class="form-check-input" type="checkbox" name="change_location_system_services" id="systems" value=true
+                                    {% if request.change_location_system_services %}checked="checked"{% endif %}>
+                                <label class="form-check-label" for="change_location_system_services">سیستم ها و سرویس ها</label>
                             </div>
                             <div class="check-list-detail col-9">
                                 {% for value in systems_services_values %}
-                                <div class='check-list-box {% if value.Code in systems_services_selected %}active{%else%}inactive{%endif%}'>
+                                <div class='check-list-box {% if value.Code in system_services_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
-                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in systems_services_selected %}_Gray{%endif%}.png" 
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in system_services_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}">
-                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="systems_services_items"
-                                        {% if value.Code in systems_services_selected %}checked="checked"{% endif %}>
+                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="system_services_items_{{value.Code}}"
+                                        {% if value.Code in system_services_selected %}checked="checked"{% endif %}>
                                     </div>
                                     <div class='check-list-caption'>            
                                         {{ value.Caption }}

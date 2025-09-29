@@ -1,0 +1,108 @@
+/* .task-table {
+    width: 100%;
+    table-layout: fixed;
+}
+.col-task-id { width: 4%; }
+.col-task-order { width: 4%; }
+.col-task-title { width: 24%; }
+.col-task-status { width: 10%; }
+.col-task-executor { width: 23%; }
+.col-task-tester { width: 23%; }
+.col-task-date { width: 5%; }
+.col-task-report { width: 5%; }
+/* Optional: prevent text overflow */
+/* .task-table th, .task-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+} 
+.task-table-header
+{
+    background-color: blue;
+    text-align: center;
+    font-weight: bolder;
+    color: white;
+    
+}
+
+.user-info
+{
+  text-align: center;
+  display: block;
+}
+tbody .col-task-tester,tbody  .col-task-executor
+{
+    /* display: flex; 
+} */
+
+.task-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.col-task-id { width: 4%; }
+.col-task-order { width: 4%; }
+.col-task-title { width: 24%; }
+.col-task-status { width: 10%; }
+.col-task-executor { width: 23%; }
+.col-task-tester { width: 23%; }
+.col-task-date { width: 5%; }
+.col-task-report { width: 5%; }
+
+
+.col-task-date, .col-task-report , .col-task-status, .col-task-executor, .col-task-tester
+{
+    text-align: center;
+}
+.task-table-header {
+    background-color: blue;
+    text-align: center;
+    font-weight: bolder;
+    color: white;
+}
+
+/* اینجا flex رو برای لیست یوزرها می‌ذاریم */
+.task-table.user-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.task-table .user-info {
+  text-align: center;
+  display: flex;
+  flex-direction: column; /* آواتار بالا، نام پایین */
+  align-items: center;
+  width: 70px; /* برای اینکه منظم کنار هم باشند */
+}
+
+.task-table .user-avatar img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.task-table .user-name {
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+}
+
+i.fa-clipboard-list
+{
+    font-size: 25pt;
+    color: #44474b;
+    cursor:pointer;
+}
+i.fa-clipboard-list:hover{
+    font-size: 27pt;
+}
+
+i.fa-clipboard-list.active
+{
+    font-size: 25pt;
+    color: #0d6efd;
+    cursor:pointer;
+}

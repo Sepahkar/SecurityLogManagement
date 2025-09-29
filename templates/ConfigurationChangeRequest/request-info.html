@@ -1,62 +1,107 @@
-<div class="col-12 requestor user-info">
+{% load static %}
+{% load custom_filters %}
+<div class="col-12 requestor">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/request-info.css">
     <div class="title">اطلاعات درخواست</div>
     <hr/>
-    <div class="content">
-        <div class="row">
-            <div class="user-avatar col-6">
-                <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.requestor_nationalcode.username|split:'@' }}.jpg" 
-                alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}" class="personnel-avatar">
+    <div class="content row">
+        <div class="user-list row">
+            <div class="fieldBox requestor ">
+                <div class="sub-title">اطلاعات درخواست دهنده</div>
+                <div class="user-info">
+                    <div class="user-avatar col-4">
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.requestor_nationalcode.username|split:'@' }}.jpg" 
+                        alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}" class="personnel-avatar">
+                    </div>
+                    <div class="user-information col-8">
+                        <input type="hidden" name="requestor_user_nationalcode" value="{{request.requestor_nationalcode.national_code}}"/>
+                        <span>{{request.requestor_nationalcode.fullname}}</span><br/>
+                        <span>{{request.requestor_role_id.role_title}}</span><br/>
+                        {{request.requestor_team_code.team_name}}</span>
+                    </div>
+                </div>
             </div>
-            <div class="user-information col-6">
-                <input type="hidden" name="requestor_user_nationalcode" value="{{request.requestor_nationalcode.national_code}}"/>
-                <span>{{request.requestor_nationalcode.fullname}}</span>
-                <span>{{request.requestor_role_id.role_title}}</span> تیم
-                {{request.requestor_team_code.team_name}}</span>
+            <div class="fieldBox direct-manager ">
+                <div class="sub-title">اطلاعات مدیر مستقیم</div>
+                <div class="user-info">
+                    <div class="user-avatar col-3">
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.direct_manager_nationalcode.username|split:'@' }}.jpg" 
+                        alt="{{ request.direct_manager_nationalcode.fullname }}" title="{{ request.direct_manager_nationalcode.fullname }}" class="personnel-avatar">
+                    </div>
+                    <div class="user-information col-8">
+                        <input type="hidden" name="direct_manager_nationalcode" value="{{request.direct_manager_nationalcode.national_code}}"/>
+                        <span>{{request.direct_manager_nationalcode.fullname}}</span><br/>
+                        <span>{{request.direct_manager_nationalcode.role_title}}</span><br/>
+                        {{request.direct_manager_nationalcode.team_name}}</span>
+                    </div>
+                </div>
             </div>
+            <div class="fieldBox related-manager">
+                <div class="sub-title">اطلاعات مدیر مربوطه</div>
+                <div class="user-info">
+                    <div class="user-avatar col-3">
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.related_manager_nationalcode.username|split:'@' }}.jpg" 
+                        alt="{{ request.related_manager_nationalcode.fullname }}" title="{{ request.related_manager_nationalcode.fullname }}" class="personnel-avatar">
+                    </div>
+                    <div class="user-information col-8">
+                        <input type="hidden" name="related_manager_nationalcode" value="{{request.related_manager_nationalcode.national_code}}"/>
+                        <span>{{request.related_manager_nationalcode.fullname}}</span><br/>
+                        <span>{{request.related_manager_nationalcode.role_title}}</span><br/>
+                        {{request.related_manager_nationalcode.team_name}}</span>
+                    </div>
+                </div>
+            </div>
+            {% if request.need_committee %}
+            <div class="fieldBox commite">
+                <div class="sub-title">اطلاعات کمیته</div>
+                <div class="user-info">
+                    <div class="user-avatar col-3">
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.committee_user_nationalcode.username|split:'@' }}.jpg" 
+                        alt="{{ request.committee_user_nationalcode.fullname }}" title="{{ request.committee_user_nationalcode.fullname }}" class="personnel-avatar">
+                    </div>
+                    <div class="user-information col-8">
+                        <input type="hidden" name="committee_user_nationalcode" value="{{request.committee_user_nationalcode.national_code}}"/>
+                        <span>{{request.committee_user_nationalcode.fullname}}</span><br/>
+                        <span>{{request.committee_user_nationalcode.role_title}}</span><br/>
+                        {{request.committee_user_nationalcode.team_name}}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        <div class="col-12">
-            <div>
-                <div class="row">
-                    <div class="col-4">
-                        <span class="label-title">عنوان تغییر:</span>
-                    </div>
-                    <div class="col-8">
-                        {{ request.change_title }}
-                        <!--
-                         چون باید اطلاعات برگشت داده شود، در یک
-                        input hidden
-                        هم ذخیره می کنیم
-                        -->
-                        <input type="hidden" name="change_title" value="{{ request.change_title }}"/>
-                    </div>
+        <div class="row fieldBox col-12 request-info">
+            <div class="row">
+                <div class="col-6">
+                    <span class="label-title">عنوان تغییر:</span>
+                    {{ request.change_title }}
+                    <!--
+                        چون باید اطلاعات برگشت داده شود، در یک
+                    input hidden
+                    هم ذخیره می کنیم
+                    -->
+                    <input type="hidden" name="change_title" value="{{ request.change_title }}"/>
                 </div>
-                <div class="row">
-                    <div class="col-4">
-                        <span class="label-title">نوع تغییر:</span>
-                    </div>
-                    <div class="col-8">
-                        {{ request.change_type.change_type_title }}
-                        <!--
-                         چون باید اطلاعات برگشت داده شود، در یک
-                        input hidden
-                        هم ذخیره می کنیم
-                        -->
-                        <input type="hidden" name="change_type" value="{{ request.change_type.id }}"/>
-                    </div>
+                <div class="col-6">
+                    <span class="label-title">نوع تغییر:</span>
+                    {{ request.change_type.change_type_title }}
+                    <!--
+                        چون باید اطلاعات برگشت داده شود، در یک
+                    input hidden
+                    هم ذخیره می کنیم
+                    -->
+                    <input type="hidden" name="change_type" value="{{ request.change_type.id }}"/>
                 </div>
-                <div class="row">
-                    <div class="col-4">
-                        <span class="label-title">توضیحات:</span>
-                    </div>
-                    <div class="col-8">
-                        {{ request.change_description }}
-                        <!--
-                         چون باید اطلاعات برگشت داده شود، در یک
-                        input hidden
-                        هم ذخیره می کنیم
-                        -->
-                        <input type="hidden" name="change_description" value="{{ request.change_description }}"/>
-                    </div>
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <span class="label-title">توضیحات:</span>
+                    {{ request.change_description }}
+                    <!--
+                        چون باید اطلاعات برگشت داده شود، در یک
+                    input hidden
+                    هم ذخیره می کنیم
+                    -->
+                    <input type="hidden" name="change_description" value="{{ request.change_description }}"/>
                 </div>
             </div>
         </div>

@@ -12,49 +12,110 @@
 <div class="request-task-report-container">
     {% if success %}
         {% include 'ConfigurationChangeRequest/request-info.html' %}
-    <div class="task-info-box mb-4">
-        <div class="row mb-2">
-            <div class="col-4 label-title">شناسه تسک:</div>
-            <div class="col-8">{{ task.id }}</div>
-        </div>
-        <div class="row mb-2">
-            <div class="col-4 label-title">عنوان تسک:</div>
-            <div class="col-8">{{ task.name }}</div>
-        </div>
-        <div class="row mb-2">
-            <div class="col-4 label-title">تاریخ انتخاب تسک:</div>
-            <div class="col-8">{{ task.selected_date|jalali_date }}</div>
-        </div>
-    </div>
-
-    <div class="task-report-box mb-4">
-        <form method="post" id="task-report-form">
-            {% csrf_token %}
+        <div class="title">اطلاعات تسک</div>
+        <hr/>   
+        <div class="task-info-box fieldBox">
             <div class="row mb-3">
-                <div class="col-4 label-title">تاریخ انجام تسک:</div>
-                <div class="col-8">
-                    <input type="text" class="form-control" name="done_date" id="done_date" value="{{ report.done_date|default_if_none:'' }}" placeholder="تاریخ انجام را وارد کنید">
+                <div class="col-2">
+                    <span class="label-title">شناسه تسک:</span>
+                    <span class="label-text">{{ task.id }}</span>
+                </div>
+                <div class="col-2">
+                    <span class="label-title">ترتیب تسک:</span>
+                    <span class="label-text">{{ task.order_number }}</span>
+                </div>                
+                <div class="col-2">
+                    <span class="label-title">تاریخ انتخاب:</span>
+                    <span class="label-text">{{ task.pickup_date|to_jalali }}</span>
+                </div>
+                <div class="col-6">
+                    <span class="label-title">عنوان تسک:</span>
+                    <span class="label-text">{{ task.title }}</span>
                 </div>
             </div>
-            <div class="row mb-3">
-                <div class="col-4 label-title">گزارش انجام:</div>
-                <div class="col-8">
-                    <textarea class="form-control" name="report_text" id="report_text" rows="4" placeholder="گزارش انجام تسک را وارد کنید">{{ report.report_text|default_if_none:'' }}</textarea>
+        </div>
+        <div class="title">گزارش انجام</div>
+        <hr/>           
+        <div class="task-report-box row fieldBox">
+            <div class="task-user d-flex flex-nowrap align-items-start col-5">
+                <!-- مجری -->
+                <span class="label-title">مجری:</span>
+                <div class="user-container d-flex flex-column align-items-center">
+                    {% if task_selected_executor %}
+                        <div class="user-avatar" title="{{ task_selected_executor.fullname }}">
+                            <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ task_selected_executor.username|split:'@' }}.jpg"
+                                 onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
+                                 alt="{{ task_selected_executor.fullname }}">
+                        </div>
+                        <div class="user-name">{{ task_selected_executor.fullname }}</div>
+                    {% else %}
+                        <span class="no-user">مجری ای ثبت نشده است</span>
+                    {% endif %}
+                </div>
+                <!-- تستر(ها) -->
+                <span class="label-title">
+                    {% if status_code == "TESREP" %}تستر:{% else %}تسترها:{% endif %}
+                </span>
+                <div class="user-container d-flex flex-row flex-nowrap align-items-center">
+                    {% if task_selected_tester %}
+                        <div class="user-item d-flex flex-column align-items-center">
+                            <div class="user-avatar" title="{{ task_selected_tester.fullname }}">
+                                <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ task_selected_tester.username|split:'@' }}.jpg"
+                                     onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
+                                     alt="{{ task_selected_tester.fullname }}">
+                            </div>
+                            <div class="user-name">{{ task_selected_tester.fullname }}</div>
+                        </div>
+                    {% else %}
+                        {% for tester in task_testers %}
+                            <div class="user-item d-flex flex-column align-items-center">
+                                <div class="user-avatar" title="{{ tester.fullname }}">
+                                    <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ tester.username|split:'@' }}.jpg"
+                                         onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
+                                         alt="{{ tester.fullname }}">
+                                </div>
+                                <div class="user-name">{{ tester.fullname }}</div>
+                            </div>
+                        {% empty %}
+                            <span class="no-user">تستری ثبت نشده است</span>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
-            <div class="row mt-4">
-                <div class="col-12 d-flex justify-content-end">
-                    <button type="button" class="btn btn-secondary mx-2" onclick="window.history.back();">بازگشت</button>
-                    <button type="submit" class="btn btn-success">تایید</button>
+            <div class="task-report col-7">
+                <div class="report-date d-flex flex-nowrap align-items-center">
+                    <span class="label-title">تاریخ انجام تسک:</span>
+                    <span class="label-text">
+                        <input type="text"
+                        id="persianDateInput"
+                        class="persian-date"
+                        {% if mode == 'READONLY' %} disabled {% endif %}
+                        placeholder="تاریخ انجام را انتخاب کنید"
+                        data-date="{{ done_date|default_if_none:'' }}" 
+                        value="{{ done_date|default_if_none:'' }}"/>
+                        <!-- hidden input: مقدار میلادی نهایی برای ارسال به سرور -->
+                        <input type="hidden" id="done_date" name="done_date" value="{{ done_date|default_if_none:'' }}">    
+                    </span>
+                    <span class="label-title">ساعت انجام تسک:</span>
+                    <span class="label-text">
+                        <input id="timepicker" name="done_time"  type="text" placeholder="ساعت را انتخاب کنید"
+                        {% if mode == 'READONLY' %} disabled {% endif %} value="{{ done_time|default_if_none:'' }}" />
+                        <div id="timepicker-container"></div>
+                        <input type="hidden" id="done_time" value="{{ done_time|default_if_none:'' }}"
+                        {% if mode == 'READONLY' %} disabled {% endif %}>
+                    </span>
+                </div>
+                <div class="report-text-container">
+                    <span class="label-title">گزارش انجام:</span>
+                    <span class="label-text">
+                        <textarea name="report_text" class="report-text {% if mode == 'READONLY' %}inactive{% endif %}" rows="4" 
+                        {% if mode == 'READONLY' %} disabled {% endif %}
+                        placeholder="گزارش انجام تسک را وارد کنید">{{ report|default_if_none:'' }}</textarea>
+                    </span>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
 
-    {% else %}
-        {% if message %}
-            <h1 class="error">{{message}}</h1>
-        {% endif %}
     {% endif %}
 {% endblock %}
 {% block extra_js %}

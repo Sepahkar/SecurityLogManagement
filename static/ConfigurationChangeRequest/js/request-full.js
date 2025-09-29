@@ -975,7 +975,7 @@ function form_validation() {
     /***************************************سطر دوم********************************************* */
     //////////////////////////////////بخش اول//////////////////////////
     //اطلاعات تغییر
-    if (!$('select[name="change_type"]').val()) {
+    if (!$('[name="change_type"]').val()) {
         errors.push("لطفا نوع تغییر را مشخص کنید.");
     }
 
@@ -1038,38 +1038,38 @@ function form_validation() {
     /*-------------------------------------صفحه دوم----------------------------------------------/
     /***************************************سطر اول********************************************* */
     //////////////////////////////////بخش اول//////////////////////////
-    // زمانبندی تغییرات
-    if ($('input[name="request_date"]').val() === '') {
-        errors.push("لطفا زمان انجام تغییرات را مشخص کنید")
-    }
-    //اگر زمان معلوم شده باشد، باید مربوط به آینده باشد
-    else
-    {
-        var persianDate = $('input[name="request_date"]').val();
-        var requestTime = $('input[name="request_time"]').val();
-        var today = new Date();
-        var persianToday = toJalaali(today.getFullYear(), today.getMonth() + 1, today.getDate());
-        // if (!IsValidPersianDate(persianDate)) {
-        //     errors.push("تاریخ شمسی وارد شده معتبر نیست.");
+    // // زمانبندی تغییرات
+    // if ($('input[name="request_date"]').val() === '') {
+    //     errors.push("لطفا زمان انجام تغییرات را مشخص کنید")
+    // }
+    // //اگر زمان معلوم شده باشد، باید مربوط به آینده باشد
+    // else
+    // {
+    //     var persianDate = $('input[name="request_date"]').val();
+    //     var requestTime = $('input[name="request_time"]').val();
+    //     var today = new Date();
+    //     var persianToday = toJalaali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+    //     // if (!IsValidPersianDate(persianDate)) {
+    //     //     errors.push("تاریخ شمسی وارد شده معتبر نیست.");
         
-        // } else if (compare_persian_date(persianDate, persianToday) <= 0) {
-        //     errors.push("زمان درخواست تغییرات نمی تواند مربوط به گذشته باشد.");
-        // }
-        if (!IsValidTime(requestTime)) {
-            errors.push("زمان درخواست باید در فرمت HH:MM باشد.");
-        }
-    }
+    //     // } else if (compare_persian_date(persianDate, persianToday) <= 0) {
+    //     //     errors.push("زمان درخواست تغییرات نمی تواند مربوط به گذشته باشد.");
+    //     // }
+    //     if (!IsValidTime(requestTime)) {
+    //         errors.push("زمان درخواست باید در فرمت HH:MM باشد.");
+    //     }
+    // }
 
-    if ($('input[name="duration_hour"]').val() == 0
-        && $('input[name="duration_minute"]').val() == 0) {
-        errors.push("مدت زمان لازم برای انجام کار نمی‌تواند صفر باشد.");
-    }
-    var downtime = parseInt($('input[name="estimate_downtime_hour"]').val()) * 60 + parseInt($('input[name="estimate_downtime_minute"]').val())
-    var worstcase = parseInt($('input[name="worstcase_downtime_hour"]').val()) * 60 + parseInt($('input[name="worstcase_downtime_minute"]').val())
-    //بدترین زمان تخمین نمی تواند از زمان تخمینی اصلی کمتر باشد
-    if (downtime > worstcase) {
-        errors.push("بدترین تخمین قطعی سیستم باید بزرگتر یا مساوی میزان تخمین قطعی سیستم باشد.");
-    }
+    // if ($('input[name="duration_hour"]').val() == 0
+    //     && $('input[name="duration_minute"]').val() == 0) {
+    //     errors.push("مدت زمان لازم برای انجام کار نمی‌تواند صفر باشد.");
+    // }
+    // var downtime = parseInt($('input[name="estimate_downtime_hour"]').val()) * 60 + parseInt($('input[name="estimate_downtime_minute"]').val())
+    // var worstcase = parseInt($('input[name="worstcase_downtime_hour"]').val()) * 60 + parseInt($('input[name="worstcase_downtime_minute"]').val())
+    // //بدترین زمان تخمین نمی تواند از زمان تخمینی اصلی کمتر باشد
+    // if (downtime > worstcase) {
+    //     errors.push("بدترین تخمین قطعی سیستم باید بزرگتر یا مساوی میزان تخمین قطعی سیستم باشد.");
+    // }
 
 
     //////////////////////////////////بخش دوم//////////////////////////
@@ -1092,13 +1092,13 @@ function form_validation() {
     /***************************************سطر دوم********************************************* */
     //////////////////////////////////بخش اول//////////////////////////
     // الزام به تغییر
-    if ($('.reason-table input[type="checkbox"]:checked').length === 0) {
+    if ($('.reason input[type="checkbox"]:checked').length === 0) {
         errors.push("حداقل یکی از گزینه‌های الزام به تغییر باید انتخاب شود.");
     }
 
     //اگز گزینه سایر انتخاب شده باشد باید توضیحات بیان شود
-    if ($('.reason-table input[name="ReasonOther"]').is(':checked')
-        && $('.reason-table input[name="ReasonOtherDescription"]').val() === "")
+    if ($('.reason input[name="ReasonOther"]').is(':checked')
+        && $('.reason input[name="ReasonOtherDescription"]').val() === "")
     {
         errors.push("با توجه به اینکه برای دلایل الزام به تغییر گزینه 'سایر'' انتخاب شده است، باید در قسمت مربوطه توضیحات لازم را درج نمایید.");
     }
@@ -1124,8 +1124,13 @@ function form_validation() {
 function validateSpecialForm(showErrors = false) {
     msg = form_validation()
     // اگر خطایی وجود نداشته باشد
-    if (msg==='')
+    if (msg === '' || (Array.isArray(msg) && msg.length === 0))
         return true
+
+    // اگر msg آرایه باشد، آن را به رشته چندخطی تبدیل کن
+    if (Array.isArray(msg)) {
+        msg = msg.join('<br/>');
+    }
 
     // اگر خطایی داشته یاشیم باید نمایش داده شود
     const message_manager_obj = new message_manager()

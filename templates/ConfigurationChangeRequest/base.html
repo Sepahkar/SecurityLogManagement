@@ -1,5 +1,5 @@
 <html dir="rtl" lang="fa-IR">
-{%  load static %}
+{% load static %}
 {% load custom_filters %}
 <head>
     <meta charset="utf-8">
@@ -8,6 +8,10 @@
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/jquery-confirm.min.css" >
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/all.min.css" >
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/fontiran.css">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/font-style.css">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/persian-datepicker.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/time-picker.css">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/request.css">
     <!-- Extra CSS -->
@@ -91,15 +95,31 @@
         <!--form buttons -->
         <div class="row mt-4 form-button">
             <div class="col-12">
-                {% if mode == 'UPDATE' %}
-                    <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-orginal-text="تایید">تایید</button>
-                    <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-orginal-text="رد">رد</button>
-                    <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-orginal-text="بازگشت">بازگشت</button>
-                {% elif mode != 'READONLY' %}
-                    <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-orginal-text="شروع فرآیند">شروع فرآیند</button>
-                    <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-orginal-text="بازگشت">بازگشت</button>
+                {% comment %} mode = {{ mode }} {% endcomment %}
+                {%if not is_task %}
+                    {% if mode == 'UPDATE' %}
+                        <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
+                        <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-original-text="رد">رد</button>
+                        <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-original-text="بازگشت">بازگشت</button>
+                    {% elif mode != 'READONLY' %}
+                        <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="شروع فرآیند">شروع فرآیند</button>
+                        <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-original-text="بازگشت">بازگشت</button>
+                    {% else %}
+                        <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+                    {% endif %}
                 {% else %}
-                    <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+                    {% if status_code|slice:"-3:" == "RED" or status_code == "DEFINE" %}
+                        {% if mode != "READONLY" %}
+                                <button type="button" class="btn btn-primary" onclick="handleFormSubmit(event, 'CON')" data-original-text="انتخاب تسک">انتخاب تسک</button>
+                        {% endif %}
+                    {% elif status_code|slice:"-3:" == 'SEL'%}
+                        <button type="button" class="btn  btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
+                        {% if status_code == 'TESSEL' %}
+                        <button type="button" class="btn btn-danger" onclick="handleFormSubmit(event, 'RET')" data-original-text="عدم تایید">عدم تایید</button>
+                        {% endif %}
+                    {% endif %}
+                    <button type="button" class="btn btn-secondary mx-2" onclick="window.closeModal && window.closeModal();">بستن پنجره</button>
+
                 {% endif %}
             </div>
         </div>
@@ -120,7 +140,11 @@
 <script src="/static/ConfigurationChangeRequest/js/select2.min.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/message-handler.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/bootstrap.bundle.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/persian-date.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/persian-datepicker.min.js"></script>
+<script src="/static/ConfigurationChangeRequest/js/timepicker-index.umd.min.js"></script>
 <script src="/static/ConfigurationChangeRequest/js/request.js"></script>
+
 <!-- Custom JavaScript -->
 {% block extra_js %}{% endblock %}
 

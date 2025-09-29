@@ -1,0 +1,503 @@
+{% extends 'ConfigurationChangeRequest/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}درخواست تغییرات - بررسی مدیر مربوطه{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'ConfigurationChangeRequest/css/request-full.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        {% if success %}
+            <div class='panel-row'><!--اطلاعات درخواست، ویژگی های تغییر -->
+                {% include 'ConfigurationChangeRequest/request-info.html' %}
+            </div><!--اطلاعات درخواست، ویژگی های تغییر -->
+            <div class='panel-row'><!--محل تغییر، دامنه تغییرات -->
+                <div class='col-4 fieldBox'>
+                    <div class="title">ویژگی های تغییر</div>
+                    <hr/>
+                    <div class="content">
+                        <div class="content-row col-12">
+                            <div class="col-6 radio-label">طبقه بندی تغییر:</div>
+                            <div class="radio-list col-6">
+                                {% for value in classification_values %}
+                                        {% if request.classification and request.classification.Code == value.Code %}
+                                        <div class='radio-box active'>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {%endif%}
+                                {% endfor %}                                    
+                            </div>
+                        </div>
+                        <div class="content-row col-12">
+                            <div class="col-6 radio-label">گستردگی تغییرات:</div>
+                            <div class="radio-list col-6">
+                                {% for value in change_level_values %}
+                                    {% if request.change_level and request.change_level.Code == value.Code %}
+                                        <div class='radio-box active'>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {%endif%}
+                                {% endfor %}                                    
+                            </div>
+                        </div>
+                        <div class="content-row col-12">
+                            <div class="col-6 radio-label">اولویت تغییر:</div>
+                            <div class="radio-list col-6">
+                                {% for value in priority_values %}
+                                    {% if request.priority and request.priority.Code == value.Code %}
+                                        <div class='radio-box active'>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {%endif%}
+                                {% endfor %}                                    
+                            </div>
+                        </div>
+                        <div class="content-row col-12">
+                            <div class="col-6 radio-label">سطح ریسک تغییر:</div>
+                            <div class="radio-list col-6">
+                                {% for value in risk_level_values %}
+                                    {% if request.risk_level and request.risk_level.Code == value.Code %}
+                                        <div class='radio-box active'>
+                                            <div class='radio-info'>
+                                                <div class='radio-image'>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='radio-caption'>
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}                                    
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-4 fieldBox change-info'>
+                    <div class="title">محل تغییر</div>
+                    <hr/>
+                    <div class="content">
+                        <div class="content-row col-12">
+                            {% if request.change_location_data_center %}                                    
+                                <div class="col-3 check-list-main-checkbox">
+                                    <label class="form-check-label" for="change_location_data_center">مرکز داده</label>
+                                </div>
+                                <div class="check-list-detail col-9 data-center-list">
+                                    {% for value in data_center_values %}
+                                        {% if value.Code in data_center_selected %}
+                                            <div class='check-list-box active'>
+                                                <div>
+                                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" 
+                                                    title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                                </div>
+                                                <div class='check-list-caption'>            
+                                                    {{ value.Caption }}
+                                                </div>
+                                            </div>
+                                        {%endif%}
+                                    {% endfor %}
+                                </div>
+                            {%endif%}
+                        </div>
+                        <div class="content-row col-12 database-list">
+                            {% if request.change_location_database %}
+                                <div class="col-3 check-list-main-checkbox">
+                                    <label class="form-check-label" for="change_location_database">پایگاه داده</label>
+                                </div>
+                                <div class="check-list-detail col-9">
+                                    {% for value in database_values %}
+                                        {% if value.Code in database_selected %}
+                                        <div class='check-list-box active'>
+                                            <div>
+                                                <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                            </div>
+                                            <div class='check-list-caption'>            
+                                                {{ value.Caption }}
+                                            </div>
+                                        </div>
+                                        {%endif%}
+                                    {% endfor %}
+                                </div>
+                            {%endif%}
+                        </div>
+                        <div class="content-row col-12 systems-list">
+                            {% if request.change_location_system_services %}
+                                <div class="col-3 check-list-main-checkbox">
+                                    <label class="form-check-label" for="change_location_system_services">سیستم ها</label>
+                                </div>
+                                <div class="check-list-detail col-9">
+                                    {% for value in systems_services_values %}
+                                        {% if value.Code in system_services_selected %}
+                                        <div class='check-list-box active'>
+                                            <div>
+                                                <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" 
+                                                title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                            </div>
+                                            <div class='check-list-caption'>            
+                                                {{ value.Caption }}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {%endif%}
+                        </div>
+                        {% if request.change_location_other %}
+                            <div class="content-row col-12">
+                                <div class="col-3 check-list-main-checkbox">
+                                    <label class="form-check-label" for="other">:سایر</label>
+                                </div>
+                                <div class="check-list-detail col-9">
+                                    {{ request.change_location_other_description|default_if_none:'' }}
+                                </div>
+                            </div>
+                        {%endif%}
+                    </div>
+                </div>
+                <div class='col-4 fieldBox'>
+                    <div class="title">دامنه تغییرات</div>
+                    <hr/>
+                    <div class="content ">
+                        <div class="content-row col-12 ">
+                            <div class="col-3 radio-label">نیاز به کمیته :</div>
+                            <div class="col-9 need-committee-box">
+                                {% if request.need_committee == False or not request.need_committee %}
+                                    <label class="radio-label" for="need_committee_no">ندارد</label>
+                                {%else%}
+                                    {% for c in committee %}
+                                        {% if request.committee and request.committee.id == c.id %}
+                                            {{ c.title }}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="change-team-corp">
+                            <div class="content-row col-12">
+                                <div class="col-3 radio-label">دامنه تغییر:</div>
+                                <div class="radio-list col-9">
+                                    {% for value in domain_values %}
+                                        {% if request.change_domain and request.change_domain.Code == value.Code %}
+                                            <div class='radio-box active' data-code='{{ value.Code }}'>
+                                                <div class='radio-info'>
+                                                    <div class='radio-image'>
+                                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}.png" 
+                                                        title="{{ value.Caption }}" alt="{{ value.Caption }}" class="{{ value.Code }}">
+                                                    </div>
+                                                    <div class='radio-caption'>
+                                                        {{ value.Caption }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}                                    
+                                </div>
+                            </div>
+                            {% if request.change_domain.Code == "Domain_Between" or request.change_domain.Code == "Domain_Inside" %}
+                                <div class="content-row col-12 team-icons" >
+                                    <div class="col-3 radio-label">
+                                         تیم ها
+                                    </div>
+                                    <div class="icon-list col-9">
+                                        {%for team in teams%}
+                                            {% if team.team_code in request_teams %}
+                                                <img src="{% static 'ConfigurationChangeRequest/images/icon/team/'|add:team.team_code%}.png" 
+                                                alt="{{ team.team_name }}" data-code="{{team.team_code}}" title="{{ team.team_name }}" class="active"/>
+                                            {%endif%}
+                                        {%endfor%}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if request.change_domain.Code == "Domain_Between" or request.change_domain.Code == "Domain_Outside" %}                            
+                                <div class="content-row col-12 corp-icons">
+                                    <div class="col-3 radio-label">
+                                         شرکت ها
+                                    </div>                                    
+                                    <div class="icon-list col-9">
+                                        {%for corp in corps%}
+                                            {% if corp.corp_code in request_corps %}
+                                                <img src="{% static 'ConfigurationChangeRequest/images/icon/corp/'|add:corp.corp_code%}.png" 
+                                                alt="{{ corp.corp_name }}" data-code="{{ corp.corp_code }}" title="{{ corp.corp_name }}" 
+                                                class="active"/>
+                                            {% endif %}
+                                        {%endfor%}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div><!--محل تغییر، دامنه تغییرات -->
+            <div class='panel-row'><!--حوزه اثرگذاری، الزام به تغییر، بازگشت تغییرات -->
+                <div class='col-6 fieldBox'>
+                    <div class="title">حوزه اثرگذاری</div>
+                    <hr/>
+                    <div class="content">
+                        <table class="impact-table">
+                            {%if request.stop_critical_service%}
+                            <tr>
+                                <td class="title-text">
+                                    منجر به قطعی سرویس های حیاتی می شود
+                                    <span class="subtitle-text">منجر به قطعی سرویس های مشتریان شده و تاثیر منفی بر وجهه شرکت دارد</span>
+                                </td>
+                                <td>
+                                    {%if request.critical_service_title%} 
+                                        "{{request.critical_service_title}}"
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {%endif%}
+                            {%if request.stop_sensitive_service%}
+                            <tr>
+
+                                <td class="title-text">
+                                    منجر به قطعی سرویس های حساس می شود
+                                    <span class="subtitle-text">سرویس های مشتریان و سامانه های اصلی شرکت قطع نمی شود</span>
+                                </td>
+                                <td>
+                                    {%if request.stop_service_title%}
+                                        "{{request.stop_service_title}}"
+                                    {%endif%}                                    
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {%if request.not_stop_any_service%}
+                            <tr>
+                                <td class="title-text">
+                                    عدم قطعی سرویس ها
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                <div class='col-6 fieldBox'>
+                    <div class="title">الزام به تغییر</div>
+                    <hr/>
+                    <div class="content reason">
+                        <div class="row">
+                            {%if request.reason_regulatory%}
+                            رگولاتوری
+                            {%endif%}
+
+                            {%if request.reason_technical%}
+                            فنی
+                            {%endif%}
+
+                            {%if request.reason_security%}
+                            امنیتی
+                            {%endif%}
+                            {%if request.reason_business%}
+                            توسعه کسب و کاری
+                            {%endif%}
+                        </div>
+                        {%if request.reason_other%}
+                            <div class="row">
+                                سایر:
+                                {%if request.reason_other_description%}"{{request.reason_other_description}}"{% endif %}
+                            </div>
+                        {%endif%}
+                    </div>
+                    <hr/>
+                    <div class="title">بازگشت تغییرات</div>
+                    <hr/>
+                    <div class="content return-plan-table">
+                        <div class="row">
+                            <div class="title-text">
+                                امکان بازگشت به عقب وجود
+                                {%if request.has_role_back_plan%}دارد{% else %}ندارد{% endif %}
+                            </div>
+                        </div>
+                        {%if request.has_role_back_plan%}
+                            <div class="row">
+                                    طرح بازگشت:
+                                    <textarea name="RollbackPlan" placeholder="طرح بازگشت" disabled>{{request.role_back_plan_description}}</textarea>
+                            </div>
+                        {%endif%}
+                    </div>
+                </div>
+            </div><!--حوزه اثرگذاری، الزام به تغییر، بازگشت تغییرات -->
+            <div class='panel-row'><!-- تقسیم وظایف -->
+                <div class='col-12 fieldBox'>
+                    <div class="title">تقسیم وظایف</div>
+                    <hr/>
+                    <table class="width-table">
+                        <thead>
+                            <tr>
+                                <th>نام وظیفه</th>
+                                <th>مجریان</th>
+                                <th>تسترها</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request_task in request.requesttask_set.all %}
+                            <tr data-task-id="{{ request_task.task.id }}">
+                                <td>{{ request_task.task.title }}</td>
+                                <td>
+                                    <div class="users-container" data-task-id="{{ request_task.task.id }}" data-role="E">
+                                        {% for task_user in request_task.task.taskuser_set.all %}
+                                            {% if task_user.user_role_code == 'E' %}
+                                                <div class="user-badge" data-user-id="{{ task_user.user_nationalcode.national_code }}">
+                                                    <img class="person-small-avatar" src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{task_user.user_nationalcode.username|split:'@'}}.jpg" 
+                                                    alt="{{ task_user.user_nationalcode.fullname }}" title="{{ task_user.user_nationalcode.fullname }}" 
+                                                    onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" />
+                                                </div>
+                                            {% endif %}
+                                        {% empty %}
+                                            <span class="text-muted">هیچ مجری تعریف نشده</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="users-container" data-task-id="{{ request_task.task.id }}" data-role="T">
+                                        {% for task_user in request_task.task.taskuser_set.all %}
+                                            {% if task_user.user_role_code == 'T' %}
+                                                <div class="user-badge" data-user-id="{{ task_user.user_nationalcode.national_code }}">
+                                                    <img class="person-small-avatar" src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{task_user.user_nationalcode.username|split:'@'}}.jpg" 
+                                                    alt="{{ task_user.user_nationalcode.fullname }}" title="{{ task_user.user_nationalcode.fullname }}" 
+                                                    onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" />
+                                                </div>
+                                            {% endif %}
+                                        {% empty %}
+                                            <span class="text-muted">هیچ تستری تعریف نشده</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: #6c757d;">هیچ وظیفه‌ای تعریف نشده است</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>                
+            </div><!-- تقسیم وظایف -->
+            <div class='panel-row'><!-- اطلاع رسانی -->
+                <div class='col-12 fieldBox'>
+                    <div class="title">اطلاع رسانی</div>
+                    <hr/>
+                    <table class="width-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    عنوان
+                                </th>
+                                <th>
+                                    سمت ها
+                                </th>
+                                <th>
+                                    تیم
+                                </th>
+                                <th>
+                                    افراد
+                                </th>
+                                <th>
+                                    نحوه اطلاع رسانی
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request_notify_group in request.requestnotifygroup_set.all %}
+                            <tr>
+                                <td>
+                                    {{ request_notify_group.notify_group.title }}
+                                </td>
+                                <td>
+                                    {% if request_notify_group.notify_group.role_id %}
+                                        {{ request_notify_group.notify_group.role_id.role_title }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request_notify_group.notify_group.team_code %}
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/team/' %}{{ request_notify_group.notify_group.team_code.team_code }}.png" 
+                                            alt="{{ request_notify_group.notify_group.team_code.team_name }}" 
+                                            title="{{ request_notify_group.notify_group.team_code.team_name }}"
+                                            class="team-icon" />
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for notify_user in request_notify_group.notify_group.notifygroupuser_set.all %}
+                                        <img class="person-small-avatar" 
+                                            src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ notify_user.user_nationalcode.username|split:'@' }}.jpg" 
+                                            alt="{{ notify_user.user_nationalcode.fullname }}" 
+                                            title="{{ notify_user.user_nationalcode.fullname }}"
+                                            onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" />
+                                    {% empty %}
+                                        <span class="text-muted">-</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <img class="notification-icon email-notification" 
+                                        src="{% static 'ConfigurationChangeRequest/images/icon/' %}{% if request_notify_group.by_email %}notification-email.png{% else %}notification-email_gray.png{% endif %}" 
+                                        alt="اطلاع رسانی با ایمیل" 
+                                        title="اطلاع رسانی با ایمیل"
+                                        data-notify-group-id="{{ request_notify_group.id }}"
+                                        data-notification-type="email" 
+                                        class="{% if request_notify_group.by_email %}active{% else %}inactive{% endif %}"/>
+                                    
+                                    <img class="notification-icon sms-notification" 
+                                        src="{% static 'ConfigurationChangeRequest/images/icon/' %}{% if request_notify_group.by_sms %}notification-sms.png{% else %}notification-sms_gray.png{% endif %}" 
+                                        alt="اطلاع رسانی با پیامک" 
+                                        title="اطلاع رسانی با پیامک"
+                                        data-notify-group-id="{{ request_notify_group.id }}"
+                                        data-notification-type="sms" 
+                                        class="{% if request_notify_group.by_sms %}active{% else %}inactive{% endif %}"/>
+                                    
+                                    <img class="notification-icon phone-notification" 
+                                        src="{% static 'ConfigurationChangeRequest/images/icon/' %}{% if request_notify_group.by_phone %}notification-phone.png{% else %}notification-phone_gray.png{% endif %}" 
+                                        alt="اطلاع رسانی با تلفن گویا" 
+                                        title="اطلاع رسانی با تلفن گویا"
+                                        data-notify-group-id="{{ request_notify_group.id }}"
+                                        data-notification-type="phone" 
+                                        class="{% if request_notify_group.by_phone %}active{% else %}inactive{% endif %}"/>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #6c757d;">هیچ گروه اطلاع رسانی تعریف نشده است</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>    
+            </div><!-- اطلاع رسانی -->
+        {% endif %}
+    </div>
+{% endblock %}
+
+

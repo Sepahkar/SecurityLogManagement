@@ -9,3 +9,4 @@ djangorestframework
 mssql-django
 mssql
 django-environ
+wfastcgi

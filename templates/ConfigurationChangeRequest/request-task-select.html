@@ -12,42 +12,77 @@
 <div class="request-task-select-container">
     {% if success %}
         {% include 'ConfigurationChangeRequest/request-info.html' %}
-    <div class="task-info-box">
-        <div class="row mb-3">
-            <div class="col-4 label-title">نام تسک:</div>
-            <div class="col-8">{{ task.name }}</div>
-        </div>
-        <div class="row mb-3">
-            <div class="col-4 label-title">شناسه تسک:</div>
-            <div class="col-8">{{ task.id }}</div>
-        </div>
-        <div class="row mb-3 align-items-center">
-            <div class="col-4 label-title">مجریان:</div>
-            <div class="col-8 d-flex">
-                {% for executor in task.executors %}
-                    <div class="executor-avatar" title="{{ executor.fullname }}" style="margin-left: 5px;">
-                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ executor.username|split:'@' }}.jpg"
-                             alt="{{ executor.fullname }}"
-                             class="personnel-avatar"
-                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-                    </div>
-                {% empty %}
-                    <span>مجری ثبت نشده است</span>
-                {% endfor %}
+        <div class="title">اطلاعات تسک</div>
+        <hr/>        
+        <div class="task-info-box fieldBox">
+            <div class="row mb-3">
+                <div class="col-2">
+                    <span class="label-title">شناسه تسک:</span>
+                    <span class="label-text">{{ task.id }}</span>
+                </div>
+                <div class="col-2">
+                    <span class="label-title">ترتیب تسک:</span>
+                    <span class="label-text">{{ task.order_number }}</span>
+                </div>                
+                <div class="col-8">
+                    <span class="label-title">عنوان تسک:</span>
+                    <span class="label-text">{{ task.title }}</span>
+                </div>
             </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-12 d-flex justify-content-end">
-                <button type="button" class="btn btn-secondary mx-2" onclick="window.closeModal && window.closeModal();">بستن پنجره</button>
-                <button type="button" class="btn btn-primary" id="select-task-btn">انتخاب تسک</button>
+            <div class="row mb-3 align-items-center user-select-list flex-nowrap" >
+                <span class="label-title" >
+                {% if status_code == "TESRED" %}
+                    تسترها:
+                {% else %}
+                    مجریان:
+                {% endif %}
+                </span>
+                <div class="d-flex flex-row align-items-center flex-nowrap" >
+                    {% if status_code == "TESRED" %}
+                        {% for tester in task_testers %}
+                            <div class="user-avatar" title="{{ tester.fullname }}">
+                                <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ tester.username|split:'@' }}.jpg"
+                                    onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" 
+                                    alt="{{ tester.fullname }}"
+                                    {% if tester.national_code == current_user%}
+                                    class="active"
+                                    {% else %}
+                                    class="inactive"
+                                    {% endif %}
+                                >
+                            </div>
+                            <div class="user-name">
+                                {{ tester.fullname }}
+                            </div>                            
+                        {% empty %}
+                            <span>تستری ثبت نشده است</span>
+                        {% endfor %}
+                    {% else %}
+                        {% for executor in task_executors %}
+                            <div class="user-avatar" title="{{ executor.fullname }}" >
+                                <div class="user-avatar d-flex justify-content-center">
+                                    <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ executor.username|split:'@' }}.jpg"
+                                        onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" 
+                                        alt="{{ executor.fullname }}"
+                                        {% if executor.national_code == current_user%}
+                                        class="active"
+                                        {% else %}
+                                        class="inactive"
+                                        {% endif %}
+                                    >
+                                </div>
+                                <div class="user-name">
+                                    {{ executor.fullname }}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <span style="margin-right: 0.5rem;">مجری ثبت نشده است</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
             </div>
-        </div>
-    </div>
 
-    {% else %}
-        {% if message %}
-            <h1 class="error">{{message}}</h1>
-        {% endif %}
+        </div>
     {% endif %}
 {% endblock %}
 {% block extra_js %}

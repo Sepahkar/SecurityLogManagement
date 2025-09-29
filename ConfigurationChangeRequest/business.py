@@ -1,6 +1,12 @@
+from asyncio import current_task
 import json
+from random import choice
 
+from django.core.signals import request_started
 from django.db.transaction import commit
+# from requests import request
+from datetime import datetime
+import Utility
 
 # from ConfigurationChangeRequest.views import commitee
 from . import models as m
@@ -8,13 +14,15 @@ import jdatetime
 from . import validator
 from django.core.exceptions import ValidationError
 from datetime import datetime
-from Utility.APIManager.Portal.register_document import v2 as register_document
-from Utility.APIManager.Portal.send_document import ver2 as send_document
-from Utility.APIManager.Portal.update_document_state_code import (
-    v1 as update_document_state_code,
-)
-from Utility.APIManager.Portal.terminate_flow import v1 as terminate_flow
-from Utility.APIManager.Portal.finish_flow import v1 as finish_flow
+# from Utility.APIManager.Portal.register_document import v2 as register_document
+# from Utility.APIManager.Portal.send_document import ver2 as send_document
+# from Utility.APIManager.Portal.update_document_state_code import (
+#     v1 as update_document_state_code,
+# )
+# from Utility.APIManager.Portal.terminate_flow import v1 as terminate_flow
+# from Utility.APIManager.Portal.finish_flow import v1 as finish_flow
+
+from Utility.APIManager.Notification.send_email import v1 as send_email
 from Config import settings
 from typing import List, Optional, Any
 from django.db.models import QuerySet
@@ -24,9 +32,9 @@ APP_CODE = settings.APPCODE
 
 
 class Cartable:
-    doc_id: int
-    app_code: str
-    doc_state: str
+    doc_id: int=-1
+    app_code: str=''
+    doc_state: str=''
 
     def __init__(self) -> None:
         self.app_code = settings.APPCODE
@@ -107,7 +115,7 @@ class Cartable:
         return {"success": True, "message": "سندها با موفقیت ارسال شدند"}
 
     def exit_from_cartable(
-        self,
+        self, national_code:str
     ):
         # اگر سند وجود نداشته باشد پیام خطا می دهد
         if not self.validate_doc():
@@ -140,6 +148,7 @@ class Cartable:
         # اگر هنوز سند ایجاد نشده باشد
         if not self.doc_id:
             return False
+        return True
         # باید با فراخوانی یک API کنترل کنیم که سند وجود دارد
 
 
@@ -155,10 +164,10 @@ class FormManager:
     request_obj: Any = None
     error_message: str = None
     request_id: int = -1
-    current_user_natioanl_code:str=''
+    current_user_national_code:str=''
 
     def __init__(self,current_user_national_code:str, request_id: int = -1):
-        self.current_user_natioanl_code = current_user_national_code
+        self.current_user_national_code = current_user_national_code
         # از ایجاد Request در اینجا خودداری می‌کنیم تا وابستگی دوری ایجاد نشود
         self.request_obj = None
         self.error_message = None
@@ -241,9 +250,7 @@ class FormManager:
         # مشخص می کنیم که وضعیت فعلی فرم چیست؟
         form_status = self.check_form_status(
             user_nationalcode=user_nationalcode,
-            request_id=request_id,
-            request_task_id=-1,
-        )
+            request_id=request_id)
         form_data["mode"] = form_status["mode"]
         form_data["form"] = form_status["form"]
 
@@ -264,41 +271,37 @@ class FormManager:
 
             form_data.update(result)
 
-        # اگر در حالت ویرایش و یا درج باشیم بایستی اطلاعات تکمیلی را هم اضافه کنیم
-        if form_status["mode"] in ["INSERT", "UPDATE"]:
+        # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
+        result = self.get_form_data()
+        # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
+        if not result.get("success", False):
+            return result
 
-            # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
-            result = self.get_form_data()
-            # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
-            if not result.get("success", False):
-                return result
+        form_data.update(result)
 
-            form_data.update(result)
+        # اطلاعات کاربران را دریافت می کنیم
+        result = self.get_all_user_data()
+        # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
+        if not result.get("success", False):
+            return result
 
-            # اطلاعات کاربران را دریافت می کنیم
-            result = self.get_all_user_data()
-            # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
-            if not result.get("success", False):
-                return result
+        form_data.update(result)
 
-            form_data.update(result)
+        # سایر اطلاعات مربوط به فرم را دریافت می کنیم
+        request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
 
-            # سایر اطلاعات مربوط به فرم را دریافت می کنیم
-            request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
-
-            form_data.update(
-                {
-                    "request_number": request_id,
-                    "request_date": request_date,
-                }
-            )
+        form_data.update(
+            {
+                "request_number": request_id,
+                "request_date": request_date,
+            }
+        )
 
         return form_data
 
     # این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
     def check_form_status(
-        self, user_nationalcode: str, request_id: int = -1, request_task_id: int = -1
-    ) -> dict:
+        self, user_nationalcode: str, request_id: int = -1 ) -> dict:
         """
         این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
 
@@ -326,13 +329,13 @@ class FormManager:
         if not self.request_id or request_id <= 0:
             return {"mode": "INSERT", "form": "RequestSimple"}
 
-        # بررسی اعتبار request_id
-        self.request_obj = Request(current_user_national_code=self.current_user_natioanl_code, request_id=self.request_id)
-        request_instance = self.request_obj.request_instance
-
-        # مقادیر پیش فرض
-        mode = "READONLY"
-        form = "RequestSimple"
+        # ایجاد یک شی درخواست
+        request_obj:Request = Request(current_user_national_code=self.current_user_national_code, request_id=self.request_id)
+        request_status = request_obj.status_code
+        self.request_obj = request_obj
+        # این متغییرها وضعیت و فرم را مشخص می کنند
+        mode = "Readonly"
+        form = "Invalid"
 
         # اینجا نوع فرم را بر اساس وضعیت فرم و کاربر جاری به دست می آوریم
         # موضوع این است که وقتی مثلا درخواست کننده با مدیر مربوطه یکسان باشد، قدری پیچیده می شود
@@ -341,109 +344,344 @@ class FormManager:
         
         # در چه صورتی فرم ساده باید نمایش داده شود؟
         # در صورتی که کاربر جاری درخواست دهنده و یا مدیر مستقیم باشد
-        if (user_nationalcode in 
-            (request_instance.requestor_nationalcode.national_code, 
-             request_instance.direct_manager_nationalcode.national_code)):
-            form = "RequestSimple"
-
-        # اگر کاربر جاری درخواست دهنده باشد و فرم در وضعیت پیش نویس باشد
-        if  (user_nationalcode == request_instance.requestor_nationalcode.national_code 
-            and request_instance.status_code == "DRAFTD"):
-            mode = "UPDATE"
-
-        # اگر کاربر جاری مدیر مستقیم باشد و فرم در وضعیت مدیر مستقیم باشد
-        if (user_nationalcode == request_instance.direct_manager_nationalcode.national_code
-            and request_instance.status_code == "DIRMAN"):
-            mode = "UPDATE"
-
-        # اگر کاربر جاری مدیر مربوطه باشد و فرم در وضعیت مدیر مربوطه باشد
-        if (user_nationalcode == request_instance.related_manager_nationalcode.national_code
-            and request_instance.status_code == "RELMAN"):
-            form = "RequestFull"
-            mode = "UPDATE"
-
-        # اگر کاربر جاری دبیر کمیته باشد و فرم در وضعیت بررسی کمیته باشد
-        if (user_nationalcode == request_instance.committee_user_nationalcode.national_code
-            and request_instance.status_code == "COMITE"):
-            form = "RequestFull"
-            mode = "UPDATE"
         
-        if (request_instance.status_code == ''):
+        # با توجه به مقدار request_status وضعیت فرم و دسترسی کاربر را تعیین می‌کنیم
+        # برای اینکه اشتباهی رخ ندهد، بهتر است این کار را بکنیم
+        # به ازای هر وضعیت، بررسی زیر را انجام دهیم
+        # 1- کاربر جاری را بررسی کنیم
+        # 2- اگر کاربر باید به این فرم دسترسی به روزرسانی داشته باشد، به وی اجازه به روزرسانی بدهیم
+        # 3- اگر کاربر در مرحله های قبلی بوده است باید به این فرم دسترسی فقط خواندنی داشته باشد
+        # 4- اگر کاربر مربوط به مراحل بعدی است غیر مجاز است
+        # 5- اگر کاربر مربوط به این درخواست نیست غیر مجاز است
+        
+        # انواع وضعیت هایی که درخواست می تواند داشته باشد:
+       
+        # ('DRAFTD', 'پیش نویس'): 
+        # مجاز به ویرایش: درخواست دهنده         فرم : درخواست ساده
+        # فقط خواندنی: مدیر درخواست دهنده      فرم: درخواست ساده
+       
+        # ('DIRMAN', 'اظهار نظر مدیر مستقیم'):
+        # مجاز به ویرایش: مدیر مستقیم       فرم:درخواست ساده
+        # فقط خواندنی: درخواست دهنده        فرم: درخواست ساده
+       
+        # ('RELMAN', 'اظهار نظر مدیر مربوطه')
+        # مجاز به ویرایش: مدیر مربوطه                  فرم: درخواست کامل
+        # فقط خواندنی: دبیر کمیته       فرم: درخواست کامل فقط خواندنی
+        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
 
-            # به دست آوردن لیست مجریان
-            executor_list = task_user_list(request_id, -1, "E", False)
-            # به دست آوردن لیست تسترها
-            tester_list = task_user_list(request_id, -1, "T", False)
-            if user_nationalcode in executor_list + tester_list:
-                form = "TaskSelect"
-                if request_instance.mode_code == "DOTASK":
-                    # اگر شماره تسک مشخص شده باشد
-                    if request_task_id > 0:
-                        # تسک مربوطه را به دست می آوریم
-                        request_task = m.RequestTask.objects.filter(
-                            id=request_task_id
-                        ).first()
-                        request_task_user = m.TaskUserSelected.objects.filter(
-                            request_task=request_task_id
-                        )
-                        if request_task:
-                            # اگر وضعیت تسک انتخاب شده باشد
-                            if (
-                                request_task.mode_code == "EXESEL"
-                                and request_task_user.filter()
-                            ):
-                                ...
-                        # در صورتی که شناسه تسک درخواست نامعتبر باشد
-                        else:
-                            mode = "INVALID"
+        # برای اینکه اشتباهی رخ ندهد، بهتر است این کار را بکنیم
+        # به ازای هر وضعیت، بررسی زیر را انجام دهیم
+        # 1- کاربر جاری را بررسی کنیم
+        # 2- اگر کاربر باید به این فرم دسترسی به روزرسانی داشته باشد، به وی اجازه به روزرسانی بدهیم
+        # 3- اگر کاربر در مرحله های قبلی بوده است باید به این فرم دسترسی فقط خواندنی داشته باشد
+        # 4- اگر کاربر مربوط به مراحل بعدی است غیر مجاز است
+        # 5- اگر کاربر مربوط به این درخواست نیست غیر مجاز است
+        
+        # انواع وضعیت هایی که درخواست می تواند داشته باشد:
+       
+        # ('DRAFTD', 'پیش نویس'): 
+        # مجاز به ویرایش: درخواست دهنده         فرم : درخواست ساده
+        # فقط خواندنی: مدیر درخواست دهنده      فرم: درخواست ساده
+       
+        # ('DIRMAN', 'اظهار نظر مدیر مستقیم'):
+        # مجاز به ویرایش: مدیر مستقیم       فرم:درخواست ساده
+        # فقط خواندنی: درخواست دهنده        فرم: درخواست ساده
+       
+        # ('RELMAN', 'اظهار نظر مدیر مربوطه')
+        # مجاز به ویرایش: مدیر مربوطه                  فرم: درخواست کامل
+        # فقط خواندنی: دبیر کمیته       فرم: درخواست کامل فقط خواندنی
+        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
+        
+        # ('COMITE', 'اظهار نظر کمیته'): 
+        # مجاز به ویرایش: دبیرکمیته                    فرم: درخواست کامل
+        # فقط خواندنی: مدیر درخواست دهنده       فرم: درخواست کامل فقط خواندنی
+        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
+        
+        # ('DOTASK', 'انجام تسک ها'): 
+        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
+        # برای سایر نقش ها لازم است که وضعیت تسک هم کنترل شود
+            # ('EXERED', 'آماده انتخاب مجری')
+            # مجاز به ویرایش : مجریان       فرم: انتخاب تسک
+            # فقط خواندنی: تسترها       فرم: انتخاب تسک
+
+            # ('EXESEL', 'مجری انتخاب شده'),
+            # مجاز به ویرایش : مجری منتخب      فرم: گزارش تسک
+            # فقط خواندنی: مجریان، تسترها       فرم: انتخاب تسک
+
+            # ('TESRED', 'آماده انتخاب تستر'),
+            # مجاز به ویرایش: تسترها        فرم: انتخاب تسک
+            # فقط خواندنی: مجری منتخب          فرم: گزارش تسک
+            # فقط خواندنی: مجریان       فرم: انتخاب تسک
+            
+            # ('TESSEL', 'تستر انتخاب شده'),
+            # مجاز به ویرایش: تستر منتخب       فرم : گزارش تسک
+            # فقط خواندنی: مجری منتخب       فرم: گزارش تسک
+            # فقط خواندنی: مجریان و تسترها      فرم: انتخاب تسک
+            
+            # ('FINISH', 'انجام موفق'),
+            # ('FAILED', 'انجام ناموفق'),    
+            # فقط خواندنی: تستر منتخب، مجری منتخب       فرم : گزارش تسک
+            # فقط خواندنی: مجری منتخب       فرم: گزارش تسک
+           
+            
+        
+        # ('FINISH', 'خاتمه یافته'):
+        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
+        
+        # ('FAILED', 'خاتمه ناموفقیت آمیز'):
+        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
+        
+        
+        
+        #توجه کنید، ممکن بود این کد را به صورت ساده تر و فشرده تر نوشت، ولی به دلیل خوانایی از فاکتور گیری و یا مقادیر پیش فرض چندگانه اجتناب شده است
+        if request_status == "DRAFTD":
+            # پیش نویس
+            if user_nationalcode == request_obj.user_requestor.national_code:
+                form = "RequestSimple"
+                mode = "UPDATE"
+            elif user_nationalcode == request_obj.user_direct_manager.national_code:
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif request_status == "DIRMAN":
+            # اظهار نظر مدیر مستقیم
+            if user_nationalcode == request_obj.user_direct_manager.national_code:
+                form = "RequestSimple"
+                mode = "UPDATE"
+            elif user_nationalcode == request_obj.user_requestor.national_code:
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif request_status == "RELMAN":
+            # اظهار نظر مدیر مربوطه
+            if user_nationalcode == request_obj.user_related_manager.national_code:
+                form = "RequestFull"
+                mode = "UPDATE"
+            elif user_nationalcode == request_obj.user_committee.national_code:
+                form = "RequestFull-Readonly"
+                mode = "READONLY"
+            elif user_nationalcode in (
+                request_obj.user_requestor.national_code,
+                request_obj.user_direct_manager.national_code,
+            ):
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif request_status == "COMITE":
+            # اظهار نظر کمیته
+            if user_nationalcode == request_obj.user_committee.national_code:
+                form = "RequestFull"
+                mode = "UPDATE"
+            elif user_nationalcode == request_obj.user_related_manager.national_code:
+                form = "RequestFull-Readonly"
+                mode = "READONLY"
+            elif user_nationalcode in (
+                request_obj.user_requestor.national_code,
+                request_obj.user_direct_manager.national_code,
+            ):
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif request_status == "DOTASK":
+            # انجام تسک ها
+            if user_nationalcode in (
+                request_obj.user_requestor.national_code,
+                request_obj.user_direct_manager.national_code,
+                request_obj.user_related_manager.national_code,
+                request_obj.user_committee.national_code,
+            ):
+                form = "TaskList"
+                mode = "READONLY"
+            else:
+                # تسک جاری را به دست می آوریم
+                task:Task = request_obj.current_task
+                
+                # حالا کنترل می کنیم که وضعیت تسک چیست؟
+                task_status = task.status_code
+
+                # حالتهایی که ممکن است اتفاق بیافتد:
+                # ('EXERED', 'آماده انتخاب مجری'),
+                # ('EXESEL', 'مجری انتخاب شده'),
+                # ('TESRED', 'آماده انتخاب تستر'),
+                # ('TESSEL', 'تستر انتخاب شده'),
+                # ('FINISH', 'انجام موفق'),
+                # ('FAILED', 'انجام ناموفق'),                
+
+                # نکات مهم:
+                # 1- این کد به دلیل افزایش خوانایی غیرفشرده نوشته شده است
+                # 2- با توجه به اینکه مثلا یک مجری می تواند تستر هم باشد، ترتیب کنترل شرط ها مهم است
+                
+                # تسک هنوز شروع نشده است
+                if task_status == 'DEFINE':
+                    form = "Invalid"
+                    mode = "INVALID"
+                
+                # آماده انتخاب مجری
+                elif task_status == 'EXERED':
+                    # اگر کاربر در لیست مجریان باشد
+                    if any(user_nationalcode == executor.national_code for executor in task.executors):
+                        form = 'TaskSelect'
                         mode = "UPDATE"
+                    # اگر کاربر در لیست تسترها باشد
+                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    else:
+                        form = "Invalid"
+                        mode = "INVALID"
+                        
+                # مجری انتخاب شده است
+                elif task_status == 'EXESEL':
+                    # اگر کاربر مجری منتخب باشد
+                    if user_nationalcode == task.selected_executor.national_code:
+                        form = 'TaskReport'
+                        mode = "UPDATE"
+                    # اگر کاربر مجری منتخب نباشد، ولی در لیست مجریان باشد
+                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    # اگر کاربر در لیست تسترهای منختب باشد
+                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    else:
+                        form = "Invalid"
+                        mode = "INVALID"
+                
+                # آماده انتخاب تستر
+                elif task_status == 'TESRED':
+                    # اگر کاربر در لیست تسترها باشد
+                    if any(user_nationalcode == tester.national_code for tester in task.testers):
+                        form = 'TaskSelect'
+                        mode = "UPDATE"
+                    # اگر کاربر مجری منتخب باشد
+                    elif user_nationalcode == task.selected_executor.national_code:
+                        form = 'TaskReport'
+                        mode = "READONLY"
+                    # اگر کاربر در لیست مجریان باشد
+                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    else:
+                        form = "Invalid"
+                        mode = "INVALID"
+                
+                # تستر انتخاب شده است
+                elif task_status == 'TESSEL':
+                    # اگر کاربر تستر منتخب باشد
+                    if user_nationalcode == task.selected_tester.national_code:
+                        form = 'TaskReport'
+                        mode = "UPDATE"
+                    # اگر کاربر مجری منتخب باشد
+                    elif user_nationalcode == task.selected_executor.national_code:
+                        form = 'TaskReport'
+                        mode = "READONLY"
+                    # اگر کاربر در لیست تسترها باشد
+                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    # اگر کاربر در لیست مجریان باشد
+                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    else:
+                        form = "Invalid"
+                        mode = "INVALID"
+                
+                # تسک موفقیت آمیز خاتمه یافته
+                # انجام تسک ناموفق بوده است
+                elif task_status == 'FINISH' or task_status == 'FAILED':
+                    # اگر کاربر تستر منتخب باشد
+                    if user_nationalcode == task.selected_tester.national_code:
+                        form = 'TaskReport'
+                        mode = "READONLY"
+                    # اگر کاربر مجری منتخب باشد
+                    elif user_nationalcode == task.selected_executor.national_code:
+                        form = 'TaskReport'
+                        mode = "READONLY"
+                    # اگر کاربر در لیست تسترها باشد
+                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    # اگر کاربر در لیست مجریان باشد
+                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
+                        form = 'TaskSelect'
+                        mode = "READONLY"
+                    else:
+                        form = "Invalid"
+                        mode = "INVALID"
+                else:
+                    form = "Invalid"
+                    mode = "INVALID"                    
+        elif request_status in ("FINISH", "FAILED"):
+            # خاتمه یافته یا خاتمه ناموفقیت آمیز
+            if user_nationalcode in (
+                request_obj.user_requestor.national_code,
+                request_obj.user_direct_manager.national_code,
+                request_obj.user_related_manager.national_code,
+                request_obj.user_committee.national_code,
+            ):
+                form = "TaskList-Readonly"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
 
-            elif user_nationalcode in tester_list:
-                form = "TaskSelect"
-                if request_instance.mode_code == "TESREP":
-                    mode = "UPDATE"
+        else:
+            # وضعیت نامعتبر
+            form = "Invalid"
+            mode = "INVALID"
 
-            # به دست آوردن لیست مجریان منتخب
-            executor_list = task_user_list(request_id, -1, "E", True)
-            # به دست آوردن لیست تسترهای منتخب
-            tester_list = task_user_list(request_id, -1, "T", True)
-            if user_nationalcode in executor_list:
-                form = "TaskReport"
-                if request_instance.mode_code == "EXEREP":
-                    mode = "UPDATE"
-            elif user_nationalcode in tester_list:
-                form = "TaskReport"
-                if request_instance.mode_code == "TESREP":
-                    mode = "UPDATE"
-
+            
         return {"mode": mode, "form": form}
 
-    def load_task_data(self, request_id: int, task_id: int, user_nationalcode: str):
+    def load_task_data(self, request_obj:"Request", task_obj:"Task", user_nationalcode: str):
         """
         بارگذاری داده‌های تسک
         """
-        form_data = {"message": ""}
+        form_data = {"success": True, "message": ""}
 
         # دریافت اطلاعات درخواست
-        request_data = m.ConfigurationChangeRequest.objects.filter(
-            id=request_id
-        ).first()
-        if request_data:
-            form_data["request"] = request_data
+        form_data["request"] = request_obj.request_instance
+        form_data["request_id"] = request_obj.request_id
 
         # دریافت اطلاعات تسک
-        task_data = m.RequestTask.objects.filter(id=task_id).first()
-        if task_data:
-            form_data["task"] = task_data
+        form_data["task"] = task_obj.task_instance
 
         # دریافت اطلاعات کاربران تسک
-        task_users = m.TaskUser.objects.filter(task=task_data.task)
-        form_data["task_users"] = task_users
+        form_data["task_users"] = task_obj.users
+        form_data["task_executors"] = task_obj.executors
+        form_data["task_testers"] = task_obj.testers
+        
+        form_data["task_selected_executor"] = task_obj.selected_executor
+        form_data["task_selected_tester"] = task_obj.selected_tester
+        
+        form_data["status_code"] = task_obj.status_code
+        form_data["status_title"] = task_obj.status_title if task_obj.status_title else 'انتخاب تسک توسط مجریان'
 
         # دریافت اطلاعات کاربر جاری
-        current_user = self.get_current_user_info(user_nationalcode)
-        form_data["current_user"] = current_user
+        form_data["current_user"] = user_nationalcode
+        form_data["is_task"] = True
 
+        # حالا باید ببینیم این کاربر مجری و یا تستر است؟
+        tester_executor = 'E' if user_nationalcode in [u.national_code for u in task_obj.executors] else 'T'
+
+        form_data['done_date'] = task_obj.executor_done_date if tester_executor == 'E' else task_obj.tester_done_date
+        form_data['done_time'] = task_obj.executor_done_time if tester_executor == 'E' else task_obj.tester_done_time
+        form_data['report'] = task_obj.executor_report if tester_executor == 'E' else task_obj.tester_report
+        
         return form_data
 
     def validate_task_report(self, form_data: dict) -> dict:
@@ -573,7 +811,6 @@ class FormManager:
         form_status = self.check_form_status(
             user_nationalcode=user_nationalcode,
             request_id=request_id,
-            request_task_id=request_task_id,
         )
         form_mode = form_status["mode"]
         form_name = form_status["form"]
@@ -1348,7 +1585,7 @@ class FormManager:
 
         try:
            
-            # data["current_user"] = self.__get_user_data(self.current_user_natioanl_code)
+            # data["current_user"] = self.__get_user_data(self.current_user_national_code)
 
             # all_users = []
             # users = m.User.objects.all()
@@ -1358,8 +1595,8 @@ class FormManager:
 
             # data["all_users"] = all_users
 
-            data["current_user"] = m.User.objects.filter(national_code=self.current_user_natioanl_code).first()
-            data["current_user_team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_natioanl_code)
+            data["current_user"] = m.User.objects.filter(national_code=self.current_user_national_code).first()
+            data["current_user_team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_national_code)
             data["all_users"] = m.UserTeamRole.objects.all()
 
 
@@ -1388,7 +1625,7 @@ class FormManager:
 
         extra_information = []
         for value in values:
-            if (request.POST.get(value.Code) == value.Code):  # ذخیره وضعیت چک باکس
+            if (request.POST.get(type+'_items_'+value.Code) == value.Code):  # ذخیره وضعیت چک باکس
                 extra_information.append(value.id)
 
         return extra_information
@@ -1411,93 +1648,144 @@ class FormManager:
 
 
 class Task:
-    task_id: int
-    task_instance: m.Task
-    request_task_id: int
-    task_status: str
-    request_task_instance: m.RequestTask
-    test_required: bool
+    task_id: int = -1
+    task_title:str = ''
+    task_instance: m.Task = None
+    task_order:int = 0
+    
+    request_task_id: int = -1
+    request_id:int = -1
+    status_code: str = ''
+    # ('DEFINE', 'تعریف'),
+    # ('EXERED', 'آماده انتخاب مجری'),
+    # ('EXESEL', 'مجری انتخاب شده'),
+    # ('TESRED', 'آماده انتخاب تستر'),
+    # ('TESSEL', 'تستر انتخاب شده'),
+    # ('FINISH', 'انجام موفق'),
+    # ('FAILED', 'انجام ناموفق'),    
+    status_title:str = ''
+    
+    request_task_instance: m.RequestTask = None
+    test_required: bool = False
+    error_message:str = ''
 
     # اطلاعات افراد درگیر در تسک
-    users: List[m.User]
-    executors: List[m.User]
-    selected_executor: m.User
-    testers: List[m.User]
-    selected_tester: m.User
+    users: List[m.User] = []
 
-    def __int__(self, request_task_id):
+    executors: List[m.User] = []
+    executors_names: str = ''
+    selected_executor: m.User = None
+    executor_done_date:datetime = None
+    executor_done_time:str= ''
+    executor_report: str=''    
+    
+    testers: List[m.User] = []
+    testers_names:str = ''
+    selected_tester: m.User = None
+    tester_done_date:datetime = None
+    tester_done_time:str= ''
+    tester_report: str=''    
+
+    current_user_nationalcode:str = ''
+
+    def __init__(self, request_task_id, current_user:str):
         try:
             # دریافت درخواست بر اساس request_id
-            self.request_task_instance = m.RequestTaskUser.objects.get(
+            self.request_task_instance = m.RequestTask.objects.get(
                 id=request_task_id
             )
-            self.task_status = self.request_task_instance.status_code
+            self.request_id = self.request_task_instance.request.id
+            self.task_order = self.request_task_instance.order_number
+            self.status_code = self.request_task_instance.status_code
+            self._sync_status_title()
             self.task_instance = self.request_task_instance.task
             self.task_id = self.task_instance.id
+            self.task_title = self.task_instance.title
             self.request_task_id = request_task_id
             self.test_required = self.task_instance.test_required
-
+            self.current_user_nationalcode = current_user
             # مقداردهی لیست ها
-            self.users = []
-            self.executors = []
-            self.testers = []
+            self.get_users_info()
 
-        except m.ConfigurationChangeRequest.DoesNotExist:
-            return False
-        return True
+        except m.RequestTask.DoesNotExist:
+            self.error_messager = 'شناسه تسک درخواست نامعتبر است'
+
+        except Exception as e:
+            self.error_messager = f'در ایجاد نمونه تسک مربوط به درخواست خطایی رخ داد: <br/>{str(e)}'
+
+    def _sync_status_title(self, status_code: str = None):
+        code = status_code if status_code is not None else self.status_code
+        try:
+            self.status_title = dict(
+                m.RequestTask.STATUS_CHOICES
+            ).get(code, code)
+        except Exception:
+            self.status_title = code
 
     def get_users_info(self):
         task_id = self.task_id
 
-        # اطلاعات کلیه افراد مربوط به تسک
-        if not self.users:
-            task_user = m.TaskUser.objects.filter(task_id=task_id).values_list(
-                "user_nationalcode", flat=True
+        try:
+            # دریافت همه کاربران فعال مرتبط با تسک (چه مجری و چه تستر)
+            task_users_qs = m.RequestTaskUser.objects.filter(
+                request_task__task_id=self.task_id, 
+                request_task__request_id = self.request_id
             )
-            self.users = m.User.objects.filter(national_code__in=task_user)
 
-        # دریافت اطلاعات مجریان تسک
-        if not self.executors:
-            task_user = m.TaskUser.objects.filter(
-                task_id=task_id, user_role_code="E"
-            ).values_list("user_nationalcode", flat=True)
-            self.executors = m.User.objects.filter(national_code__in=task_user)
+            self.users = [tu.user_nationalcode for tu in task_users_qs]
 
-        # دریافت اطلاعات تسترهای تسک
-        if not self.testers:
-            task_user = m.TaskUser.objects.filter(
-                task_id=task_id, user_role_code="T"
-            ).values_list("user_nationalcode", flat=True)
-            self.testers = m.User.objects.filter(national_code__in=task_user)
+            # مجریان (کسانی که user_role_code = 'E' دارند)
+            self.executors = [tu.user_nationalcode for tu in task_users_qs if tu.user_role_code == 'E']
+            # تسترها (کسانی که user_role_code = 'T' دارند)
+            self.testers = [tu.user_nationalcode for tu in task_users_qs if tu.user_role_code == 'T']
 
-        # دریافت اطلاعات مجری منتخب
-        if not self.selected_executor:
-            selected_user = m.TaskUserSelected.objects.filter(
-                request_task=self.request_task_instance, task_user__user_role_code="E"
-            ).first()
-            if selected_user is not None:
-                national_code = selected_user.task_user.user_nationalcode.national_code
-                self.selected_executor = m.User.objects.filter(
-                    national_code=national_code
-                ).first()
+            # اسامی مجریان به صورت رشته جدا شده با کاما
+            self.executors_names = '، '.join([user.fullname_gender for user in self.executors])
+            # اسامی تسترها به صورت رشته جدا شده با کاما
+            self.testers_names = '، '.join([user.fullname_gender for user in self.testers])
 
-        # دریافت اطلاعات تستر منتخب
-        if self.test_required and not self.selected_tester:
-            selected_user = m.TaskUserSelected.objects.filter(
-                request_task=self.request_task_instance, task_user__user_role_code="T"
-            ).first()
-            if selected_user is not None:
-                national_code = selected_user.task_user.user_nationalcode.national_code
-                self.selected_tester = m.User.objects.filter(
-                    national_code=national_code
-                ).first()
+            # مقداردهی مجری منتخب (در صورت وجود)
+            selected_executor_obj = m.RequestTaskUserSelected.objects.filter(
+                request_task_user__request_task__task_id=self.task_id, 
+                request_task_user__request_task__request_id = self.request_id, 
+                request_task_user__user_role_code="E"
+            ).order_by('id').last()
+            
+            if selected_executor_obj is not None:
+                self.selected_executor = selected_executor_obj.request_task_user.user_nationalcode
+                # حالا تاریخ و ساعت و گزارش مربوطه را هم در صورت وجود استخراج می کنیم.user_done_dat
+                self.executor_done_date = selected_executor_obj.user_done_date
+                self.executor_done_time = selected_executor_obj.user_done_time
+                self.executor_report = selected_executor_obj.user_report_description
+
+            # مقداردهی تستر منتخب (در صورت وجود)
+            selected_tester_obj = m.RequestTaskUserSelected.objects.filter(
+                request_task_user__request_task__task_id=self.task_id, 
+                request_task_user__request_task__request_id = self.request_id, 
+                request_task_user__user_role_code="T"
+            ).order_by('id').last()
+            
+            if selected_tester_obj is not None:
+                self.selected_tester = selected_tester_obj.request_task_user.user_nationalcode
+                # حالا تاریخ و ساعت و گزارش مربوطه را هم در صورت وجود استخراج می کنیم
+                self.tester_done_date = selected_tester_obj.user_done_date
+                self.tester_done_time = selected_tester_obj.user_done_time
+                self.tester_report = selected_tester_obj.user_report_description
+                
+
+        except m.RequestTaskUser.DoesNotExist:
+            self.error_message = 'برای این تسک هیچ کاربری تعریف نشده است'
+
+        except Exception as e:
+            self.error_message = f'در واکشی اطلاعات افراد مرتبط با تسک مربوط به درخواست خطایی رخ داد: <br/>{str(e)}'
+            
+
 
     def next_step(self, action_code: str) -> dict:
         """این تابع تسک را به مرحله بعدی می برد. انواع حالتهای ممکن شامل موارد زیر است:
         ('DEFINE', 'تعریف'): CON->EXERED, RET->FAILED, REJ->FAILED
         ('EXERED', 'آماده انتخاب مجری'): CON->EXESEL
-        ('EXESEL', 'مجری انتخاب شده'): CON->EXEFIN, RET->EXERED, REJ->FAILED
-        ('EXEFIN', 'اجرای موفق'): CON->(if test_required : TESRED else : FINISH), RET->EXERED, REJ->FAILED
+        ('EXESEL', 'مجری انتخاب شده'): CON->(if test_required : TESRED else : FINISH), RET->EXERED, REJ->FAILED        ('EXEFIN', 'اجرای موفق'): CON->(if test_required : TESRED else : FINISH), RET->EXERED, REJ->FAILED
         ('TESRED', 'آماده انتخاب تستر'): CON->TESSEL
         ('TESSEL', 'تستر انتخاب شده'): CON->FINISH, RET->TESRED, REJ->EXESEL
         ('FINISH', 'انجام موفق'):
@@ -1512,56 +1800,197 @@ class Task:
             dict: یک دیکشنری است که عضو اول موفقیت و یا عدم موفقیت و عضو دوم پیام مربوطه را شامل می شود
         """
 
-        status_code = self.task_status
+        status_code = self.status_code
         new_status = None
         message = ''
         if action_code == "CON":
             if status_code == "DEFINE":
                 new_status = "EXERED"
+                message= f" تسک برای {self.executors_names} جهت انتخاب جهت اجرا ارسال گردید"
+                
             elif status_code == "EXERED":
                 new_status = "EXESEL"
+                message = f'تسک {self.task_title} توسط {self.selected_executor.fullname_gender} جهت اجرا انتخاب شد.<br/> وضعیت در انتظار تنظیم گزارش توسط ایشان می باشد'
             elif status_code == "EXESEL":
-                new_status = "EXEFIN"
-            elif status_code == "EXEFIN":
-                new_status = "TESRED" if self.test_required else "FINISH"
+                message = f'اجرای تسک {self.task_title} با موفقیت خاتمه یافت '
+                if self.test_required and self.testers:
+                    new_status = "TESRED"
+                    message = f' و تسک جهت تست برای {self.testers_names} ارسال شد. <br/> وضعیت در انتظار انتخاب این تسک توسط یکی از تسترها می باشد.'
+                else:
+                    new_status = "FINISH"                    
             elif status_code == "TESRED":
                 new_status = "TESSEL"
+                message = f'تسک {self.task_title} توسط {self.selected_tester.fullname_gender} جهت انجام تست انتخاب شد.<br/> وضعیت در انتظار تنظیم گزارش توسط ایشان می باشد'
             elif status_code == "TESSEL":
                 new_status = "FINISH"
+                message = f'تست تسک {self.task_title} با موفقیت خاتمه یافت '
+
+        # اگر عملیات بازگشت مدرک باشد
         elif action_code == "RET":
             if status_code == "DEFINE":
                 new_status = "FAILED"
+                message = "انجام این تسک منتفی گردید"
             elif status_code == "EXESEL":
                 new_status = "EXERED"
-            elif status_code == "EXEFIN":
-                new_status = "EXERED"
+                message= f"کاربر جاری از انجام تسک منصرف شده و تسک برای {self.executors_names} جهت انتخاب برای اجرا ارسال گردید"
             elif status_code == "TESSEL":
                 new_status = "TESRED"
+                message= f"کاربر جاری از تست تسک منصرف شده و تسک برای {self.testers_names} جهت انتخاب برای تست ارسال گردید"
         elif action_code == "REJ":
-            if status_code in ["DEFINE", "EXESEL", "EXEFIN"]:
+            if status_code in ["DEFINE", "EXERED"]:
                 new_status = "FAILED"
+                message = "انجام این تسک منتفی گردید"
             elif status_code == "TESSEL":
                 new_status = "EXESEL"
+                message = f'با توجه به ناموفق آمیز بودن تست، تسک جهت اجرای مجدد به {self.executors_names} ارسال شد.'
         else:
             return {"success": False, "message": "نوع عملیات درخواستی معتبر نمی‌باشد"}
 
+
+
+
         if new_status:
-            self.task_status = new_status
+            self.status_code = new_status
+            # عنوان وضعیت تسک را به روز می کنیم
+            self._sync_status_title()
+            # وضعیت جدید را در شی مربوطه به روز می کنیم
+            self.request_task_instance.status_code = new_status
+            self.request_task_instance.save()
+            
+            # حالا باید کنترل کنیم که آیا این تسک آخرین تسک بوده است یا خیر؟
+            # برای این کار ابتدا یک نمونه شی درخواست را ایجاد می کنیم
+            if new_status in ('FINISH','FAILED'):
+                request_obj:Request = Request(current_user_national_code=self.current_user_nationalcode,request_id=self.request_id)
+                result = request_obj.next_task(self)
+                if not result.get('success',True):
+                    return result
+                elif result.get('message','') != '':
+                    message = result.get('message')
+                    
+                
             return {
                 "success": True,
                 "message":message,
             }
+            
         else:
             return {
                 "success": False,
-                "message": "تغییر وضعیت برای حالت فعلی امکان‌پذیر نیست",
+                "message": "تغییر وضعیت برای حالت فعلی این تسک امکان‌پذیر نیست",
             }
 
-    def save(self, data: dict): ...
+    def exit_cartable(self, user_nationalcode: str):
+        """
+        خارج کردن تسک از کارتابل سایر کاربران به جز کاربر جاری
+        """
+        # یک نمونه از شی کارتابل را ایجاد می کنیم
+        # از این شی برای خارج کردن سند از کارتابل سایر مجریان استفاده می شود
+        obj_cartable = Cartable()
+        # شناسه سند را از جدول درخواست به دست آورده و در شی کارتابل به روز می کنیم
+        obj_cartable.doc_id = self.request_task_instance.request.doc_id
+        # به ازای هر کاربر به جز کاربر جاری باید مدرک را از کارتابل آنها خارج کنیم
+        for user in self.users:
+            if user.national_code != user_nationalcode:
+                result = obj_cartable.exit_from_cartable(national_code=user.national_code)
+                if not result.get('success'):
+                    return result
 
-    def validate(self, data: dict) -> bool: ...
+        return {'success':True}
+    
+    def select_task(self, user_nationalcode: str) -> dict:
+        """
+        در این تابع، تسک جاری توسط کاربر جاری (تستر یا مجری) انتخاب می شود
+        """
+        try:
+            # بررسی می کنیم که آیا کاربر جاری مجری یا تستر تسک هست یا خیر
+            request_task_user = m.RequestTaskUser.objects.filter(
+                request_task=self.request_task_instance,
+                user_nationalcode__national_code=user_nationalcode
+            ).first()
 
-    def get_data(self) -> dict: ...
+            if not request_task_user:
+                return {"success": False, "message": "شما مجری یا تستر این تسک نیستید"}
+
+
+            # باید رکوردی در جدول کاربران انتخاب کننده تسک درج کنیم
+            task_user_selected = m.RequestTaskUserSelected.objects.create(
+                pickup_date = datetime.now(),
+                request_task_user = request_task_user
+            )
+
+
+            # خارج کردن از کارتابل سایر کاربران
+            result = self.exit_cartable( user_nationalcode)
+            if not result.get('success'):
+                return result
+
+            # حالا به تسک را به مرحله بعدی می بریم
+            result = self.next_step('CON')
+            
+            # اگر همه چیز اوکی باشد باید ذخیره کنیم
+            if result.get('success'):
+                task_user_selected.save()
+                
+            return result
+
+        except Exception as e:
+            return {"success": False, "message": f"خطا در انتخاب تسک: {str(e)}"}
+
+    def start_task(self):
+        """
+        این تابع برای شروع تسک استفاده می شود
+        تسک ابتدا به وضعیت انتخاب مجری منتقل می شود
+        """
+        # self.status_code = 'EXERED'
+        # self.request_task_instance.status_code = 'EXERED'
+        # self.request_task_instance.save()
+        
+        return self.next_step('CON')
+        
+
+    def finish_task(self, user_natioanl_code:str):
+        """
+        این تابع برای خاتمه دادن وضعیت یک تسک است
+        پس از خاتمه یافتن تسک، باید کنترل شود که آیا تسک دیگری وجود دارد یا خیر
+        در صورتی که تسک دیگری وجود ندارد، باید فرآیند خاتمه یابد و اطلاع رسانی انجام شود
+        """
+        request_obj:Request = Request(self.request_id, user_natioanl_code)
+        # حالا باید تابع مربوطه را فراخوانی کنیم که بررسی کند آیا آخرین تسک بوده است یا خیر؟
+        request_obj.next_task(self)
+
+    def save_task_report(
+        self, request_task_id: int, form_data: dict, user_nationalcode: str
+    ) -> dict:
+        """
+        ذخیره گزارش تسک
+        """
+        try:
+            # به‌روزرسانی اطلاعات تسک
+            task_user = m.RequestTaskUserSelected.objects.filter(
+                request_task_user__request_task_id=request_task_id, 
+                request_task_user__user_nationalcode=user_nationalcode
+            ).order_by('id').last()
+
+            if task_user:
+                task_user.user_report_result = (
+                    form_data.get("operation_result") == "true"
+                )
+
+                now = datetime.now()
+                task_user.user_report_date = now.date()
+                task_user.user_report_time = now.time().strftime("%H:%M")
+                task_user.user_report_description = form_data.get("operation_report")
+                task_user.user_done_date = form_data.get("done_date")
+                task_user.user_done_time = form_data.get("done_time")
+                task_user.save()
+
+                return {"success": True, "message": "گزارش تسک با موفقیت ذخیره شد"}
+            else:
+                return {"success": False, "message": "رکورد مربوطه یافت نشد"}
+          
+        except Exception as e:
+            return {"success": False, "message": f"خطا در ذخیره گزارش تسک: {str(e)}"}
+
 
 
 class Request:
@@ -1699,66 +2128,25 @@ class Request:
 
                 # لیست تسک ها را به دست می آوریم
                 # دریافت لیست تسک‌های مربوط به این درخواست
-                self.tasks = list(
+                tasks = list(
                     m.RequestTask.objects.filter(request=self.request_instance)
                 )
+                # به ازای هر یک از این تسک ها یک نمونه از شی 
+                # Task
+                # ایجاد می کنیم و در آرایه 
+                # self.tasks
+                # میریزیم
+                for t in tasks:
+                    new_task = Task(request_task_id=t.id,current_user=self.current_user_national_code)
+                    # اگر در ایجاد تسک به مشکل برخورده باشیم، خطا را باید به درخواست منتقل کنیم
+                    # تا در فراخوانی کننده نمایش داده شود
+                    if new_task.error_message != '':
+                        self.error_message += '<br/>' + new_task.error_message
+                    self.tasks.append(new_task)
+                    
 
-                # دریافت لیست کاربران تسک‌ها
-                self.task_users = list(
-                    m.TaskUser.objects.filter(task_id__in=[t.id for t in self.tasks])
-                )
-
-                # مجریان (executors) تسک‌ها
-                self.task_executors = list(
-                    m.User.objects.filter(
-                        national_code__in=[
-                            tu.user_nationalcode.national_code
-                            for tu in self.task_users
-                            if tu.user_role_code == "E"
-                        ]
-                    )
-                )
-
-                # مجریان انتخاب شده (selected executors)
-                # ابتدا RequestTask های مربوط به این درخواست را پیدا می‌کنیم
-                request_tasks = m.RequestTask.objects.filter(request=self.request_instance)
-                
-                # سپس TaskUserSelected های مربوط به مجریان انتخاب شده را پیدا می‌کنیم
-                selected_executor_task_users = m.TaskUserSelected.objects.filter(
-                    request_task__in=request_tasks,
-                    task_user__user_role_code="E"
-                ).select_related('task_user__user_nationalcode')
-                
-                self.task_selected_executors = [
-                    tus.task_user.user_nationalcode 
-                    for tus in selected_executor_task_users
-                ]
-
-                # تسترهای تسک‌ها
-                self.task_testers = list(
-                    m.User.objects.filter(
-                        national_code__in=[
-                            tu.user_nationalcode.national_code
-                            for tu in self.task_users
-                            if tu.user_role_code == "T"
-                        ]
-                    )
-                )
-
-                # تسترهای انتخاب شده (selected testers)
-                # TaskUserSelected های مربوط به تسترهای انتخاب شده را پیدا می‌کنیم
-                selected_tester_task_users = m.TaskUserSelected.objects.filter(
-                    request_task__in=request_tasks,
-                    task_user__user_role_code="T"
-                ).select_related('task_user__user_nationalcode')
-                
-                self.task_selected_testers = [
-                    tus.task_user.user_nationalcode 
-                    for tus in selected_tester_task_users
-                ]
-
-                # اگر تسک جاری وجود داشته باشد، آن را تنظیم کن
-                self.current_task = self.tasks[0] if self.tasks else None
+                # تسک جاری را برابر با نخستین تسکی قرار بده که وضعیت آن FINISH یا FAILED نباشد
+                self.current_task = next((t for t in self.tasks if t.status_code not in ("FINISH", "FAILED")), None)
 
                 # آیا هیچ تسکی باقی مانده است؟
                 self.has_any_task_left = any(
@@ -1916,12 +2304,12 @@ class Request:
                         "change_location_database"
                     ).get_default()#در صورتی که مقداری وجود نداشته باشد، مقدار پیش فرض تعریف شده در مدل را در نظر می گیریم
                 )
-            if 'change_location_systems' not in form_data:
-                form_data['change_location_systems'] = (  # محل تغییر: سامانه‌ها
-                    change_type_obj.change_location_systems
-                    if change_type_obj.change_location_systems is not None
+            if 'change_location_system_services' not in form_data:
+                form_data['change_location_system_services'] = (  # محل تغییر: سامانه‌ها
+                    change_type_obj.change_location_system_services
+                    if change_type_obj.change_location_system_services is not None
                     else m.ConfigurationChangeRequest._meta.get_field(
-                        "change_location_systems"
+                        "change_location_system_services"
                     ).get_default()#در صورتی که مقداری وجود نداشته باشد، مقدار پیش فرض تعریف شده در مدل را در نظر می گیریم
                 )
             if 'change_location_other' not in form_data:
@@ -2158,16 +2546,32 @@ class Request:
 
             # 4. RequestTask_ChangeType -> RequestTask
             request_task_changetype_records: QuerySet[m.RequestTask_ChangeType] = (
-                m.RequestTask_ChangeType.objects.filter(changetype=change_type_obj)
+                m.RequestTask_ChangeType.objects.filter(changetype=change_type_obj).order_by('order_number')
             )
             for record in request_task_changetype_records:
-                m.RequestTask.objects.create(
+                # ابتدا رکورد RequestTask را ایجاد و نگهداری می‌کنیم
+                request_task = m.RequestTask.objects.create(
                     request=self.request_instance,
                     task=record.task,
+                    order_number=record.order_number,
                     status_code="DEFINE",  # وضعیت پیش‌فرض
                 )
+                # 5. TaskUser -> RequestTaskUser
+                # برای هر کاربر مرتبط با این تسک، رکورد RequestTaskUser ایجاد کن
+                task_user_records: QuerySet[m.TaskUser] = (
+                    m.TaskUser.objects.filter(task=record.task, is_active=True)
+                )
+                for task_user in task_user_records:
+                    m.RequestTaskUser.objects.create(
+                        request_task=request_task,
+                        user_nationalcode=task_user.user_nationalcode,
+                        user_role_id=task_user.user_role_id,
+                        user_team_code=task_user.user_team_code,
+                        user_role_code=task_user.user_role_code,
+                    )
 
-            # 5. RequestNotifyGroup_ChangeType -> RequestNotifyGroup
+
+            # 6. RequestNotifyGroup_ChangeType -> RequestNotifyGroup
             request_notify_group_changetype_records: QuerySet[
                 m.RequestNotifyGroup_ChangeType
             ] = m.RequestNotifyGroup_ChangeType.objects.filter(
@@ -2337,8 +2741,8 @@ class Request:
                     pass
             return {"success": False, "message": f"خطا در ایجاد درخواست: {str(e)}"}
 
-    def next_status(self):
-        self.status_code
+    # def next_status(self):
+    #     self.status_code
 
     def update_request(self, form_data: dict, current_user_nationalcode:str) -> dict:
         """
@@ -2762,54 +3166,6 @@ class Request:
         except Exception as e:
             return {"success": False, "message": f"خطا در به‌روزرسانی درخواست: {str(e)}"}
 
-    def select_task(self, task_id: int, user_nationalcode: str) -> dict:
-        """
-        انتخاب تسک توسط مجری یا تستر
-        """
-        try:
-            # بررسی اینکه آیا کاربر مجری یا تستر این تسک است
-            task_user = m.TaskUserSelected.objects.filter(
-                request_task_id=task_id, task_user__user_nationalcode=user_nationalcode
-            ).first()
-
-            if not task_user:
-                return {"success": False, "message": "شما مجری یا تستر این تسک نیستید"}
-
-            # خارج کردن از کارتابل سایر کاربران
-            self.exit_cartable(task_id, user_nationalcode)
-
-            return {"success": True, "message": "تسک با موفقیت انتخاب شد"}
-
-        except Exception as e:
-            return {"success": False, "message": f"خطا در انتخاب تسک: {str(e)}"}
-
-    def save_task_report(
-        self, task_id: int, form_data: dict, user_nationalcode: str
-    ) -> dict:
-        """
-        ذخیره گزارش تسک
-        """
-        try:
-            # به‌روزرسانی اطلاعات تسک
-            task_user = m.TaskUserSelected.objects.filter(
-                request_task_id=task_id, task_user__user_nationalcode=user_nationalcode
-            ).first()
-
-            if task_user:
-                task_user.user_report_result = (
-                    form_data.get("operation_result") == "true"
-                )
-                task_user.user_report_date = form_data.get("operation_date")
-                task_user.user_report_time = form_data.get("operation_time")
-                task_user.user_report_description = form_data.get("operation_report")
-                task_user.user_done_date = form_data.get("operation_date")
-                task_user.user_done_time = form_data.get("operation_time")
-                task_user.save()
-
-            return {"success": True, "message": "گزارش تسک با موفقیت ذخیره شد"}
-
-        except Exception as e:
-            return {"success": False, "message": f"خطا در ذخیره گزارش تسک: {str(e)}"}
 
     def send_cartable(self, from_user: str, to_user: str, doc_state: str):
         """
@@ -2844,12 +3200,6 @@ class Request:
             receiver=to_user, sender=from_user, new_doc_state=doc_state
         )
 
-    def exit_cartable(self, task_id: int, user_nationalcode: str):
-        """
-        خارج کردن از کارتابل سایر کاربران
-        """
-        # این تابع dummy است
-        pass
 
     def extract_request_users(self):
         """
@@ -2943,14 +3293,19 @@ class Request:
                     else:
                         new_status = "DOTASK"
                         # ارسال به کارتابل مجریان
-                        self.send_to_executors()
-                        message = f'فرم با موفقیت برای مجریان جهت انجام نخستین تسک ارسال گردید'
+                        result = self.do_task()
+                        if not result.get('success',True):
+                            return result                        
+                        next_user = self.current_task.executors
 
                 elif current_status == "COMITE":
                     new_status = "DOTASK"
                     # ارسال به کارتابل مجریان
-                    self.send_to_executors()
-                    message = f'فرم با موفقیت برای مجریان جهت انجام نخستین تسک ارسال گردید'
+                    result= self.do_task()
+                    if not result.get('success',True):
+                        return result
+                    next_user = self.current_task.executors
+
                 elif current_status == "DOTASK":
                     new_status = "FINISH"
                     message = 'فرآیند با موفقیت خاتمه یافت'
@@ -2993,9 +3348,15 @@ class Request:
 
                 # ارسال به کارتابل کاربر بعدی
                 if next_user:
-                    self.send_cartable(
-                        self.request_instance.id, next_user.national_code, self.status_title
-                    )
+                    if isinstance(next_user, (list, tuple)):
+                        for user in next_user:
+                            self.send_cartable(
+                                self.request_instance.id, user.national_code, self.status_title
+                            )
+                    else:
+                        self.send_cartable(
+                            self.request_instance.id, next_user.national_code, self.status_title
+                        )
 
                 # ذخیره اطلاعات اضافی
                 if form_data:
@@ -3016,29 +3377,321 @@ class Request:
         except Exception as e:
             return {"success": False, "message": f"خطا در تغییر وضعیت: {str(e)}"}
 
-    def send_to_executors(self):
+
+    def do_task(self):
         """
-        ارسال به کارتابل مجریان
+        اجرای آخرین تسک فعال
         """
         try:
-            # دریافت تسک‌های مربوط به این درخواست
-            request_tasks = m.RequestTask.objects.filter(request=self.request_instance)
-
-            for request_task in request_tasks:
-                # دریافت مجریان این تسک
-                executors = m.TaskUser.objects.filter(
-                    task=request_task.task, user_role_code="E"
-                )
-
-                for executor in executors:
-                    self.send_cartable(
-                        self.request_instance.id,
-                        executor.user_nationalcode.national_code,
-                    )
+            # اگر تسک جاری نداریم نخستین تسک را انتخاب می کنیم
+            if not self.current_task:
+                self.current_task = self.tasks[0]
+            
+            # اگر وضعیت تسک تعریف باشد، باید آن را شروع کنیم
+            if self.current_task.status_code == "DEFINE":
+                result = self.current_task.start_task()
+                return result
+            
+            # حالا تسک را به مرحله بعدی می بریم
+            result = self.current_task.next_step('CON')
+            return result
 
         except Exception as e:
-            pass
+            return {'success':False, 'message':f'امکان اجرای تسک مربوطه وجود ندارد{str(e)}'}
 
+    def next_task(self, task_obj:Task):
+        """
+        این تابع پس از خاتمه یک تسک فراخوانی می شود
+        و به سراغ تسک بعدی می رود
+        اگر این تسک آخرین تسک باشد، باید فرآیند درخواست خاتمه یابد
+        """
+        # نخست کنترل می کنیم که تسک جاری همین تسک باشد
+        if task_obj.request_task_id != self.current_task.request_task_id:
+            return {'success':False, 'message':'امکان تغییر تسکی به جز تسک جاری وجود ندارد'}
+        
+        # حالا باید به سراغ تسک بعدی برویم
+        # ابتدا شماره ترتیب تسک جاری را به دست می آوریم 
+        order_number = task_obj.task_order 
+        
+        # حالا تسکی که شماره ترتیب بعدی را دارد پیدا می کنیم
+        next_task = m.RequestTask.objects.filter(
+            request=self.request_instance,
+            order_number__gt=order_number
+        ).order_by('order_number').first()
+        
+        # حالا بررسی می کنیم که آیا تسکی وجود دارد یا خیر
+        if next_task is None:
+            return self.finish_request(True)
+        
+        return {'success':True,'message':''}
+
+    def finish_request(self, success_finish:bool=True):
+        """
+        این تابع درخواست را مختومه می کند
+        کارهای زیر باید انجام شود:
+        1- وضعیت رکورد درخواست خاتمه یافته شود
+        2- در صورتی که تسک بازی وجود دارد باید خاتمه یابد
+        3- درخواست از کارتابل همه خارج می شود
+        4- به گروه های اطلاع رسانی، اطلاع رسانی انجام می شود
+
+        Args:        
+            finish_type:: bool
+                True: خاتمه موفقیت آمیز
+                False : خاتمه ناموفق
+        """
+        # وضعیت خاتمه موفقیت آمیز
+        status_code = 'FINISH'
+        
+        # در صورتی که وضعیت خاتمه ناموفق باشد
+        if not success_finish:
+            status_code = 'FAILED'
+        
+        # 1- وضعیت رکورد درخواست را به روز می کنیم
+        self.request_instance.status_code = status_code
+        self.request_instance.save()
+        
+        # 2- بررسی می کنیم اگر تسک بازی وجود داشته باشد وضعیت آن را هم مختومه می کنیم
+        # رکوردهایی که وضعیت آنها خاتمه نیست را پیدا می کنیم
+        unfinished_tasks = m.RequestTask.objects.filter(
+            request=self.request_instance
+        ).exclude(status_code__in=('FINISH', 'FAILED'))
+        for task in unfinished_tasks:
+            task.status_code = status_code
+            task.save()
+            
+        # 3- باید درخواست از کارتابل همه خارج شود
+        self.obj_cartable.exit_from_all_cartables()
+        
+        # 4- اطلاع رسانی انجام شود
+        self.notify(status_code=status_code)
+        
+    def notify(self, status_code):
+        """
+        این تابع به تمامی گروه های اطلاع رسانی، اطلاع رسانی را بر حسب کانال های تعیین شده انجام می دهد
+
+        Args:
+            status_code (: str): مشخص می کند که اطلاع رسانی در چه مرحله ای باید انجام شود
+                # ('DRAFTD', 'پیش نویس'): Code : SLM.CCR.DRAFTD : اطلاع رسانی به درخواست کننده
+                # ('DIRMAN', 'اظهار نظر مدیر مستقیم'): Code : SLM.CCR.DIRMAN : اطلاع رسانی به مدیر درخواست کننده
+                # ('RELMAN', 'اظهار نظر مدیر مربوطه'): Code : SLM.CCR.RELMAN : اطلاع رسانی به مدیر مربوطه
+                # ('COMITE', 'اظهار نظر کمیته'): Code : SLM.CCR.COMITE : اطلاع رسانی به دبیر کمیته
+                # ('DOTASK', 'انجام تسک ها'): 
+                    # ('EXERED', 'آماده انتخاب مجری'): Code: SLM.CCR.TASEXS : اطلاع رسانی به مجریان
+                    # ('EXESEL', 'مجری انتخاب شده'): Code: SLM.CCR.TASEXR : اطلاع رسانی به مجری منتخب
+                    # ('TESRED', 'آماده انتخاب تستر'): Code: SLM.CCR.TASTES : اطلاع رسانی به تسترها
+                    # ('TESSEL', 'تستر انتخاب شده'): Code: SLM.CCR.TASTER : اطلاع رسانی به تستر منتخب
+                    # ('FINISH', 'انجام موفق'): Code: SLM.CCR.TASFIN : اطلاع رسانی به مجری منتخب، مدیر مربوطه
+                    # ('FAILED', 'انجام ناموفق'): Code: SLM.CCR.TASFAL :  اطلاع رسانی به مجری منتخب، مدیر مربوطه
+                # ('FINISH', 'خاتمه یافته'): Code: SLM.CCR.FINISH : اطلاع رسانی به درخواست کننده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته، گروه های اطلاع رسانی
+                # ('FAILED', 'خاتمه ناموفقیت آمیز'): Code : SLM.CCR.FAILED : اطلاع رسانی به درخواست کننده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته، گروه های اطلاع رسانی
+                    """
+        code = None
+        users = []
+
+        if status_code == 'DRAFTD':
+            code = 'SLM.CCR.DRAFTD'
+            users = [self.user_requestor]
+        elif status_code == 'DIRMAN':
+            code = 'SLM.CCR.DIRMAN'
+            users = [self.user_direct_manager]
+        elif status_code == 'RELMAN':
+            code = 'SLM.CCR.RELMAN'
+            users = [self.user_related_manager]
+        elif status_code == 'COMITE':
+            code = 'SLM.CCR.COMITE'
+            users = [self.user_committee]
+        # اگر در وضعیت انجام تسک باشد، اطلاع رسانی بر اساس وضعیت تسک جاری انجام می شود
+        elif status_code == 'DOTASK':
+            if status_code == 'EXERED':
+                code = 'SLM.CCR.TASEXS'
+                users = self.current_task.executors
+            elif status_code == 'EXESEL':
+                code = 'SLM.CCR.TASEXR'
+                users = [self.current_task.selected_executor]
+            elif status_code == 'TESRED':
+                code = 'SLM.CCR.TASTES'
+                users = self.current_task.testers
+            elif status_code == 'TESSEL':
+                code = 'SLM.CCR.TASTER'
+                users = [self.current_task.selected_tester]
+            elif status_code == 'FINISH':
+                code = 'SLM.CCR.TASFIN'
+                users = [self.user_related_manager, self.current_task.selected_executor]
+            elif status_code == 'FINISH':
+                code = 'SLM.CCR.TASFAL'
+                users = [self.user_related_manager, self.current_task.selected_executor]
+        elif status_code == 'FINISH':
+            code = 'SLM.CCR.FINISH'
+            users = []
+            if self.user_requestor:
+                users.append(self.user_requestor)
+            if self.user_direct_manager:
+                users.append(self.user_direct_manager)
+            if self.user_related_manager:
+                users.append(self.user_related_manager)
+            if self.user_committee:
+                users.append(self.user_committee)
+            group_users = self.get_notification_group_user('email')
+            if group_users.get('users'):
+                users += group_users.get('users', [])
+        elif status_code == 'FAILED':
+            code = 'SLM.CCR.FAILED'
+            users = []
+            if self.user_requestor:
+                users.append(self.user_requestor)
+            if self.user_direct_manager:
+                users.append(self.user_direct_manager)
+            if self.user_related_manager:
+                users.append(self.user_related_manager)
+            if self.user_committee:
+                users.append(self.user_committee)
+            group_users = self.get_notification_group_user('email')
+            if group_users.get('users'):
+                users += group_users.get('users', [])
+                
+                
+        if code and users:
+            return self.send_email(template_code=code, users=users)
+        
+        return {'sucess':False, 'message':'امکان اطلاع رسانی وجود ندارد'}
+    
+    def get_notification_group_user(self, notify_type: str)->dict:
+        """
+        این تابع لیستی از کاربران را بر حسب اطلاع رسانی تعیین شده در انتهای فرآیند بازگشت می دهد
+        
+        پارامتر notify_type باید یکی از مقادیر 'email'، 'sms' یا 'phone' باشد.
+        """
+        if notify_type not in ('email', 'sms', 'phone'):
+            return {"sucess":False,"message":"نوع اطلاع رسانی نامعتبر است"}
+        
+        # رکوردهای اطلاع رسانی مربوط به این درخواست را استخراج می کنیم
+        notification_group = m.RequestNotifyGroup.objects.filter(request=self.request_instance)
+        # در صورتی که نوع اطلاع رسانی با استفاده از ایمیل باشد
+        if notify_type == 'email':
+            notification_group = notification_group.filter(by_email=True)
+        # در صورتی نوع اطلاع رسانی با استفاده از پیامک باشد
+        if notify_type == 'sms':
+            notification_group = notification_group.filter(by_sms=True)
+        # در صورتی که نوع اطلاع رسانی با استفاده از تلفن گویا باشد
+        if notify_type == 'phone':
+            notification_group = notification_group.filter(by_phone=True)
+        
+        users:[m.User] = []
+        # به ازای هر رکورد اطلاع رسانی باید کاربران مربوطه را استخراج کنیم و به لیست اضافه کنیم
+        for ng in notification_group:
+            # رکورد گروه اطلاع رسانی را به دست می آوریم
+            notify_group = ng.notifygroup
+            # مقدار فیلد سمت و تیم را به دست می آوریم
+            role_id = notify_group.role_id
+            team_code = notify_group.team_code 
+            # اگر هم سمت و هم تیم مقدار داشته باشد، 
+            # همه کاربرانی که آن سمت و تیم را دارند را استخراج می کنیم
+            # مثلا برنامه نویسان تیم خودرو
+            if role_id and team_code:
+                u = m.UserTeamRole.objects.filter(role_id = role_id, team_code = team_code).values_list('national_code')
+                if u:
+                    # افراد استخراج شده را به لیست اضافه می کنیم
+                    users += u
+            # اگر فقط سمت مقدار داشته باشد
+            # باید برای تمامی کاربرانی که این سمت را دارند ارسال شود
+            # مثلا برای تمامی مدیران پروژه
+            elif role_id:
+                u = m.UserTeamRole.objects.filter(role_id = role_id).values_list('national_code')
+                if u:
+                    # افراد استخراج شده را به لیست اضافه می کنیم
+                    users += u
+            # اگر فقط تیم مقدار داشته باشد
+            # باید برای تمامی کاربرانی که در آن تیم هستند ارسال شود
+            # مثلا برای تمامی اعضای تیم ادمین
+            elif team_code:
+                u = m.UserTeamRole.objects.filter(team_code = team_code).values_list('national_code')
+                if u:
+                    # افراد استخراج شده را به لیست اضافه می کنیم
+                    users += u
+            # در غیر این صورت باید اطلاع رسانی برای افرادی که در این گروه تعریف شده اند انجام شود
+            else:
+                u = m.NotifyGroupUser.objects.filter(notification_group=notify_group).values_list('user_nationalcode')
+                if u:
+                    # افراد استخراج شده را به لیست اضافه می کنیم
+                    users += u
+        
+        return {'success':True, 'users':users, 'message':''}
+        
+    
+    def send_email(self, template_code:str, users:[m.User]):
+        """
+        این تابع به افرادی که در لیست هستند اطلاع رسانی از طریق ایمیل را انجام می دهد
+        برای این کار آدرس ایمیل افراد را استخراج می کند
+        داده های مربوط به درخواست را در متغییر مربوطه قرار می دهد
+        سرویس ایمیل را صدا می زند
+
+        Args:
+            template_code (str): کد الگوی اطلاع رسانی. این کد در دیتابیس سیستم اطلاع رسانی تعریف شده است
+            user (m.User]): آرایه ای از افرادی که باید اطلاع رسانی برای آنها انجام شود
+        """
+        variable_values = {}
+        to_users_emails = [str]
+        
+        # آدرس ایمیل افراد را استخراج می کنیم 
+        for user in users:
+            # ادرس ایمیل را باید اصلاح کنیم
+            email = user.usermame.split('@')[0] + '@iraneit.com'
+            to_users_emails.append(email)
+        
+        # حالا متغییرها را به روز می کنیم
+        # عنوان درخواست
+        variable_values['title'] = self.request_instance.change_title
+        # عنوان نوع درخواست
+        variable_values['change_type'] = self.request_instance.change_type.change_type_title
+        # وضعیت درخواست
+        variable_values['request_status'] = self.status_title
+        # اطلاعات درخواست دهنده
+        variable_values['creator_fullname_gender'] = self.user_requestor.fullname_gender 
+        variable_values['creator_fullname_title'] = self.user_requestor.fullname_title
+        # اطلاعات مدیر مستقیم
+        variable_values['direct_manager_gender'] = self.user_direct_manager.fullname_gender 
+        variable_values['direct_manager_title'] = self.user_direct_manager.fullname_title
+        # اطلاعات مدیر مربوطه
+        variable_values['related_manager_gender'] = self.user_related_manager.fullname_gender 
+        variable_values['related_manager_title'] = self.user_related_manager.fullname_title
+        # اطلاعات دبیر کمیته
+        variable_values['committe_user_gender'] = self.user_committee.fullname_gender
+        variable_values['committe_user_title'] = self.user_committee.fullname_title
+        # نام کمیته
+        variable_values['committe'] = self.request_instance.committee
+        # عنوان تسک
+        variable_values['task_title'] = self.current_task.task_title
+        # مجریان تسک
+        variable_values['executors_names'] = self.current_task.executors_names
+        # تسترهای تسک
+        variable_values['testers_names'] = self.current_task.testers_names
+        # مجری منتخب
+        variable_values['selected_executor_gender'] = self.current_task.selected_executor.fullname_gender
+        variable_values['selected_executor_title'] = self.current_task.selected_executor.fullname_title
+        # تستر منتخب
+        variable_values['selected_tester_gender'] = self.current_task.selected_tester.fullname_gender
+        variable_values['selected_tester_title'] = self.current_task.selected_tester.fullname_title
+        # وضعیت تسک
+        variable_values['task_status'] = self.current_task.status_title
+        
+        # فراخوانی را انجام می دهیم
+        result = send_email(template_code=template_code, variable_value=variable_values, to=to_users_emails, cc=None, bcc=None)
+        
+        # رکورد متناظر را در جدول سوابق اطلاع رسانی درج می کنیم
+        nl = m.NotificationLog.objects.create(
+            request=self.request_instance,
+            request_status=self.status_title,
+            template_code=template_code,
+            email_to=to_users_emails,
+            variables=variable_values,
+            service_data=result,
+            service_return_val=result.get('return_code',-1)
+        )
+        nl.creator_user = self.current_user_national_code
+        nl.last_modifier_user = self.current_user_national_code
+        nl.save()
+        
+    
     def save_step_data(
         self,
         current_status: str,
@@ -3170,7 +3823,7 @@ class Request:
                 data["database_selected"] = list(
                     extra_info.filter(extra_info__Code__startswith='Database_').values_list('extra_info__Code', flat=True)
                 )
-                data["system_selected"] = list(
+                data["system_services_selected"] = list(
                     extra_info.filter(extra_info__Code__startswith='SystemsServices_').values_list('extra_info__Code', flat=True)
                 )
 
@@ -3203,7 +3856,7 @@ class Request:
             request=self.request_instance
         ).order_by("task__ordernumber")
         for request_task in request_tasks:
-            t = Task(request_task)
+            t = Task(request_task, self.current_user_national_code)
             self.tasks.append(t)
 
     def get_task(self, request_task_id: int) -> Task:

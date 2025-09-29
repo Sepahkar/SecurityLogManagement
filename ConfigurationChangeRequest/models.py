@@ -1,3 +1,5 @@
+from tabnanny import verbose
+from tkinter import Variable
 from turtle import mode
 from django.db import models
 import jdatetime
@@ -63,6 +65,36 @@ class User(models.Model):
             gender = 'خانم'
             
         return f"{gender} {self.first_name} {self.last_name}"
+    
+    @property
+    def fullname_title(self):
+        title = 'جناب آقای'
+        if not self.title:
+            title = 'سرکار خانم'
+            
+        return f"{title} {self.first_name} {self.last_name}"
+    @property
+    def get_team(self):
+        """
+        نخستین تیم کاربر را با توجه به UserTeamRole بازگشت می‌دهد.
+        اگر کاربر هیچ تیمی نداشته باشد، None باز می‌گرداند.
+        """
+        utr = UserTeamRole.objects.filter(national_code=self.national_code, team_code__is_active=True).order_by('id').first()
+        if utr and utr.team_code:
+            return utr.team_code.team_name
+        return None
+
+    @property
+    def get_role(self):
+        """
+        نخستین تیم کاربر را با توجه به UserTeamRole بازگشت می‌دهد.
+        اگر کاربر هیچ تیمی نداشته باشد، None باز می‌گرداند.
+        """
+        utr = UserTeamRole.objects.filter(national_code=self.national_code, team_code__is_active=True).order_by('id').first()
+        if utr and utr.role_id:
+            return utr.role_id.role_title
+        return None
+
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.national_code})"
@@ -222,8 +254,8 @@ class ChangeType(models.Model):
                                                     help_text='آیا تغییر در مرکز داده انجام می‌شود؟')
     change_location_database = models.BooleanField(default=False, verbose_name='محل تغییر: پایگاه داده', null=True,
                                                 help_text='آیا تغییر در پایگاه داده انجام می‌شود؟')
-    change_location_systems = models.BooleanField(default=False, verbose_name='محل تغییر: سیستم‌ها', null=True,
-                                                help_text='آیا تغییر در سیستم‌ها انجام می‌شود؟')
+    change_location_system_services = models.BooleanField(default=False, verbose_name='محل تغییر: سیستم‌ها و سرویس ها', null=True,
+                                                help_text='آیا تغییر در سیستم‌ها یا سرویس ها انجام می‌شود؟')
     change_location_other = models.BooleanField(default=False, verbose_name='محل تغییر: سایر', null=True,
                                                 help_text='آیا تغییر در محل دیگری انجام می‌شود؟')
     change_location_other_description = models.CharField(
@@ -361,7 +393,7 @@ class NotifyGroupUser(models.Model):
     اطلاعات آنها را در این جدول ذخیره می کنیم
     توجه کنید که سمت و تیم هر فرد را هم باید اینجا ذخیره کنیم
     """
-    notify_group_code = models.ForeignKey(to=NotifyGroup, verbose_name='کد گروه اطلاع رسانی', on_delete=models.CASCADE)
+    notify_group = models.ForeignKey(to=NotifyGroup, verbose_name='کد گروه اطلاع رسانی', on_delete=models.CASCADE)
     user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
                                           db_column='user_nationalcode', on_delete=models.CASCADE)
     user_role_id = models.ForeignKey(to=Role, db_column='user_role_id' ,verbose_name='سمت کاربر', 
@@ -446,7 +478,7 @@ class ConfigurationChangeRequest(BaseModel):
     related_manager_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
                                             db_column='related_manager_nationalcode',
                                             verbose_name='کد ملی مدیر مربوطه', 
-                                            related_name='related_manager_natioanlcode',
+                                            related_name='related_manager_nationalcode',
                                             null=False)
     committee_user_nationalcode = models.ForeignKey(User, on_delete=models.CASCADE, 
                                                     db_column='committee_user_nationalcode',
@@ -500,8 +532,8 @@ class ConfigurationChangeRequest(BaseModel):
                                                     help_text='آیا تغییر در مرکز داده انجام می‌شود؟')
     change_location_database = models.BooleanField(default=False, verbose_name='محل تغییر: پایگاه داده', 
                                                 help_text='آیا تغییر در پایگاه داده انجام می‌شود؟')
-    change_location_systems = models.BooleanField(default=False, verbose_name='محل تغییر: سیستم‌ها', 
-                                                help_text='آیا تغییر در سیستم‌ها انجام می‌شود؟')
+    change_location_system_services = models.BooleanField(default=False, verbose_name='محل تغییر: سیستم‌ها و سرویس ها', 
+                                                help_text='آیا تغییر در سیستم‌ها و سرویس ها انجام می‌شود؟')
     change_location_other = models.BooleanField(default=False, verbose_name='محل تغییر: سایر', 
                                                 help_text='آیا تغییر در محل دیگری انجام می‌شود؟')
     change_location_other_description = models.CharField(
@@ -682,6 +714,7 @@ class TaskUser(models.Model):
         ('T', 'تستر'),
     ]    
     user_role_code = models.CharField(max_length=1,choices=ROLE_CHOICES, verbose_name='سمت کاربر در تسک' )
+    is_active = models.BooleanField(default=True, verbose_name='فعال است؟', help_text='مشخص می کند که این کاربر برای این تسک فعال است یا خیر؟')
     
     class Meta:
         verbose_name = 'کاربر تسک'
@@ -703,6 +736,7 @@ class RequestTask(models.Model):
                                 on_delete=models.CASCADE)
     task = models.ForeignKey(to=Task, verbose_name='شناسه تسک', 
                             on_delete=models.CASCADE)
+    order_number = models.PositiveSmallIntegerField(verbose_name='شماره ترتیب', help_text='ترتیب اجرای تسک در درخواست را مشخص می کند', default=0)
 
     STATUS_CHOICES = [
         ('DEFINE', 'تعریف'),
@@ -712,8 +746,6 @@ class RequestTask(models.Model):
         ('TESSEL', 'تستر انتخاب شده'),
         ('FINISH', 'انجام موفق'),
         ('FAILED', 'انجام ناموفق'),
-        
-        
     ]
     status_code = models.CharField(max_length=6, verbose_name='وضعیت تسک' , choices=STATUS_CHOICES)
     
@@ -726,42 +758,6 @@ class RequestTask(models.Model):
         return f'{self.request} - {self.task}'
 
 
-class TaskUserSelected(models.Model):
-    """ 
-    زمانی که یک فرد یک تسک را جهت انجام عملیات مربوطه (اجرای تسک یا تست تسک) انتخاب می کند
-    یک رکورد در این جدول درج می شود
-    همچنین فرد مربوطه باید گزارش، تاریخ انجام تسک و ... را هم وارد کند که در این جدول ذخیره می شود
-    در حال حاضر جدولی نداریم که سوابق تغییرات این جدول در آن ذخیره شود
-    یعنی اگر تستر فرم را به مجری برگرداند و مجری دوباره تسک را انجام دهد
-    فقط تاریخ آخر را خواهیم داشت
-    """
-    task_user = models.ForeignKey(to=TaskUser, verbose_name='شناسه کاربر تسک', on_delete=models.CASCADE)
-    request_task = models.ForeignKey(to=RequestTask, verbose_name='شناسه کاربر تسک', on_delete=models.CASCADE)
-    pickup_date = models.DateTimeField(verbose_name='تاریخ و ساعت انتخاب تسک', auto_now_add=True,
-                                       help_text='تاریخ و ساعتی که این تسک توسط کاربر انتخاب شده است')
-    user_report_result = models.BooleanField(null=True, 
-                                             help_text='در صورتی که تست موفقیت آمیز باشد مقدار 1 و در غیر این صورت مقدار صفر خواهد داشت')
-    user_report_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ گزارش تستر',
-                                                help_text='تاریخ گزارش تستر به شمسی.')
-    user_report_time = models.CharField(null=True, max_length=5, verbose_name='ساعت گزارش تستر',
-                                        help_text='ساعت گزارش تستر به شمسی در قالب HH:MM.')
-    user_done_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ انجام تست',
-                                help_text='تاریخ انجام تست به شمسی.')
-    user_done_time = models.CharField(null=True, max_length=5, verbose_name='ساعت انجام تست',
-                                help_text='ساعت انجام تست به شمسی در قالب HH:MM.')
-    user_report_description = models.CharField(max_length=1000, verbose_name='توضیحات تست', null=True, blank=True, 
-                                               help_text='توضیحات تست را وارد کنید.')
-    
-    
-    class Meta:
-        verbose_name = 'کاربر انجام دهنده تسک'
-        verbose_name_plural = 'کاربران انجام دهنده تسک ها'
-        managed = True  
-    
-    def __str__(self) -> str:
-        return self.task_user      
-
-
 
 class RequestTask_ChangeType(models.Model):
     """ 
@@ -772,13 +768,14 @@ class RequestTask_ChangeType(models.Model):
                                 verbose_name='کد نوع تغییر', null=False)
     task = models.ForeignKey(to=Task, verbose_name='شناسه تسک', 
                             on_delete=models.CASCADE)
+    order_number = models.PositiveSmallIntegerField(verbose_name='شماره ترتیب', help_text='ترتیب اجرای تسک در نوع درخواست را مشخص می کند', default=0)
     class Meta:
         verbose_name = 'تسک نوع درخواست'
         verbose_name_plural = 'تسک های نوع درخواست ها'
         managed = True  
     
     def __str__(self) -> str:
-        return f'{self.request} - {self.task}'
+        return f'{self.task}'
 
 class RequestTaskUser(models.Model):
     """ 
@@ -816,7 +813,50 @@ class RequestTaskUser(models.Model):
         managed = True  
     
     def __str__(self) -> str:
-        return f'{self.request} - {self.task} '
+        return f'{self.request_task}'
+
+
+class RequestTaskUserSelected(models.Model):
+    """ 
+    زمانی که یک فرد یک تسک را جهت انجام عملیات مربوطه (اجرای تسک یا تست تسک) انتخاب می کند
+    یک رکورد در این جدول درج می شود
+    همچنین فرد مربوطه باید گزارش، تاریخ انجام تسک و ... را هم وارد کند که در این جدول ذخیره می شود
+    البته این اطلاعات را در جدول 
+    RequestTaskUser
+    هم می شد ذخیره کرد. ولی مشکل این است که اگر این کار را می کردیم
+    در بسیاری از رکوردها فیلدهای تاریخ انجام و گزارش خالی می ماند
+    همچنین ممکن است یک مجری چند بار گزارش بدهد(مثلا تستر بازگشت دهد) در این حالت هم نیاز به این جدول داریم
+    که بتوانیم به ازای یک کاربر، چند گزارش وارد کنیم
+    در حال حاضر جدولی نداریم که سوابق تغییرات این جدول در آن ذخیره شود
+    یعنی اگر تستر فرم را به مجری برگرداند و مجری دوباره تسک را انجام دهد
+    فقط تاریخ آخر را خواهیم داشت
+    """
+    request_task_user = models.ForeignKey(to=RequestTaskUser, verbose_name='شناسه کاربر تسک', on_delete=models.CASCADE)
+    pickup_date = models.DateTimeField(verbose_name='تاریخ و ساعت انتخاب تسک', auto_now_add=True,
+                                       help_text='تاریخ و ساعتی که این تسک توسط کاربر انتخاب شده است')
+    user_report_result = models.BooleanField(null=True, 
+                                             help_text='در صورتی که تست موفقیت آمیز باشد مقدار 1 و در غیر این صورت مقدار صفر خواهد داشت')
+    user_report_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ گزارش تستر',
+                                                help_text='تاریخ گزارش تستر به شمسی.')
+    user_report_time = models.CharField(null=True, max_length=5, verbose_name='ساعت گزارش تستر',
+                                        help_text='ساعت گزارش تستر به شمسی در قالب HH:MM.')
+    user_done_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ انجام تست',
+                                help_text='تاریخ انجام تست به شمسی.')
+    user_done_time = models.CharField(null=True, max_length=5, verbose_name='ساعت انجام تست',
+                                help_text='ساعت انجام تست به شمسی در قالب HH:MM.')
+    user_report_description = models.CharField(max_length=1000, verbose_name='توضیحات تست', null=True, blank=True, 
+                                               help_text='توضیحات تست را وارد کنید.')
+    
+    
+    class Meta:
+        verbose_name = 'کاربر انجام دهنده تسک'
+        verbose_name_plural = 'کاربران انجام دهنده تسک ها'
+        managed = True  
+    
+    def __str__(self) -> str:
+        return self.request_task_user      
+
+
 
 class RequestFlow(models.Model):
     """ 
@@ -1017,3 +1057,27 @@ class RequestExtraInformation(models.Model):
 
     def __str__(self) -> str:
         return f'{self.request.change_title} - {self.extra_info.Caption}'        
+    
+    
+class NotificationLog(BaseModel):
+    """
+    این جدول برای ذخیره سازی سوابق اطلاع رسانی به کار می رود
+    در صورتی که اطلاع رسانی انجام نشده باشد، کد خطا درج می شود
+
+    """
+    request = models.ForeignKey(to=ConfigurationChangeRequest, on_delete=models.CASCADE, verbose_name='درخواست مربوطه')
+    request_status =  models.CharField(max_length=100, verbose_name='وضعیت فعلی درخواست')
+    task_status =  models.CharField(max_length=100, verbose_name='وضعیت فعلی تسک')
+    template_code = models.CharField(max_length=20, verbose_name='کد الگوی اطلاع رسانی')
+    email_to = models.CharField(max_length=1000, verbose_name='آدرس ایمیل دریافت کنندگان To', null=True)
+    email_cc = models.CharField(max_length=1000, verbose_name='آدرس ایمیل دریافت کنندگان To', null=True)
+    email_bcc = models.CharField(max_length=1000, verbose_name='آدرس ایمیل دریافت کنندگان To', null=True)
+    variables = models.CharField(max_length=2000, verbose_name='متغییرها و مقادیر', null=True)
+    service_data = models.CharField(max_length=4000, verbose_name='مقادیر بازگشتی تابع', null=True)
+    service_return_val = models.SmallIntegerField(verbose_name='کد بازگشتی تابع', null=True)
+    class Meta:
+        verbose_name = 'سابقه اطلاع رسانی'
+        verbose_name_plural = 'سوابق اطلاع رسانی ها'
+
+    def __str__(self):
+        return self.request.change_title +  ' - ' + self.template_code
