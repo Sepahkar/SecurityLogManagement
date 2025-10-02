@@ -1,3 +1,14 @@
+"""**Returns all Users' information**.
+*Be aware that it is not the full user data,
+and it does not contain info such as Phone Number, UserTeamRole, ... .*
+
+For get full information check out :py:mod:`get_user_full_info`
+
+"""
+import requests
+from shared_lib import core as slcore
+
+
 def v1() -> list[dict]:
     """
     .. warning::
@@ -12,7 +23,6 @@ def v1() -> list[dict]:
     :return: Users' data
     :rtype: list[dict]
     """
-    raise Exception("DO NOT USE")
     return [{'username' : 'B.Ghasemi',
              'fullname' : 'بهاره قاسمی',
              'firstname': 'بهاره',
@@ -71,8 +81,25 @@ def v1() -> list[dict]:
             ]
 
 
+# todo
+# firsname, lastname,fullname,  photo_url
+# new api (/HR/api/v2/) must be defined 
+# filter active user must be defined
+
+
 def v2() -> list[dict]:
-    raise Exception("DO NOT USE")
+    """Return all users' information. *Using the HR API v1*.
+
+    :param: Nothing
+    :return: All users' data. *It's not user full information*
+    :rtype: list of dict
+    """
+    url = 'http://192.168.20.81:14000/HR/api/v1/users/'
+
+    # TEST server
+    # url = 'http://192.168.20.52:14000/HR/api/v1/users/'
+    all_users = requests.get(url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
+    return all_users.json()
 
 
 def v3() -> list[dict]:
@@ -85,15 +112,9 @@ def v3() -> list[dict]:
     :return: UserName, FullName, StaticPhotoURL
     :rtype: list of dict
     """
-    return [
-        {
-        "UserName": "m.sepahkar@eit",
-        "FullName": "محمد سپه کار",
-        "StaticPhotoURL": "http://192.168.20.81:14000/media/HR/PersonalPhoto/m.sepahkar.jpg"
-        },
-        {
-        "UserName": "E.Rezaee@eit",
-        "FullName": "عرفان رضائي",
-        "StaticPhotoURL": "http://192.168.20.81:14000/media/HR/PersonalPhoto/E.Rezaee.jpg"
-        },
-]
+    url = 'http://192.168.20.81:14000/HR/api/v1/users-minimal-info/'
+
+    # TEST server
+    # url = 'http://192.168.20.52:14000/HR/api/v1/users-minimal-info/'
+    all_users = requests.get(url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
+    return all_users.json()

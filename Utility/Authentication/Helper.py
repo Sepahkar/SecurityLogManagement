@@ -12,6 +12,8 @@ from django.core.cache import cache
 import traceback
 from django.contrib.auth.models import User
 import socket
+from shared_lib import core as slcore
+
 load_dotenv(os.path.join(Path(__file__).resolve().parent,".env"))
 
 
@@ -32,7 +34,7 @@ def V1_init_all_data(request, user, user_ip):
     host = os.getenv('ACCESSCONTROL_ADDRESS_IP_PORT')
     url = f'{host}AccessControl/api/get-all-apps-info/?return-dict=1'
     try:
-        res = requests.get(url)
+        res = requests.get(url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
         all_apps_info = res.json().get("data")
         if all_apps_info:
             user_data = {
@@ -47,8 +49,8 @@ def V1_init_all_data(request, user, user_ip):
                 user_team_role_url = f'{hr_full_url}api/get-user-team-role/{username}/'
                 # end
                 # requests
-                user_res = requests.get(user_url)
-                user_team_role_res = requests.get(user_team_role_url)
+                user_res = requests.get(user_url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
+                user_team_role_res = requests.get(user_team_role_url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
                 # end
                 # init data from response
                 user_info = user_res.json().get('data')
@@ -67,7 +69,7 @@ def V1_init_all_data(request, user, user_ip):
                 user_access_urls_url = f'{access_control_full_url}api/get-user-all-urls/{username}/'
                 # end
                 # requests
-                user_access_urls_res = requests.get(user_access_urls_url)
+                user_access_urls_res = requests.get(user_access_urls_url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
                 # end
                 # init data from response
                 user_access_urls = user_access_urls_res.json().get('data')
@@ -201,13 +203,13 @@ def V1_check_access_current_url(request,token):
     host = os.getenv('ACCESSCONTROL_ADDRESS_IP_PORT')
     apps_url = f'{host}AccessControl/api/get-all-apps-info/?return-dict=1'
     try:
-        res = requests.get(apps_url)
+        res = requests.get(apps_url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
         all_apps_info = res.json().get("data")
         if all_apps_info:
             if 'AccessControl' in all_apps_info:
                 ac_full_url = all_apps_info.get('AccessControl').get('FullUrl')
                 ac_check_url = ac_full_url + "api/CheckPermittedURL/"
-                response = requests.post(ac_check_url,data=json.dumps({'URL':URL,'JWT':JWT,'REQUESTED_IP':V1_get_client_ip(request)}),headers={'content-Type':'application/json'})
+                response = requests.post(ac_check_url,data=json.dumps({'URL':URL,'JWT':JWT,'REQUESTED_IP':V1_get_client_ip(request)}),headers={'content-Type':'application/json', "Service-Authorization":slcore.generate_token("e.rezaee")})
                 if response.json().get('data').get('state') == "ok":
                     if response.json().get('data').get('access') is True:
                         ret = True
@@ -258,122 +260,31 @@ def V1_show_html_page(page_name):
 
 
 def V1_get_data_from_token(token,key):
-    token_data = {
-        "username": "e.rezaee@eit",
-        "user_ip": "192.168.70.22",
-        "user_UserName": "e.rezaee@eit",
-        "user_age": "24 سال ",
-        "user_FullName": "عرفان رضائي",
-        "user_degree": "دیپلم",
-        "user_contract": "2 سال  و 5 ماه  و 10 روز ",
-        "user_user_image_name": "E.Rezaee.jpg",
-        "user_Gender": True,
-        "user_GenderTitle": "آقا",
-        "user_GenderTitlePrefix": "جناب آقای",
-        "user_GenderTitlePrefixFullName": " جناب آقای عرفان رضائي",
-        "user_Email": "E.Rezaee@iraneit.com",
-        "user_Study": "",
-        "user_NationalCode": "2222222222",
-        "team_role_info": [
-            {
-            "id": 3719,
-            "UserName": "e.rezaee@eit",
-            "TeamCode": "MIS",
-            "RoleId": 135,
-            "LevelId": None,
-            "Superior": False,
-            "ManagerUserName": "m.sepahkar@eit",
-            "StartDate": "1401/06/06",
-            "EndDate": None,
-            "FullName": "عرفان رضائي",
-            "Gender": True,
-            "TeamName": "مديريت سامانه هاي ستادي",
-            "RoleName": "مستندساز ",
-            "LevelName": None,
-            "ActiveInService": False,
-            "ActiveInEvaluation": False
-            },
-            {
-            "id": 3866,
-            "UserName": "e.rezaee@eit",
-            "TeamCode": "MIS",
-            "RoleId": 63,
-            "LevelId": 5,
-            "Superior": False,
-            "ManagerUserName": "m.sepahkar@eit",
-            "StartDate": "1402/01/01",
-            "EndDate": None,
-            "FullName": "عرفان رضائي",
-            "Gender": True,
-            "TeamName": "مديريت سامانه هاي ستادي",
-            "RoleName": "برنامه نويس",
-            "LevelName": "Junior+",
-            "ActiveInService": False,
-            "ActiveInEvaluation": False
-            }
-        ],
-        "user_access_urls": [
-            "/AddedValue/",
-            "/SystemHelp/InsertHelp/",
-            "/Duties/@username",
-            "/ProcessManagement/ChangeTeamRole/",
-            "/ServiceBook/",
-            "/Sanjeman/AutoLogin",
-            "/OKR/",
-            "/admin/autologin/",
-            "/admin",
-            "/admin",
-            "/TeamWorkPlan/172",
-            "/admin/autologin/",
-            "CostPrice/1400",
-            "/ProcessManagement/ChangeTeamRole/Report/",
-            "/HR/List/",
-            "/TeamFeature/feature-view/",
-            "/ProcessManagement/ChangeTeamRole/ReportSpecial/",
-            "/PersonnelService/Gym/",
-            "/PersonnelService/NaharTime/",
-            "/PersonnelService/NaharTime/action/",
-            "/admin",
-            "/PhotoGallery/insertphoto/",
-            "/CorpIssue/fp/",
-            "/ServiceBook/Session/",
-            "/ServiceBook/TeamDescription/",
-            "/ServiceBook/UserStory/",
-            "/ServiceBook/ImportantWork/",
-            "/ServiceBook/Session/Delete/@pk/",
-            "/ServiceBook/Session/Edit/@pk/",
-            "/ServiceBook/ImportantWork/Edit/@pk/",
-            "/ServiceBook/ImportantWork/Delete/@pk/",
-            "/ServiceBook/UserStory/Delete/@pk/",
-            "/ServiceBook/TeamDescription/Delete/@pk/",
-            "/ServiceBook/TeamDescription/Edit/@pk/",
-            "/CorpIssue/insert-corp-issue/",
-            "/TeamWorkPlan",
-            "/TeamWorkPlan/@pk/",
-            "/TeamWorkPlan/jwttest/",
-            "/PersonnelService/NaharTime/hello/",
-            "/KMS/",
-            "/LeavingSession/LeavingSessionMember/",
-            "/Main",
-            "/Main",
-            "/SalesManagement/CorpIssue/",
-            "/TeamFeature/feature-view/",
-            "admin/autologin/",
-            "/AccessControl/ListAppPermissions/",
-            "/PersonnelService/Pors/auth-gateway/",
-            "/Finance/Import",
-            "/ProcessManagement/ChangeTeamRole/HistoryReport/",
-            "/admin/",
-            "/admin/"
-        ],
-        "exp": 1738226326185
-        }
-    return token_data[key]
-
+    data_enc = V1_jwt_dec(token)
+    if data_enc and key:
+        if all(k in data_enc for k in [key,"exp"]):
+            if V1_is_not_expired(data_enc.get('exp',None)):
+                return data_enc.get(key)
 
 
 def V1_find_token_from_request(request):
-    return True
+    token = None
+    if request.GET.get('token',None):
+        token = request.GET.get('token')
+    if token is None and request.POST.get('token', None):
+        token = request.POST.get('token')
+
+    if token is None and hasattr(request,"body"):
+        try:
+            body_data = json.loads(str(request.body, encoding='utf-8'))
+            token = body_data.get('token')
+        except:
+            print("error at get token in request.body")
+
+    if token is None and hasattr(request, "data"):
+        token = request.data.get('token')
+
+    return token
 
 
 def V1_get_current_host(request):
@@ -395,7 +306,7 @@ def V1_get_api_fetch_data(url,return_key=None):
         return data
     else:
         try:
-            response = requests.get(url)
+            response = requests.get(url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
             data = response.json().get('data')
             cache.set(url,json.dumps(data))
             if return_key:
@@ -432,7 +343,7 @@ def V1_call_api(url, return_key=None, method_type="get", data={}, use_cache=True
     else:
         try:
             request_handler = get_request_handler(method_type)
-            response = request_handler(url=url, data=json.dumps(data), headers={'Content-Type':'application/json'})
+            response = request_handler(url=url, data=json.dumps(data), headers={'Content-Type':'application/json', "Service-Authorization":slcore.generate_token("e.rezaee")})
             data = response.json().get('data')
             cache.set(url, json.dumps(data))
             if return_key:

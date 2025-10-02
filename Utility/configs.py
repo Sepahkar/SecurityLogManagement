@@ -21,6 +21,7 @@ class Port:
     # test purposes
     TEMP_PORT = "12000"
     HR = "14000"
+    NOTIFICATION = "6000"
 
 
 # api uri

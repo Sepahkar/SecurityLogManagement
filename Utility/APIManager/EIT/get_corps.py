@@ -196,4 +196,8 @@ def v1(active_in_service: bool = True):
 
 
 def v2(active_in_service: bool = True):
-    raise Exception("DO NOT USE THIS")
+    """
+    Using API
+    :param active_in_service:
+    :return:
+    """

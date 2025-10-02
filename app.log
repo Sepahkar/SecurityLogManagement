@@ -134,3 +134,6 @@ Traceback (most recent call last):
              ^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'FormManager' object has no attribute 'get_all_user_data'. Did you mean: 'get_all_users_info'?
 2025-10-02 20:25:54,586 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-02 21:27:48,263 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-02 21:28:38,107 - INFO - D:\GIT\git_latest_clone_slm\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-02 21:28:45,333 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico

@@ -1,3 +1,9 @@
+"""This module is used for **getting the team manager information**"""
+import requests
+
+from Utility import configs
+from shared_lib import core as slcore
+
 def v1(team_code: str) -> str:
     """Returns the sample static data"""
     # erfan_team = {
@@ -48,42 +54,18 @@ def v1(team_code: str) -> str:
 
     # if team_code in zahra_team:
     #     return 'z.alizadeh@eit'
-    raise Exception("DO NOT USE THIS")
     return 'm.sepahkar@eit'
 
 
 
 
-def v2(teamcode: str="MIS", ManagerType="GeneralManager") -> str:
-    data = {
-        "TeamCode": "MIS",
-        "TeamName": "مديريت سامانه هاي ستادي",
-        "ActiveInService": False,
-        "ActiveInEvaluation": False,
-        "IsActive": True,
-        "GeneralManager": "m.sepahkar@eit",
-        "SupportManager": None,
-        "TestManager": None
-    } 
-    
-    return data[ManagerType]
-
-
-def v3(teamcode: str="MIS", ManagerType="GeneralManager") -> str:
-    data = {
-        "TeamCode": "MIS",
-        "TeamName": "مديريت سامانه هاي ستادي",
-        "ActiveInService": False,
-        "ActiveInEvaluation": False,
-        "IsActive": True,
-        "GeneralManager": "m.sepahkar@eit",
-        "GeneralManagerNationalCode": "1111111111",
-        "SupportManager": None,
-        "SupportManagerNationalCode": None,
-        "TestManager": None,
-        "TestManagerNationalCode": None
-    } 
-    
-    return data[ManagerType]
-
+def v2(teamcode: str, ManagerType) -> str:
+    url = configs.TEAMS("MAIN_SERVER") + teamcode
+    r = requests.get(url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
+    if r.status_code == 200:
+        
+        # its safe to use zero index,  because the teamcode is unique 
+        # and always the list length is 1
+        return r.json()[0][ManagerType]
+    return None
 

@@ -1,84 +1,40 @@
-def ver1(
-    doc_id: int,
-    sender: str = "e.rezaee@eit",
-    inbox_owners: list[str] = ["m.sepahkar@eit", "a.ahmadi@eit"],
-) -> dict:
+"""This module is using for **begin the process of sending document
+to others' cartable**
 
-    # for each inbox owner (aka receiver) we have a username key in return dict
-    return {
-        "m.sepahkar@eit": {
-            "msg": "success",
-            "data": {
-                "id": 67083,
-                "ReceiveDate": "2025-01-29T11:54:34.845225+03:30",
-                "IsRead": False,
-                "SendDate": None,
-                "InboxOwner": "m.sepahkar@eit",
-                "SenderUser": "e.rezaee@eit",
-                "DueDate": None,
-                "PersonalDueDate": None,
-                "IsVisible": True,
-                "ReadDate": None,
-                "TeamCode": None,
-                "RoleId": None,
-                "WorkFlowStep": None,
-                "DocumentId": 51449,
-                "PreviousFlow": None,
-            },
+"""
+import requests
+
+from Utility import configs
+from shared_lib import core as slcore
+
+def ver1(doc_id: int, sender: str, inbox_owners: list[str]) -> dict:
+    """ *Using Portal API v1*
+
+    :param doc_id: Document Id
+    :type doc_id: int
+    :param sender: From *It must be Username(with @eit format)*
+    :type sender: str
+    :param inbox_owners: To *It must be Username(with @eit format)*
+    :type inbox_owners: list[str]
+    :return: Dictionary that contains DocumentFlow data if it created properly, Otherwise it contains validations error messages
+    :rtype: dict
+    """
+
+    # url = 'http://192.168.20.81:23000/Cartable/api/create-document-flow2/'
+    url = configs.PUT_DOCUMENT_FLOW("MAIN_SERVER")
+    receive_status = {}
+    for receiver in inbox_owners:
+        json_data = {
+            "DocumentId": doc_id,
+            "InboxOwner": receiver,
+            "SenderUser": sender
         }
-    }
+        r = requests.put(url, json=json_data, headers={"Service-Authorization":slcore.generate_token("e.rezaee"), "Content-Type":"application/json"})
+        receive_status[receiver] = r.json()
+    return receive_status
+
+# todo response payload must be implemented
 
 
-def ver2(
-    doc_id: int,
-    sender_national_code: str = "1111111111",
-    inbox_owners_national_code: list[str] = ["2222222222","3333333333"],
-) -> dict:
-
-    # for each inbox owner (aka receiver) we have a natioanlcode key in return dict
-    return {
-        "2222222222": {
-            "msg": "success",
-            "data": {
-                "id": 67083,
-                "ReceiveDate": "2025-01-29T11:54:34.845225+03:30",
-                "IsRead": False,
-                "SendDate": None,
-                "InboxOwner": "m.sepahkar@eit",
-                "SenderUser": "e.rezaee@eit",
-                "InboxOwnerNationalCode": "2222222222",
-                "SenderUserNationalCode": "1111111111",
-                "DueDate": None,
-                "PersonalDueDate": None,
-                "IsVisible": True,
-                "ReadDate": None,
-                "TeamCode": None,
-                "RoleId": None,
-                "WorkFlowStep": None,
-                "DocumentId": 51449,
-                "PreviousFlow": None,
-            },
-        },
-        "3333333333": {
-            "msg": "success",
-            "data": {
-                "id": 67084,
-                "ReceiveDate": "2025-01-29T11:54:34.845225+03:30",
-                "IsRead": False,
-                "SendDate": None,
-                "InboxOwner": "j.abus@eit",
-                "SenderUser": "e.rezaee@eit",
-                "InboxOwnerNationalCode": "3333333333",
-                "SenderUserNationalCode": "1111111111",
-                "DueDate": None,
-                "PersonalDueDate": None,
-                "IsVisible": True,
-                "ReadDate": None,
-                "TeamCode": None,
-                "RoleId": None,
-                "WorkFlowStep": None,
-                "DocumentId": 51449,
-                "PreviousFlow": None,
-            },
-        },
-    }
+def ver2():
+    ...

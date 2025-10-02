@@ -1,0 +1,81 @@
+.user-avatar img
+{
+    width: 60px;
+    height: 70px;
+    border-radius: 50%;
+}
+.user-avatar img.inactive
+{
+    opacity: 0.5;
+}
+
+.user-select-list
+{
+    flex-wrap:nowrap; display:flex;
+}
+.user-select-list .label-title
+{
+    width: 100px;
+}
+.user-select-list .user-avatar
+{
+    margin:10px;
+}
+.user-select-list .user-name
+{
+    font-size: 9pt;
+}
+.user-list
+{
+    display: flex;
+}
+.user-info
+{
+    display: flex;
+    font-size: 10pt;
+}
+
+.fieldBox {
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 15px;
+    margin: 5px;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+}
+
+.user-list .fieldBox {
+    width: calc(25% - 10px);
+
+}
+
+.request-info.fieldBox
+{
+    width: calc(100% - 35px);    
+    padding: 15px;
+}
+.request-info.fieldBox .row
+{
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.label-title 
+{
+    font-weight: bolder;
+    color: rgb(1, 1, 2) ;
+}
+.title {
+    font-size: 18pt;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+    font-family: Defined-Traffic;
+}
+.sub-title
+{
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 3px;
+    text-align: center;
+    font-family: Defined-Traffic;
+}

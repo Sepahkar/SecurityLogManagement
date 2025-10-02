@@ -1,3 +1,8 @@
+"""This module is used for **getting teams' information**
+"""
+import requests
+from shared_lib import core as slcore
+
 def v1(active_in_service: bool = True, active_in_evaluation: bool = True) -> list[dict]:
     """Return a static json for testing purposes
 
@@ -296,7 +301,7 @@ def v1(active_in_service: bool = True, active_in_evaluation: bool = True) -> lis
     return None
 
 
-def v2(active_in_service: bool, active_in_evaluation: bool) -> list[dict]:
+def v2(active_in_service: bool = True, active_in_evaluation: bool = True) -> list[dict]:
     """*Using HR API v1*
 
     :param active_in_service: Is active in book service ?
@@ -306,25 +311,15 @@ def v2(active_in_service: bool, active_in_evaluation: bool) -> list[dict]:
     :return: Teams' data
     :rtype: list[dict]
     """
-    return [
-        {
-        "TeamCode": "EVA",
-        "TeamName": "ارزيابي",
-        "ActiveInService": False,
-        "ActiveInEvaluation": False,
-        "IsActive": True,
-        "GeneralManager": "m.sepahkar@eit",
-        "SupportManager": None,
-        "TestManager": None
-        },
-        {
-        "TeamCode": "MIS",
-        "TeamName": "مديريت سامانه هاي ستادي",
-        "ActiveInService": False,
-        "ActiveInEvaluation": False,
-        "IsActive": True,
-        "GeneralManager": "m.sepahkar@eit",
-        "SupportManager": None,
-        "TestManager": None
-        }
-    ]
+    url = 'http://192.168.20.81:14000/HR/api/v1/teams/'
+
+    # TEST server
+    # url = 'http://192.168.20.52:14000/HR/api/v1/teams/'
+
+    # use this payload as parameters for API call
+    payload = {
+        "ActiveInService": active_in_service,
+        "active_in_evaluation": active_in_evaluation,
+    }
+    all_filtered_teams = requests.get(url, params=payload, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
+    return all_filtered_teams.json()

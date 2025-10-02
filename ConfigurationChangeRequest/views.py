@@ -5,7 +5,7 @@ import logging
 import json
 import inspect
 
-in_EIT = False
+in_EIT = True
 
 def get_current_user(request):
     if in_EIT:

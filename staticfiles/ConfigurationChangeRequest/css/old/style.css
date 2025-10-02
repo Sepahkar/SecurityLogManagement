@@ -1,0 +1,39 @@
+@font-face
+{
+  font-family: Defined-Titr;
+  src: url("../font/BTitrBd.TTF");
+}
+@font-face
+{
+  font-family: Defined-IranSans;
+  src: url("../font/IRANSans_Light.TTF");
+}
+@font-face
+{
+  font-family: Defined-Traffic;
+  src: url("../font/BTraffic.TTF");
+}
+
+
+
+
+.hidden
+{
+    display: none;
+}
+
+/* استایل‌های اضافی */
+body {
+    font-family: Defined-IranSans, sans-serif;
+    margin: 20px;
+}
+form {
+    display: flex;
+    flex-direction: column;
+}
+label {
+    margin: 10px 0 5px;
+}
+select {
+    margin-bottom: 15px;
+}

@@ -1,2 +1,27 @@
+"""docstring"""
+import requests
+from Utility import Helper
+from shared_lib import core as slcore
+
 def v1(users: list) -> list[dict]:
-    raise Exception("DO NOT USE THIS, CAUSE IT DOESNT USED AT ALL")
+    """*Using HR API v1*
+
+    :param users: Usernames
+    :type users: list
+    :return: List of users full data
+    :rtype: list[dict]
+    """
+    # handling @eit in the end of usernames
+    for index, user in enumerate(users):
+        users[index] = Helper.FixUsername(user, need_eit=True).username
+
+    # example: ['jassem', 'qassem'] --> 'jassem,qassem'
+    usernames_str = ','.join([str(username) for username in users])
+
+    url = 'http://192.168.70.100:3521/HR/api/v1/users/full-info/'+ usernames_str
+
+    # TEST server
+    # url = 'http://192.168.20.52:14000/HR/api/v1/users/full-info/' + usernames_str
+
+    all_users_full_info = requests.get(url, headers={"Service-Authorization":slcore.generate_token("e.rezaee")})
+    return all_users_full_info.json()
