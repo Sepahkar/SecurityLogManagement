@@ -1578,33 +1578,33 @@ class FormManager:
         
         return user_info
 
-    # def get_all_user_data(self):
-    #     """
-    #     این تابع اطلاعات کاربر جاری و سایر کاربران مرتبط را بازگشت می دهد
-    #     """
-    #     data = {"success": True, "message": ""}
+    def get_all_user_data(self):
+        """
+        این تابع اطلاعات کاربر جاری و سایر کاربران مرتبط را بازگشت می دهد
+        """
+        data = {"success": True, "message": ""}
 
-    #     try:
+        try:
            
-    #         # data["current_user"] = self.__get_user_data(self.current_user_national_code)
+            # data["current_user"] = self.__get_user_data(self.current_user_national_code)
 
-    #         # all_users = []
-    #         # users = m.User.objects.all()
-    #         # for u in users:
-    #         #     user_info = self.__get_user_data(u.national_code)
-    #         #     all_users.append(user_info)
+            # all_users = []
+            # users = m.User.objects.all()
+            # for u in users:
+            #     user_info = self.__get_user_data(u.national_code)
+            #     all_users.append(user_info)
 
-    #         # data["all_users"] = all_users
+            # data["all_users"] = all_users
 
-    #         data["current_user"] = m.User.objects.filter(national_code=self.current_user_national_code).first()
-    #         data["current_user_team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_national_code)
-    #         data["all_users"] = m.UserTeamRole.objects.all()
+            data["current_user"] = m.User.objects.filter(national_code=self.current_user_national_code).first()
+            data["current_user_team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_national_code)
+            data["all_users"] = m.UserTeamRole.objects.all()
 
 
-    #     except Exception as e:
-    #         return {"success": False, "message": str(e)}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
 
-    #     return data
+        return data
 
     # def get_inbox_owners_national_code(
     #     self, status: str, request_instance: m.ConfigurationChangeRequest

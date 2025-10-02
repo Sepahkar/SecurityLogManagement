@@ -119,3 +119,18 @@ django.template.exceptions.TemplateSyntaxError: <ExtendsNode: extends "base.html
 2025-09-30 17:49:29,707 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
 2025-10-01 23:46:25,078 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
 2025-10-01 23:46:45,313 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-02 20:24:14,105 - WARNING - Not Found: /
+2025-10-02 20:24:15,796 - WARNING - Not Found: /
+2025-10-02 20:24:25,409 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 226, in request_create
+    data = form_manager.load_form_data(-1, current_user_nationalcode)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 283, in load_form_data
+    result = self.get_all_user_data()
+             ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'FormManager' object has no attribute 'get_all_user_data'. Did you mean: 'get_all_users_info'?
+2025-10-02 20:25:54,586 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
