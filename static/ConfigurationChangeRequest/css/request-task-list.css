@@ -44,16 +44,21 @@ tbody .col-task-tester,tbody  .col-task-executor
 .col-task-id { width: 4%; }
 .col-task-order { width: 4%; }
 .col-task-title { width: 24%; }
-.col-task-status { width: 10%; }
+.col-task-status { width: 7%; }
 .col-task-executor { width: 23%; }
 .col-task-tester { width: 23%; }
-.col-task-date { width: 5%; }
+.col-task-date { width: 8%; }
 .col-task-report { width: 5%; }
 
 
 .col-task-date, .col-task-report , .col-task-status, .col-task-executor, .col-task-tester
 {
     text-align: center;
+}
+
+tbody .col-task-date
+{
+    font-size: 10pt;
 }
 .task-table-header {
     background-color: blue;

@@ -10,3 +10,5 @@ mssql-django
 mssql
 django-environ
 wfastcgi
+wheel
+django-mis-auth2

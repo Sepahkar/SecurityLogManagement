@@ -29,11 +29,17 @@ def get_current_user(request):
         task4_test = '6000091631'
 
 
-        current_user = task1_test
+        current_user = rel_manger
     
     return current_user
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    filename='app.log',           # نام فایل لاگ
+    filemode='a',                 # 'a' برای اضافه کردن، 'w' برای بازنویسی
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
 
 # def attachment_form_view(request):
 #     """
@@ -449,6 +455,82 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     data['mode'] = mode
     return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
 
+
+def request_task_user_managment(request, request_task_id:int)-> dict:
+    """
+    این تابع افراد ذیل یک تسک را مدیریت می کند.
+
+    Args:
+        request (_type_): درخواست http
+        task_id (int): شناسه تسک مورد نظر در درخواست و یا نوع درخواست
+        operation_type (_type_): یکی از موارد زیر است:
+            a: اضافه کردن کاربر جدید
+            d: حذف کاربر مربوطه
+        user_national_code (کد ملی کاربر): کد ملی کاربر مورد نظر
+                    
+    Return value:
+        یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+            {'success':, 'message':''}
+            success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+            message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+    
+    """
+    current_user_national_code = get_current_user()
+    
+    # اطلاعات را از ورودی دریافت می کنیم
+    operation_type = request.get('operation_type', 'A')
+    user_national_code = request.get('user_national_code','')
+    
+    
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    result = obj_form_manager.task_user_managment(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
+    return JsonResponse(result)
+
+def change_type_user_managment(request, task_id:int)-> dict:
+    """
+    این تابع افراد ذیل یک تسک را مدیریت می کند.
+
+    Args:
+        request (_type_): درخواست http
+        task_id (int): شناسه تسک مورد نظر در درخواست و یا نوع درخواست
+        operation_type (_type_): یکی از موارد زیر است:
+            a: اضافه کردن کاربر جدید
+            d: حذف کاربر مربوطه
+        user_national_code (کد ملی کاربر): کد ملی کاربر مورد نظر
+                    
+    Return value:
+        یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+            {'success':, 'message':''}
+            success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+            message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+    
+    """
+    
+    current_user_national_code = get_current_user()
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+
+    # اطلاعات را از ورودی دریافت می کنیم
+    operation_type = request.get('operation_type', 'A')
+    user_national_code = request.get('user_national_code','')
+    user_role_id = request.get('role_id', -1)
+    user_team_code = request.get('team_code', '')
+    user_role_code = request.get('role_code', 'E')
+    
+    result = obj_form_manager.task_user_managment(task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'C')
+    return JsonResponse(result)
+
+
+def change_type_list(reqeust):
+    pass
+
+def change_type_create(request):
+    pass
+
+def change_type_edit(request, change_type_id):
+    ...
+    
+
+
 def request_action_view(request, request_id, action):
     """
     عملیات روی درخواست (تایید/رد/بازگشت)
@@ -503,3 +585,5 @@ def test_messages_view(request):
             'warning_message':'این یک پیام هشدار است',
             }
     return render(request, 'ConfigurationChangeRequest/test-message.html', data)
+
+

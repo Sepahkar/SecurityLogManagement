@@ -106,13 +106,13 @@
                             </td>
                            
                             <td class="col-task-date">
-                                {{ task.executor_done_date|default:"-" }}
+                                {{ task.executor_done_date|to_jalali|default:"-" }}
                                 {{ task.executor_done_time }}
                             </td>
                             <td class="col-task-report">
                                 <i class="fa fa-clipboard-list
                                 {% if task.executor_report%}active{% endif %}
-                                " aria-hidden="true" title="گزارش" 
+                                " aria-hidden="true" title="{{task.executor_report|default:'گزارشی ثبت نشده است'}}" 
                                 data-report="{{task.executor_report}}"></i>
                             </td>
                         </tr>
