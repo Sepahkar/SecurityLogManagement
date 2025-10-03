@@ -137,3 +137,232 @@ AttributeError: 'FormManager' object has no attribute 'get_all_user_data'. Did y
 2025-10-02 21:27:48,263 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
 2025-10-02 21:28:38,107 - INFO - D:\GIT\git_latest_clone_slm\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
 2025-10-02 21:28:45,333 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-02 22:53:01,186 - WARNING - Not Found: /
+2025-10-03 00:15:56,266 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:16:17,140 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:16:23,768 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:16:32,455 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:16:40,316 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:16:44,194 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:16:47,791 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:17:03,743 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:17:23,652 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:55:05,132 - ERROR - Internal Server Error: /ConfigurationChangeRequest/89/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 291, in request_view
+    current_user_nationalcode =  get_current_user(request)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 24, in get_current_user
+    tasks = m.ConfigurationChangeRequestTask.filter(request_id=request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ConfigurationChangeRequest.models' has no attribute 'ConfigurationChangeRequestTask'. Did you mean: 'ConfigurationChangeRequest'?
+2025-10-03 00:55:46,698 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:55:49,685 - ERROR - Internal Server Error: /ConfigurationChangeRequest/89/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 291, in request_view
+    current_user_nationalcode =  get_current_user(request)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 24, in get_current_user
+    tasks = m.ConfigurationChangeRequestTask.filter(request_id=request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ConfigurationChangeRequest.models' has no attribute 'ConfigurationChangeRequestTask'. Did you mean: 'ConfigurationChangeRequest'?
+2025-10-03 00:56:22,885 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:56:25,877 - ERROR - Internal Server Error: /ConfigurationChangeRequest/89/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 291, in request_view
+    current_user_nationalcode =  get_current_user(request)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 24, in get_current_user
+    tasks = m.RequestTask.filter(request_id=request_id)
+            ^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'RequestTask' has no attribute 'filter'
+2025-10-03 00:56:35,639 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:56:39,508 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:56:43,324 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 00:56:49,160 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 00:57:33,180 - WARNING - Forbidden (CSRF token from POST incorrect.): /ConfigurationChangeRequest/89/
+2025-10-03 00:57:36,558 - WARNING - Forbidden (CSRF token from POST incorrect.): /ConfigurationChangeRequest/89/
+2025-10-03 00:57:41,111 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 00:58:04,511 - WARNING - Forbidden (CSRF token from POST incorrect.): /ConfigurationChangeRequest/89/
+2025-10-03 00:58:45,815 - WARNING - Forbidden (CSRF token from POST incorrect.): /ConfigurationChangeRequest/89/
+2025-10-03 00:58:48,493 - WARNING - Forbidden (CSRF token from POST incorrect.): /ConfigurationChangeRequest/89/
+2025-10-03 00:58:50,584 - WARNING - Forbidden (CSRF token from POST incorrect.): /ConfigurationChangeRequest/89/
+2025-10-03 01:02:45,094 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 01:09:45,688 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 01:09:49,448 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 01:09:53,989 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 01:10:41,624 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 11:03:40,999 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 11:04:24,912 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 11:11:32,558 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 11:12:27,654 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 11:14:23,880 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 11:28:47,280 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 11:42:03,809 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 11:42:13,311 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 11:46:36,990 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 11:46:41,327 - WARNING - Not Found: /ConfigurationChangeRequest/Task/1/
+2025-10-03 11:46:45,455 - WARNING - Not Found: /ConfigurationChangeRequest/Task/1/
+2025-10-03 11:46:50,993 - WARNING - Not Found: /ConfigurationChangeRequest/Task/1/
+2025-10-03 11:46:55,093 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 11:47:00,479 - WARNING - Not Found: /ConfigurationChangeRequest/Task/1/
+2025-10-03 12:10:20,606 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-03 12:11:06,155 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 12:17:54,539 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 12:18:05,985 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:19:20,714 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 12:19:23,469 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:20:47,487 - WARNING - Not Found: /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:22:39,086 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 12:22:43,539 - WARNING - Not Found: /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:22:50,988 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:27:33,897 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 12:27:48,685 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:28:24,193 - WARNING - Not Found: /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:28:28,435 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:28:48,643 - WARNING - Not Found: /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:28:48,727 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:28:49,261 - WARNING - Not Found: /favicon.ico
+2025-10-03 12:29:23,781 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:29:53,814 - WARNING - Not Found: /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:30:06,404 - WARNING - Not Found: /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:30:57,299 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-03 12:31:03,138 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-03 12:31:06,642 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-03 12:31:41,487 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 12:31:44,159 - WARNING - Forbidden (CSRF token from POST incorrect.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:31:47,664 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 12:37:53,470 - WARNING - Forbidden (CSRF cookie not set.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:38:39,098 - WARNING - Forbidden (CSRF token missing.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 12:39:09,895 - WARNING - Forbidden (CSRF token missing.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 13:04:02,056 - WARNING - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header has incorrect length.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 13:04:43,688 - WARNING - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header incorrect.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 13:05:00,848 - WARNING - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header has incorrect length.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 13:05:38,595 - WARNING - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header has incorrect length.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 13:08:29,184 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 13:08:34,955 - WARNING - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header incorrect.): /ConfigurationChangeRequest/Task/253/
+2025-10-03 13:09:06,779 - WARNING - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header incorrect.): /ConfigurationChangeRequest/Task/254/
+2025-10-03 13:12:01,599 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 13:16:38,147 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 13:17:21,427 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-03 13:17:48,210 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 13:22:34,607 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:22:39,625 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-03 13:22:50,595 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 13:23:47,783 - ERROR - Internal Server Error: /ConfigurationChangeRequest/Task/253/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 538, in request_task_user_management
+    result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 1675, in task_user_management
+    user_instance = m.User.objects.get(nationalcode=user_national_code)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+                                                        ~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1476, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1494, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1501, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1613, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1645, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<7 lines>...
+        update_join_types=update_join_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1495, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1307, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1772, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'nationalcode' into field. Choices are: administrator, changetype, committee_user_nationalcode, created_configurationchangerequests, created_notificationlogs, direct_manager, direct_manager_nationalcode, first_name, gender, last_name, modified_configurationchangerequests, modified_notificationlogs, national_code, notifygroupuser, related_manager_nationalcode, requestflow, requestor_nationalcode, requesttaskuser, taskuser, user, username
+2025-10-03 13:24:22,372 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:24:27,206 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:24:30,895 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:24:48,611 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 13:26:02,327 - ERROR - Internal Server Error: /ConfigurationChangeRequest/Task/253/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 538, in request_task_user_management
+    result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 1682, in task_user_management
+    exists = m.RequestTaskUser.objects.filter(request_task=task_instance, user_nationalcode=user_instance, request_task_type='R').exists()
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1476, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1494, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1501, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1613, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1645, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<7 lines>...
+        update_join_types=update_join_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1495, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1307, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1772, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'request_task_type' into field. Choices are: id, request_task, request_task_id, requesttaskuserselected, user_nationalcode, user_nationalcode_id, user_role_code, user_role_id, user_role_id_id, user_team_code, user_team_code_id
+2025-10-03 13:26:35,808 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:27:10,041 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:27:13,759 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:28:28,977 - WARNING - Not Found: /ConfigurationChangeRequest/89/static/ConfigurationChangeRequest/favicon.ico
+2025-10-03 13:32:10,822 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:32:14,794 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:32:19,465 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-03 13:32:27,059 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.

@@ -5,32 +5,83 @@ import logging
 import json
 import inspect
 
-in_EIT = True
+in_EIT = False
 
 def get_current_user(request):
     if in_EIT:
         current_user = request.user.national_code
     else:
-        requestor = '1280419180'
-        manager = '1379150728'
-        rel_manger = '0081578091'
-        commitee = '5228300880'
+        request_id = 89
+        from . import models as m
+        objRequest = m.ConfigurationChangeRequest.objects.get(id=request_id)
+        
+        if objRequest:
+            requestor = objRequest.related_manager_nationalcode.national_code
+            rel_manger = objRequest.related_manager_nationalcode.national_code
+            manager = objRequest.direct_manager_nationalcode.national_code
+            commitee = objRequest.committee_user_nationalcode.national_code
+            # استخراج همه تسک‌های مربوط به این درخواست
+            tasks = m.RequestTask.objects.filter(request_id=request_id)
+            Task = []
 
-        task1_executor = '6309920952'
-        task1_test = '0074322060'
+            for task in tasks:
+                # پیدا کردن اولین مجری (RoleCode='E') و اولین تستر (RoleCode='T') برای هر تسک
+                executor_user = task.requesttaskuser_set.filter(user_role_code='E').first()
+                tester_user = task.requesttaskuser_set.filter(user_role_code='T').first()
 
-        task2_executor = '0063425750'
-        task2_test = ''
+                executor_name = executor_user.user_nationalcode.national_code if executor_user else ''
+                tester_name = tester_user.user_nationalcode.national_code if tester_user else ''
 
-        task3_executor = '0074322060'
-        task3_test = '6309920952'
+                Task.append([executor_name, tester_name])
+            # حالا Task[i][0] مجری و Task[i][1] تستر تسک iام است (i از 0 شروع می‌شود)
+            print(Task)
+            
+        else:
+            requestor = '1280419180'
+            manager = '1379150728'
+            rel_manger = '0081578091'
+            commitee = '5228300880'
 
-        task4_executor = '0080556787'
-        task4_test = '6000091631'
+            task1_executor = '6309920952'
+            task1_test = '0074322060'
 
+            task2_executor = '0063425750'
+            task2_test = ''
 
-        current_user = rel_manger
-    
+            task3_executor = '0074322060'
+            task3_test = '6309920952'
+
+            task4_executor = '0080556787'
+            task4_test = '6000091631'
+
+        # حالا بر اساس مرحله، کاربر جاری را مشخص می کنیم
+        if objRequest:
+            if objRequest.status_code == 'DIRMAN':
+                current_user = manager
+            elif objRequest.status_code == 'RELMAN':
+                current_user = rel_manger
+            elif objRequest.status_code == 'COMITE':
+                current_user = commitee
+            elif objRequest.status_code == 'DOTASK':
+                # اینجا نخستین تسکی که وضعیت آن TASFIN یا TASFAL نیست را پیدا می کنیم.
+                first_valid_task = None
+                for idx, task in enumerate(tasks):
+                    if task.status_code not in ['TASFIN', 'TASFAL']:
+                        first_valid_task = (idx, task)
+                        break
+
+                if first_valid_task is not None:
+                    idx, task_obj = first_valid_task
+                    if task_obj.status_code in ['EXESEL', 'EXERED', 'DEFINE']:
+                        current_user = Task[idx][0]  # مجری
+                    else:
+                        current_user = Task[idx][1]  # تستر
+                else:
+                    current_user = ''  # اگر تسک معتبری نبود
+        else:     
+            current_user = requestor
+
+    print(current_user)
     return current_user
 
 logging.basicConfig(
@@ -93,10 +144,10 @@ def get_simple_form_data(request):
     
     return form_data
 
-def get_full_form_data(request):
+def get_full_form_data(request,objFormManager :FormManager):
     # دریافت اطلاعات فرم ساده
     form_data = get_simple_form_data(request=request)
-    objFormManager :FormManager= form_data['objFormManager']  # اصلاح: استفاده از [] به جای ()
+    # objFormManager :FormManager= form_data['objFormManager']  # اصلاح: استفاده از [] به جای ()
     #*******************************صفحه اول*****************************
     #################################سطر اول#############################
     #-----------------------------قسمت اول-----------------------------
@@ -277,7 +328,7 @@ def request_view(request, request_id):
         if form == "RequestSimple":
             form_data = get_simple_form_data(request=request)
         elif form == "RequestFull":
-            form_data = get_full_form_data(request=request)      
+            form_data = get_full_form_data(request=request, objFormManager=form_manager)      
         elif form == "TaskSelect":
              return task_select_view(request=request, request_obj=request_obj, task_obj=request_obj.current_task)
         elif form ==  "TaskReport":
@@ -379,7 +430,7 @@ def request_full_view(request, request_id, data, readonly=False):
     
     # اضافه کردن لیست کاربران برای کومبو
     if 'all_users' in data:
-        data['users'] = data['all_users']
+        data['user_team_roles'] = data['all_users']
     if readonly:
         return render(request, 'ConfigurationChangeRequest/request-full-readonly.html', data)
     else:
@@ -456,7 +507,7 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
 
 
-def request_task_user_managment(request, request_task_id:int)-> dict:
+def request_task_user_management(request, request_task_id:int)-> dict:
     """
     این تابع افراد ذیل یک تسک را مدیریت می کند.
 
@@ -475,18 +526,19 @@ def request_task_user_managment(request, request_task_id:int)-> dict:
             message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
     
     """
-    current_user_national_code = get_current_user()
-    
+    current_user_national_code = get_current_user(request)
     # اطلاعات را از ورودی دریافت می کنیم
-    operation_type = request.get('operation_type', 'A')
-    user_national_code = request.get('user_national_code','')
-    
-    
+    operation_type = request.POST.get('operation_type', 'A')
+    user_national_code = request.POST.get('user_national_code','')
+    user_role_id = int(request.POST.get('role_id', -1))
+    user_team_code = request.POST.get('team_code', '')
+    user_role_code = request.POST.get('role_code', 'E')
+        
     obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
-    result = obj_form_manager.task_user_managment(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
+    result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
     return JsonResponse(result)
 
-def change_type_user_managment(request, task_id:int)-> dict:
+def change_type_user_management(request, task_id:int)-> dict:
     """
     این تابع افراد ذیل یک تسک را مدیریت می کند.
 
@@ -506,17 +558,17 @@ def change_type_user_managment(request, task_id:int)-> dict:
     
     """
     
-    current_user_national_code = get_current_user()
-    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    current_user_national_code = get_current_user(request)
 
     # اطلاعات را از ورودی دریافت می کنیم
-    operation_type = request.get('operation_type', 'A')
-    user_national_code = request.get('user_national_code','')
-    user_role_id = request.get('role_id', -1)
-    user_team_code = request.get('team_code', '')
-    user_role_code = request.get('role_code', 'E')
+    operation_type = request.POST.get('operation_type', 'A')
+    user_national_code = request.POST.get('user_national_code','')
+    user_role_id = request.POST.get('role_id', -1)
+    user_team_code = request.POST.get('team_code', '')
+    user_role_code = request.POST.get('role_code', 'E')
     
-    result = obj_form_manager.task_user_managment(task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'C')
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    result = obj_form_manager.task_user_management(task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'C')
     return JsonResponse(result)
 
 

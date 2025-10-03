@@ -161,7 +161,7 @@ class FormManager:
         FormManager obj: یک شی از کلاس مربوطه بازگشت می دهد
     """
 
-    request_obj: Any = None
+    request_obj:"Request" = None
     error_message: str = None
     request_id: int = -1
     current_user_national_code:str=''
@@ -1518,35 +1518,6 @@ class FormManager:
             change_type = m.ChangeType.objects.all()
             data["change_type"] = change_type
 
-            # # شرکت های مربوط به انواع تغییر
-            # change_type_request_corp = m.RequestCorp_ChangeType.objects.all()
-            # data["change_type_request_corp"] = change_type_request_corp
-
-            # # تیم های مربوط به انواع تغییر
-            # change_type_request_team = m.RequestTeam_ChangeType.objects.all()
-            # data["change_type_request_team"] = change_type_request_team
-
-            # change_type_data_center_list = (
-            #     m.RequestExtraInformation_ChangeType.objects.filter(
-            #         extra_info__Code__startswith="DataCenter_"
-            #     )
-            # )
-            # data["change_type_data_center_list"] = change_type_data_center_list
-
-            # change_type_database_list = (
-            #     m.RequestExtraInformation_ChangeType.objects.filter(
-            #         extra_info__Code__startswith="Database_"
-            #     )
-            # )
-            # data["change_type_database_list"] = change_type_database_list
-
-            # change_type_systems_list = (
-            #     m.RequestExtraInformation_ChangeType.objects.filter(
-            #         extra_info__Code__startswith="SystemsServices_"
-            #     )
-            # )
-            # data["change_type_systems_list"] = change_type_systems_list
-
         except Exception as e:
             return {"success": False, "message": str(e)}
 
@@ -1647,7 +1618,7 @@ class FormManager:
 
         return selected_items
 
-    def task_user_managment(self, task_id:int, operation_type:str='add', user_national_code: str='', request_change_type:str='R')-> dict:
+    def task_user_management(self, task_id:int,  operation_type:str='A', user_national_code:str='', user_role_id:int=-1, user_team_code:str='', user_role_code:str='E', request_change_type:str='R')-> dict:
         """
         این تابع افراد ذیل یک تسک را مدیریت می کند.
 
@@ -1669,10 +1640,18 @@ class FormManager:
                 message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
         
         """
+        # برای اینکه تابع با هر یک از این مقادیر ورودی کار کند
+        valid_operation_type_add = ['add','a']
+        valid_operation_type_delete = ['delete', 'd']
         
+        # برای اینکه مشکلی در مقایسه پیش نیاید همه حروف را کوچک می کنیم
+        operation_type = operation_type.lower()
+        # کد تیم  کد نوع سمت را بزرگ می کنیم
+        user_team_code = user_team_code.upper()
+        user_role_code = user_role_code.upper()
         
         # کنترل می کنیم که نوع عملیات مقدار مجاز داشته باشد
-        if operation_type not in ['add', 'delete', 'a', 'd']:
+        if operation_type not in valid_operation_type_add+valid_operation_type_delete:
             return {'success': False, 'message': 'نوع عملیات نامعتبر است.'}
         
         # کنترل می کنیم که مقدار متغییر آخر که مشخص می کند این تسک مربوط به درخواست است و یا نوع تغییر، معتبر باشد
@@ -1680,63 +1659,78 @@ class FormManager:
             return {'success': False, 'message': 'نوع تسک (درخواست/نوع درخواست) نامعتبر است.'}
         
         # با توجه به اینکه تسک مربوط به نوع درخواست و یا درخواست است، کنترل می کنیم که شناسه تسک معتبر باشد.
-        from ConfigurationChangeRequest.models import TaskUser, Task, ChangeType, ConfigurationChangeRequest, ChangeTypeTask, TaskRequest
+
         try:
             if request_change_type == 'R':
                 # تسک مربوط به درخواست
-                task_instance = TaskRequest.objects.get(pk=task_id)
+                task_instance = m.RequestTask.objects.get(pk=task_id)
             else:
                 # تسک مربوط به نوع درخواست
-                task_instance = ChangeTypeTask.objects.get(pk=task_id)
+                task_instance = m.Task.objects.get(pk=task_id)
         except Exception:
             return {'success': False, 'message': 'شناسه تسک نامعتبر است.'}
         
         # کنترل می کنیم که کد ملی معتبر باشد
-        from ConfigurationChangeRequest.models import User
         try:
-            user_instance = User.objects.get(nationalcode=user_national_code)
-        except User.DoesNotExist:
+            user_instance = m.User.objects.get(national_code=user_national_code)
+
+        except m.User.DoesNotExist:
             return {'success': False, 'message': 'کد ملی کاربر نامعتبر است.'}
         
-        # در صورتی که موضوع اضافه کردن کاربر جدید است، ابتدا کنترل می کنیم که کاربری با این مشخصات برای این تسک تعریف شده است یا خیر
-        if operation_type in ['add', 'a']:
-            if request_change_type == 'R':
-                exists = m.TaskUser.objects.filter(task_id=task_id, user_nationalcode=user_instance, request_task_type='R').exists()
-            else:
-                exists = m.RequestTaskUser.objects.filter(task_id=task_id, user_nationalcode=user_instance, request_task_type='T').exists()
-            if exists:
-                return {'success': False, 'message': 'این کاربر قبلاً به این تسک اضافه شده است.'}
+        # کنترل می کنیم که کاربری با این مشخصات برای این تسک تعریف شده است یا خیر
+        if request_change_type == 'R':
+            exists = m.RequestTaskUser.objects.filter(request_task=task_instance, user_nationalcode=user_instance, user_role_code=user_role_code).exists()
+        else:
+            exists = m.TaskUser.objects.filter(request_task=task_instance, user_nationalcode=user_instance, user_role_code=user_role_code).exists()
         
-        # اگر موضوع حذف کاربر موجود است، ابتدا کنترل می کنیم که آیا مشخصات برای این تسک تعریف شده است یا خیر
-        if operation_type in ['delete', 'd']:
-            if request_change_type == 'R':
-                exists = m.TaskUser.objects.filter(task_id=task_id, user_nationalcode=user_instance, request_task_type='R').exists()
-            else:
-                exists = m.RequestTaskUser.objects.filter(task_id=task_id, user_nationalcode=user_instance, request_task_type='T').exists()
-            if not exists:
-                return {'success': False, 'message': 'این کاربر برای این تسک تعریف نشده است.'}
+        # اگر کاربری با این مشخصات تعریف شده است و هدف اضافه کردن است، خطا داریم
+        if operation_type in valid_operation_type_add and exists:
+            return {'success': False, 'message': 'این کاربر قبلاً به این تسک اضافه شده است.'}
+        # اگر کاربری با این مشخصات تعریف نشده باشد و هدف حذف کردن است، خطا داریم 
+        elif operation_type in valid_operation_type_delete and not exists:
+            return {'success': False, 'message': 'این کاربر برای این تسک تعریف نشده است.'}
+        
         
         # اگر تغییر اضافه کردن کاربر جدید است، با توجه به اینکه موضوع مربوط به شناسه تسک و نوع تغییر است یا شناسه تسک درخواست، 
         # اگر کد ملی قبلا برای این کاربر درج نشده باشد، عملیات درج را انجام می دهد
-        if operation_type in ['add', 'a']:
+        if operation_type in valid_operation_type_add:
             try:
-                TaskUser.objects.create(
-                    task_id=task_id,
-                    user_nationalcode=user_instance,
-                    request_task_type=request_change_type
-                )
-                return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.'}
+                if request_change_type == 'R':
+                    m.RequestTaskUser.objects.create(
+                        request_task=task_instance,
+                        user_nationalcode=user_instance,
+                        user_role_id_id=user_role_id,
+                        user_team_code_id=user_team_code,
+                        user_role_code=user_role_code,
+                    )
+                    return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.'}
+                else:
+                    m.TaskUser.objects.create(
+                        task_id=task_instance,
+                        user_nationalcode=user_instance,
+                        user_role_id_id=user_role_id,
+                        user_team_code_id=user_team_code,
+                        user_role_code=user_role_code,
+                    )
+                    return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.'}
             except Exception as e:
                 return {'success': False, 'message': f'خطا در افزودن کاربر: {str(e)}'}
-        
+            
         # در صورتی که حذف کاربر باشد، بر مبنای اینکه تسک مربوط به درخواست تغییر است یا نوع تغییر زکوزد مربوطه حذ می شود.
         if operation_type in ['delete', 'd']:
             try:
-                TaskUser.objects.filter(
-                    task_id=task_id,
-                    user_nationalcode=user_instance,
-                    request_task_type=request_change_type
-                ).delete()
+                if request_change_type == 'R':
+                    m.RequestTaskUser.objects.filter(
+                        request_task=task_instance,
+                        user_nationalcode=user_instance,
+                        user_role_code = user_role_code
+                   ).delete()
+                else:
+                    m.TaskUser.objects.filter(
+                        task_id=task_instance,
+                        user_nationalcode=user_instance,
+                        user_role_code = user_role_code
+                    ).delete()
                 return {'success': True, 'message': 'کاربر با موفقیت از تسک حذف شد.'}
             except Exception as e:
                 return {'success': False, 'message': f'خطا در حذف کاربر: {str(e)}'}        

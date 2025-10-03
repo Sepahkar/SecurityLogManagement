@@ -499,15 +499,27 @@ function addNewTask(task) {
     `;
     
     tbody.appendChild(newRow);
-    
+
+    // Initialize Select2 for new user combos
+    $(newRow).find('.user-combo').select2({
+        placeholder: "انتخاب کاربر...",
+        allowClear: true,
+        width: '100%'
+    }).on('select2:close', function() {
+        const $container = $(this).closest('.users-container');
+        $container.find('.user-selector').hide();
+        $container.find('.add-user-btn').css('display', 'inline-block');
+        $(this).val('').trigger('change');
+    });
+
     // Re-initialize event listeners for new elements
     initializeUserBadges();
     initializeAddUserButtons();
     initializeTaskActions();
-    
+
     // Update task data
     updateTaskData();
-    
+
     console.log('New task added:', task);
 }
 
@@ -1475,9 +1487,89 @@ function FetchData(jsonData) {
     }
 }
 
+/**
+ * مدیریت کاربران تسک
+ * @param {jQuery} select_obj - شیء سلکتور jQuery
+ * @param {string} operation_type - نوع عملیات (یک کاراکتر، مثلاً 'A' یا 'D')
+ */
+function task_user_management(select_obj, operation_type)
+{
+    const user_national_code = select_obj.val();
+    if (user_national_code) 
+    {
+
+        // داده های مورد نیاز را استخراج می کنیم
+        // شناسه تسک درخواست که باید این کاربر به آن افزوده شود
+        const request_taskId = select_obj.parent().data('request-task-id');
+        // نقش کاربر می تواند تستر یا مجری باشد
+        const role_type_code = select_obj.parent().data('role')
+        // شناسه سمت کاربر
+        const roleId = select_obj.data('role-id');
+        // شناسه تیم کاربر
+        const teamCode = select_obj.data('team-code');
+
+        const message_manager_obj = new message_manager()
+
+        const data = {
+            operation_type: operation_type,//برای اضافه کردن کاربر جدید به تسک
+            user_national_code: user_national_code,
+            role_id: roleId,
+            team_code: teamCode,
+            role_code: role_type_code,
+        }
+        console.log(data)
+
+        const csrftoken = getCookie('csrftoken');
+
+        url = '/ConfigurationChangeRequest/Task/' + request_taskId  +'/';
+        console.log('url:'+url)
+
+        // فراخوانی سرور برای اضافه کردن 
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: data,
+            headers: { "X-CSRFToken": csrftoken },            
+            success: function(response) {
+                if (response.success) {
+                    addUserBadge(selectedValue, username, fullname, taskId, role);
+                    const $container = select_obj.closest('.users-container');
+                    $container.find('.user-selector').hide();
+                    $container.find('.add-user-btn').css('display', 'inline-block');
+                    select_obj.val('').trigger('change');
+                } else {
+                    message_manager_obj.showErrorMessage('خطا: ' + response.message)
+                    select_obj.val('').trigger('change');
+                }
+            }.bind(select_obj),
+            error: function(xhr, status, error) {
+                let errorMessage = 'خطا در ارتباط با سرور: ' + xhr.status + " - " + error;
+                if (xhr.responseText) {
+                    errorMessage += "\nاطلاعات سرور:\n" + xhr.responseText;
+                }
+                message_manager_obj.showErrorMessage(errorMessage);
+                select_obj.val('').trigger('change');
+            }.bind(select_obj)
+        });
+    }
+}
+
+
 $(document).ready(function() {
     // مقداردهی سبک و سریع: داده‌ها را همگام می‌کنیم تا ورودی‌های مخفی به‌روز باشند
     try { updateTaskData(); updateNotificationDataInForm(); } catch (e) {}
+
+    // Initialize Select2 on user combo selects
+    $('.user-combo').select2({
+        placeholder: "انتخاب کاربر...",
+        allowClear: true,
+        width: '100%'
+    }).on('select2:close', function() {
+        const $container = $(this).closest('.users-container');
+        $container.find('.user-selector').hide();
+        $container.find('.add-user-btn').css('display', 'inline-block');
+        $(this).val('').trigger('change');
+    });
 
     // اضافه کردن رویداد برای Ctrl + S
     $(document).on('keydown', function(e) {
@@ -1511,41 +1603,32 @@ $(document).ready(function() {
         const $selector = $container.find('.user-selector');
         const $combo = $container.find('.user-combo');
         $selector.show();
-        $combo.focus();
+        $combo.select2('open');
         $(this).hide();
     });
 
-    // رویداد تغییر کاربر انتخابی (delegated)
+    // این تابع برای اضافه کردن کاربر جدید به تسک مربوطه استفاده می شود
     $(document).on('change', '.user-combo', function() {
-        const selectedValue = $(this).val();
-        if (selectedValue) {
-            const $opt = $(this).find('option:selected');
-            const username = $opt.data('username');
-            const fullname = $opt.data('fullname');
-            const taskId = $(this).data('task-id');
-            const role = $(this).data('role');
-            addUserBadge(selectedValue, username, fullname, taskId, role);
-            const $container = $(this).closest('.users-container');
-            $container.find('.user-selector').hide();
-            $container.find('.add-user-btn').css('display', 'inline-block');
-            $(this).val('');
-        }
+        // گزینه انتخاب شده را به دست می آوریم
+        const select_obj = $(this).find('option:selected');
+        // جهت درج تابع را فراخوانی می کنیم
+        task_user_management(select_obj, 'A')
     });
 
-    // رویداد blur برای بستن سلکتور (delegated)
-    $(document).on('blur', '.user-combo', function() {
-        const combo = this;
-        setTimeout(function() {
-            const $container = $(combo).closest('.users-container');
-            const $selector = $container.find('.user-selector');
-            const $addBtn = $container.find('.add-user-btn');
-            if (document.activeElement !== combo) {
-                $selector.hide();
-                $addBtn.css('display', 'inline-block');
-                $(combo).val('');
-            }
-        }, 200);
-    });
+    // رویداد blur برای بستن سلکتور (delegated) - غیرفعال شده برای سازگاری با Select2
+    // $(document).on('blur', '.user-combo', function() {
+    //     const combo = this;
+    //     setTimeout(function() {
+    //         const $container = $(combo).closest('.users-container');
+    //         const $selector = $container.find('.user-selector');
+    //         const $addBtn = $container.find('.add-user-btn');
+    //         if (document.activeElement !== combo) {
+    //             $selector.hide();
+    //             $addBtn.css('display', 'inline-block');
+    //             $(combo).val('').trigger('change');
+    //         }
+    //     }, 200);
+    // });
 
     // رویداد تغییر وضعیت تسک (delegated)
     $(document).on('click', '.deactivate-task-btn', function() {
