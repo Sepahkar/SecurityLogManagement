@@ -1703,7 +1703,15 @@ class FormManager:
                         user_team_code_id=user_team_code,
                         user_role_code=user_role_code,
                     )
-                    return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.'}
+                    return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.',
+                            'request_task':task_id,
+                            'nationalcode':user_national_code,
+                            'role_id':user_role_id,
+                            'team_code':user_team_code,
+                            'role_code':user_role_code,  
+                            'fullname':user_instance.fullname,
+                            'username':user_instance.username                      
+                            }
                 else:
                     m.TaskUser.objects.create(
                         task_id=task_instance,

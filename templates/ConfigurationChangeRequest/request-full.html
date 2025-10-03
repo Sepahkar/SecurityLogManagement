@@ -453,14 +453,16 @@
                             <tr data-task-id="{{ request_task.task.id }}">
                                 <td>{{ request_task.task.title }}</td>
                                 <td>
-                                    <div class="users-container" data-task-id="{{ request_task.task.id }}" data-role="E">
+                                    <div class="users-container" data-request-task-id="{{ request_task.id }}" data-role="E">
                                         {% for task_user in request_task.requesttaskuser_set.all %}
                                             {% if task_user.user_role_code == 'E' %}
                                                 <div class="user-badge" data-user-id="{{ task_user.user_nationalcode.national_code }}">
                                                     <img class="person-small-avatar" src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{task_user.user_nationalcode.username|split:'@'}}.jpg"
                                                     alt="{{ task_user.user_nationalcode.fullname }}" title="{{ task_user.user_nationalcode.fullname }}"
                                                     onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" />
-                                                    <i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر"></i>
+                                                    <i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر" data-task-id={{ task_user.request_task.id }} data-user-natioalcode="{{ task_user.user_nationalcode.national_code }}"
+                                                    data-role-id = {{ task_user.user_role_id.role_id }}
+                                                    data-team-code = "{{ task_user.user_team_code.team_code }}"></i>
                                                 </div>
                                             {% endif %}
                                         {% empty %}
@@ -483,7 +485,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="users-container" data-task-id="{{ request_task.task.id }}" data-role="T" >
+                                    <div class="users-container" data-request-task-id="{{ request_task.id }}" data-role="T" >
                                         {% for task_user in request_task.requesttaskuser_set.all %}
                                             {% if task_user.user_role_code == 'T' %}
                                                 <div class="user-badge" data-user-id="{{ task_user.user_nationalcode.national_code }}">
@@ -518,7 +520,7 @@
                                 <td>
                                     <div class="task-actions">
                                         <button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="{{ request_task.task.id }}">
-                                            <i class="fas fa-eye-slash"></i>
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>

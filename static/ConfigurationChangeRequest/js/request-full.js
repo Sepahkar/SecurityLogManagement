@@ -29,58 +29,77 @@ function restoreAllUsers() {
 // مدیریت دکمه‌های افزودن کاربر (نسخه jQuery با delegation)
 // function initializeAddUserButtons() { ... } — غیرفعال شد
 
-function addUserBadge(userId, username, fullname, taskId, role) {
-    const container = document.querySelector(`.users-container[data-task-id="${taskId}"][data-role="${role}"]`);
-    
-    // Check if user already exists
-    const existingBadge = container.querySelector(`.user-badge[data-user-id="${userId}"]`);
-    if (existingBadge) {
-        // If user exists but is hidden, restore it
-        if (existingBadge.classList.contains('hidden')) {
-            existingBadge.classList.remove('hidden');
-            existingBadge.style.display = 'inline-block';
-            const removeBtn = existingBadge.querySelector('.remove-user-btn');
-            if (removeBtn) {
-                removeBtn.setAttribute('data-delete', 'false');
-            }
+function addUserBadge(user_national_code, username, fullname, taskId, roleId, teamCode, roleCode) 
+{
+
+    // همه چیز با jQuery و رفع خطاها
+    var $container = $('.users-container[data-request-task-id="' + taskId + '"][data-role="' + roleCode + '"]');
+
+    // اگر کانتینر پیدا نشد، خروج
+    if ($container.length === 0) {
+        console.error('users-container not found for taskId:', taskId, 'role:', roleCode);
+        return;
+    }
+
+    // بررسی وجود کاربر
+    var $existingBadge = $container.find('.user-badge[data-user-id="' + user_national_code + '"]');
+    if ($existingBadge.length > 0) {
+        // اگر قبلاً وجود دارد و مخفی است، نمایش بده
+        if ($existingBadge.hasClass('hidden')) {
+            $existingBadge.removeClass('hidden').css('display', 'inline-block');
+            $existingBadge.find('.remove-user-btn').attr('data-delete', 'false');
         }
         return;
     }
-    
-    // Create new user badge
-    const userBadge = document.createElement('div');
-    userBadge.className = 'user-badge adding';
-    userBadge.setAttribute('data-user-id', userId);
-    userBadge.setAttribute('data-new-user', 'true');
-    
-    userBadge.innerHTML = `
-        <img class="person-small-avatar" src="/static/ConfigurationChangeRequest/images/personnel/${username.split('@')[0]}.jpg" 
-        alt="${fullname}" title="${fullname}" 
-        onerror="this.src='/static/ConfigurationChangeRequest/images/Avatar.png';" />
-        <i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر"></i>
-    `;
-    
-    // Insert before add button
-    const addBtn = container.querySelector('.add-user-btn');
-    container.insertBefore(userBadge, addBtn);
-    
-    // توجه: رویداد حذف به‌صورت delegated در $(document).ready ثبت شده است
-    
-    // Remove "no users" message if exists
-    const noUsersMsg = container.querySelector('.text-muted');
-    if (noUsersMsg) {
-        noUsersMsg.remove();
+
+    // ساخت نشان کاربر جدید با jQuery
+    var $userBadge = $('<div>', {
+        'class': 'user-badge adding',
+        'data-user-id': user_national_code,
+        'data-new-user': 'true'
+    });
+
+    var imgSrc = '/static/ConfigurationChangeRequest/images/personnel/' + username.split('@')[0] + '.jpg';
+    var imgTag = $('<img>', {
+        'class': 'person-small-avatar',
+        'src': imgSrc,
+        'alt': fullname,
+        'title': fullname,
+        'onerror': "this.src='/static/ConfigurationChangeRequest/images/Avatar.png'"
+    });
+
+    var $removeBtn = $('<i>', {
+        'class': 'fas fa-times remove-user-btn',
+        'data-delete': 'false',
+        'title': 'حذف کاربر',
+        'data-task-id': taskId,
+        'data-user-natioalcode': user_national_code,
+        'data-role-id': roleId,
+        'data-team-code': teamCode
+    });
+
+    $userBadge.append(imgTag).append($removeBtn);
+
+    // درج قبل از دکمه افزودن کاربر
+    var $addBtn = $container.find('.add-user-btn');
+    if ($addBtn.length > 0) {
+        $userBadge.insertBefore($addBtn);
+    } else {
+        $container.append($userBadge);
     }
-    
-    // Remove adding class after animation completes
-    setTimeout(function() {
-        userBadge.classList.remove('adding');
+
+    // حذف پیام "کاربری وجود ندارد" اگر هست
+    $container.find('.text-muted').remove();
+
+    // حذف کلاس adding بعد از انیمیشن
+    setTimeout(function () {
+        $userBadge.removeClass('adding');
     }, 800);
-    
-    // Update task data
-    addUserToTaskData(taskId, role, userId, fullname, 'added');
-    
-    console.log('User added:', fullname, 'to task:', taskId, 'role:', role);
+
+    // به‌روزرسانی داده‌های تسک
+    addUserToTaskData(taskId, roleCode, user_national_code, fullname, 'added');
+
+    console.log('User added:', fullname, 'to task:', taskId, 'role:', roleCode);
 }
 
 // Function to get all users for a specific task and role
@@ -492,7 +511,7 @@ function addNewTask(task) {
         <td>
             <div class="task-actions">
                 <button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="${task.id}">
-                    <i class="fas fa-eye-slash"></i>
+                    <i class="fas fa-trash"></i>
                 </button>
             </div>
         </td>
@@ -532,28 +551,28 @@ function getUsersForCombo() {
 // مدیریت اکشن‌های تسک (نسخه jQuery با delegation)
 // function initializeTaskActions() { ... } — غیرفعال شد
 
-function toggleTaskStatus(taskId, row) {
-    const isCurrentlyInactive = row.classList.contains('inactive');
+// function toggleTaskStatus(taskId, row) {
+//     const isCurrentlyInactive = row.classList.contains('inactive');
     
-    if (isCurrentlyInactive) {
-        // Reactivate task
-        row.classList.remove('inactive');
-        const btn = row.querySelector('.deactivate-task-btn');
-        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-        btn.className = 'btn btn-sm btn-outline-danger deactivate-task-btn';
-        updateTaskStatusInData(taskId, true);
-    } else {
-        // Deactivate task
-        row.classList.add('inactive');
-        const btn = row.querySelector('.deactivate-task-btn');
-        btn.innerHTML = '<i class="fas fa-eye"></i>';
-        btn.className = 'btn btn-sm btn-outline-success deactivate-task-btn';
-        updateTaskStatusInData(taskId, false);
-    }
+//     if (isCurrentlyInactive) {
+//         // Reactivate task
+//         row.classList.remove('inactive');
+//         const btn = row.querySelector('.deactivate-task-btn');
+//         btn.innerHTML = '<i class="fas trash-slash"></i>';
+//         btn.className = 'btn btn-sm btn-outline-danger deactivate-task-btn';
+//         updateTaskStatusInData(taskId, true);
+//     } else {
+//         // Deactivate task
+//         row.classList.add('inactive');
+//         const btn = row.querySelector('.deactivate-task-btn');
+//         btn.innerHTML = '<i class="fas trash"></i>';
+//         btn.className = 'btn btn-sm btn-outline-success deactivate-task-btn';
+//         updateTaskStatusInData(taskId, false);
+//     }
     
-    // Update task data
-    updateTaskData();
-}
+//     // Update task data
+//     updateTaskData();
+// }
 
 function updateTaskStatusInData(taskId, isActive) {
     const taskDataInput = document.getElementById('task-data');
@@ -1492,17 +1511,22 @@ function FetchData(jsonData) {
  * @param {jQuery} select_obj - شیء سلکتور jQuery
  * @param {string} operation_type - نوع عملیات (یک کاراکتر، مثلاً 'A' یا 'D')
  */
-function task_user_management(select_obj, operation_type)
+function task_user_management(select_obj, operation_type, on_success)
 {
-    const user_national_code = select_obj.val();
+    var user_national_code = select_obj.val();
+    // در صورتی که خالی باشد در مقدار صفت کد ملی باید به دنبال آن بگردیم
+    if (!user_national_code)
+        user_national_code = select_obj.data('user-natioalcode')
+
+
     if (user_national_code) 
     {
 
         // داده های مورد نیاز را استخراج می کنیم
         // شناسه تسک درخواست که باید این کاربر به آن افزوده شود
-        const request_taskId = select_obj.parent().data('request-task-id');
+        const request_taskId = select_obj.parents('.users-container').data('request-task-id');
         // نقش کاربر می تواند تستر یا مجری باشد
-        const role_type_code = select_obj.parent().data('role')
+        const role_type_code = select_obj.parents('.users-container').data('role')
         // شناسه سمت کاربر
         const roleId = select_obj.data('role-id');
         // شناسه تیم کاربر
@@ -1521,10 +1545,10 @@ function task_user_management(select_obj, operation_type)
 
         const csrftoken = getCookie('csrftoken');
 
-        url = '/ConfigurationChangeRequest/Task/' + request_taskId  +'/';
+        url = '/ConfigurationChangeRequest/task-user/' + request_taskId  +'/';
         console.log('url:'+url)
 
-        // فراخوانی سرور برای اضافه کردن 
+        // فراخوانی سرور برای اضافه یا کم کردن کاربر از تسک 
         $.ajax({
             url: url,
             method: 'POST',
@@ -1532,11 +1556,10 @@ function task_user_management(select_obj, operation_type)
             headers: { "X-CSRFToken": csrftoken },            
             success: function(response) {
                 if (response.success) {
-                    addUserBadge(selectedValue, username, fullname, taskId, role);
-                    const $container = select_obj.closest('.users-container');
-                    $container.find('.user-selector').hide();
-                    $container.find('.add-user-btn').css('display', 'inline-block');
-                    select_obj.val('').trigger('change');
+                    if (typeof on_success === "function") {
+                        on_success(response);
+                    }
+
                 } else {
                     message_manager_obj.showErrorMessage('خطا: ' + response.message)
                     select_obj.val('').trigger('change');
@@ -1584,15 +1607,36 @@ $(document).ready(function() {
     $(document).on('click', '.remove-user-btn', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        const $badge = $(this).closest('.user-badge');
-        const userId = $badge.data('user-id');
-        $badge.addClass('hidden');
-        $(this).attr('data-delete', 'true');
-        setTimeout(function() { $badge.css('display', 'none'); }, 1000);
-        const $container = $badge.closest('.users-container');
-        const taskId = $container.data('task-id');
-        const role = $container.data('role');
-        removeUserFromTaskData(taskId, role, userId);
+        var $btn = $(this);
+        var $badge = $btn.closest('.user-badge');
+        var $container = $badge.closest('.users-container');
+
+        task_user_management($btn, 'D', function(data) {
+            // دریافت داده‌های مورد نیاز
+            var user_national_code = data.nationalcode;
+            var username = data.username;
+            var fullname = data.fullname;
+            var taskId = data.request_task;
+            var roleId = data.role_id;
+            var teamCode = data.team_code;
+            var roleCode = data.role_code;
+
+            // حذف بصری نشان کاربر
+            $badge.addClass('hidden');
+            $btn.attr('data-delete', 'true');
+            setTimeout(function() {
+                $badge.css('display', 'none');
+            }, 1000);
+
+            // حذف از داده‌های تسک
+            var taskIdData = $container.data('task-id');
+            var roleData = $container.data('role');
+            removeUserFromTaskData(taskIdData, roleData, user_national_code);
+        });
+
+
+        
+
     });
 
     // رویداد نمایش سلکتور افزودن کاربر (delegated)
@@ -1612,7 +1656,28 @@ $(document).ready(function() {
         // گزینه انتخاب شده را به دست می آوریم
         const select_obj = $(this).find('option:selected');
         // جهت درج تابع را فراخوانی می کنیم
-        task_user_management(select_obj, 'A')
+        task_user_management(select_obj, 'A',
+            function(data)
+            {
+                // در صورتی که فراخوانی موفقیت امیز باشد، باید تصویر کاربر را اضافه کنیم
+
+                // ابتدا داده های مورد نیاز را دریافت می کنیم
+                user_national_code = data.nationalcode
+                username = data.username
+                fullname = data.fullname
+                taskId = data.request_task
+                roleId = data.role_id
+                teamCode = data.team_code
+                roleCode = data.role_code
+
+
+                addUserBadge(user_national_code, username, fullname, taskId, roleId, teamCode, roleCode);
+                const $container = select_obj.closest('.users-container');
+                $container.find('.user-selector').hide();
+                $container.find('.add-user-btn').css('display', 'inline-block');
+                select_obj.val('').trigger('change');                
+            }
+        )
     });
 
     // رویداد blur برای بستن سلکتور (delegated) - غیرفعال شده برای سازگاری با Select2
@@ -1634,7 +1699,7 @@ $(document).ready(function() {
     $(document).on('click', '.deactivate-task-btn', function() {
         const taskId = $(this).data('task-id');
         const row = this.closest('tr');
-        toggleTaskStatus(taskId, row);
+  
     });
 
     $('.radio-box').click(
