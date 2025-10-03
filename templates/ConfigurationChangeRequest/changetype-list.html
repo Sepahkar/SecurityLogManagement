@@ -35,7 +35,7 @@
                 <tbody class="table-body">
                     {% for item in change_type_list %}
                     <tr role="row" class="table-row {% cycle '' 'row-alt' %}">
-                        <td class="col-id" role="cell" data-label="شناسه">{{ item.id }}</td>
+                        <td class="col-id" role="cell" data-label="شناسه">{{ item.code }}</td>
                         <td class="col-type" role="cell" data-label="نوع تغییر">{{ item.change_type_title }}</td>
                         <td class="col-title" role="cell" data-label="عنوان تغییر">{{ item.change_title }}</td>
                         <td class="col-actions" role="cell" data-label="عملیات">
