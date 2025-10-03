@@ -572,8 +572,12 @@ def change_type_user_management(request, task_id:int)-> dict:
     return JsonResponse(result)
 
 
-def change_type_list(reqeust):
-    pass
+def change_type_list(request):
+    current_user_nationalcode =  get_current_user(request)
+    from . import models as m
+    change_type_list = m.ChangeType.objects.all()
+    data={'change_type_list':change_type_list}
+    return render(request, 'ConfigurationChangeRequest/changetype-list.html', data)
 
 def change_type_create(request):
     pass

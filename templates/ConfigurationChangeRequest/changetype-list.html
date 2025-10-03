@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>مدیریت نوع تغییرات</title>
+    <link rel="icon" href="static/ConfigurationChangeRequest/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/bootstrap.min.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/jquery-confirm.min.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/all.min.css" >
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/font-style.css">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/scss/fontawesome.scss">
+    <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/request.css">
+    <link rel="stylesheet" href="/static/ConfigurationChangeRequest/css/changetype-list.css">
+
+</head>
+<body class="page">
+
+    <main class="container" role="main">
+        <header class="header">
+            <h1 class="title">نوع تغییرات</h1>
+        </header>
+
+        <div class="table-wrapper" role="region" aria-label="جدول نوع تغییرات">
+            <table class="data-table" role="table">
+                <thead class="table-head">
+                    <tr role="row">
+                        <th scope="col" class="col-id">شناسه</th>
+                        <th scope="col" class="col-type">نوع تغییر</th>
+                        <th scope="col" class="col-title">عنوان تغییر</th>
+                        <th scope="col" class="col-actions">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody class="table-body">
+                    {% for item in change_type_list %}
+                    <tr role="row" class="table-row {% cycle '' 'row-alt' %}">
+                        <td class="col-id" role="cell" data-label="شناسه">{{ item.id }}</td>
+                        <td class="col-type" role="cell" data-label="نوع تغییر">{{ item.change_type_title }}</td>
+                        <td class="col-title" role="cell" data-label="عنوان تغییر">{{ item.change_title }}</td>
+                        <td class="col-actions" role="cell" data-label="عملیات">
+                            <a class="btn btn-edit" href="{{ baseurl }}/changetype/edit/{{ item.id }}" title="ویرایش" aria-label="ویرایش {{ item.change_title }}">
+                                <i class="fa-solid fa-pen"></i>
+                                <span class="sr-only">ویرایش</span>
+                            </a>
+                            <a class="btn btn-delete" href="{{ baseurl }}/changetype/delete/{{ item.id }}" title="حذف" aria-label="حذف {{ item.change_title }}" onclick="return confirmDelete('{{ item.change_title }}');">
+                                <i class="fa-solid fa-trash"></i>
+                                <span class="sr-only">حذف</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td class="empty" colspan="4">رکوردی یافت نشد.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="actions-footer">
+            <a class="btn btn-add" href="{{ baseurl }}/changetype/add">
+                <i class="fa-solid fa-plus"></i>
+                <span>افزودن نوع تغییر</span>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        function confirmDelete(title) {
+            return confirm(`آیا از حذف «${title}» مطمئن هستید؟`);
+        }
+    </script>
+</body>
+</html>
+
+
