@@ -13,10 +13,10 @@ def get_current_user(request):
     else:
         request_id = 89
         from . import models as m
-        objRequest = m.ConfigurationChangeRequest.objects.get(id=request_id)
+        objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         
         if objRequest:
-            requestor = objRequest.related_manager_nationalcode.national_code
+            requestor = objRequest.requestor_nationalcode.national_code
             rel_manger = objRequest.related_manager_nationalcode.national_code
             manager = objRequest.direct_manager_nationalcode.national_code
             commitee = objRequest.committee_user_nationalcode.national_code
@@ -507,7 +507,8 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
 
 
-def request_task_user_management(request, request_task_id:int)-> dict:
+
+def request_task_management(request, request_id:int, operation_type:str, task_id:int)-> dict:
     """
     این تابع افراد ذیل یک تسک را مدیریت می کند.
 
@@ -518,6 +519,27 @@ def request_task_user_management(request, request_task_id:int)-> dict:
             a: اضافه کردن کاربر جدید
             d: حذف کاربر مربوطه
         user_national_code (کد ملی کاربر): کد ملی کاربر مورد نظر
+                    
+    Return value:
+        یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+            {'success':, 'message':''}
+            success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+            message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+    
+    """
+    current_user_national_code = get_current_user(request)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    result = obj_form_manager.task_management(request_id, task_id, operation_type, 'R')
+    return JsonResponse(result)
+
+
+def request_task_user_management(request, request_task_id:int)-> dict:
+    """
+    این تابع تسک های ذیل یک درخواست را مدیریت می کند.
+
+    Args:
+        request (_type_): درخواست http
+        request_id (int): شناسه درخواست مورد نظر
                     
     Return value:
         یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
@@ -538,17 +560,38 @@ def request_task_user_management(request, request_task_id:int)-> dict:
     result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
     return JsonResponse(result)
 
-def change_type_user_management(request, task_id:int)-> dict:
+
+def change_type_task_management(request, change_type_id:int, operation_type:str, task_id:int)-> dict:
+    """
+    این تابع تسک های ذیل یک نوع درخواست را مدیریت می کند.
+
+    Args:
+        request (_type_): درخواست http
+        task_id (int): شناسه تسک مورد نظر 
+        change_type_id (int): شناسه نوع درخواست
+        operation_type (_type_): یکی از موارد زیر است:
+
+    Return value:
+        یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+            {'success':, 'message':''}
+            success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+            message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+    
+    """
+    
+    current_user_national_code = get_current_user(request)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    result = obj_form_manager.task_management(change_type_id, task_id, operation_type, 'C')
+    return JsonResponse(result)
+
+
+def change_type_user_management(request, change_type_id:int)-> dict:
     """
     این تابع افراد ذیل یک تسک را مدیریت می کند.
 
     Args:
         request (_type_): درخواست http
-        task_id (int): شناسه تسک مورد نظر در درخواست و یا نوع درخواست
-        operation_type (_type_): یکی از موارد زیر است:
-            a: اضافه کردن کاربر جدید
-            d: حذف کاربر مربوطه
-        user_national_code (کد ملی کاربر): کد ملی کاربر مورد نظر
+        change_type_id (int): شناسه مورد درخواست
                     
     Return value:
         یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
