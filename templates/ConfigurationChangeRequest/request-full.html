@@ -537,8 +537,9 @@
                             <i class="fas fa-plus"></i> اضافه کردن تسک جدید
                         </button>
                         <select name="task-list" id="task-list" style="display:none">
+                            <option value=-1>یک گزینه را انتخاب کنید</option>
                             {% for task in task_list%}
-                            <option value="{{task.id}}" data-task-id="{{ task.id }}" data-request-id={{ request.id }}>
+                            <option value={{task.id}} data-task-id="{{ task.id }}" data-request-id={{ request.id }}>
                                 {{ task.title }}
                             </option>
                             {% endfor%}

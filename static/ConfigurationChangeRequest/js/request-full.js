@@ -1701,7 +1701,11 @@ $(document).ready(function() {
     $(document).on('change', '#task-list', function(e) {
         // کومبوی لیست تسک ها را نشان می دهیم
         const select_obj = $(this).find('option:selected');
-
+        
+        // اگر گزینه انتخاب کنید باشد
+        if (select_obj.val() == -1)
+            return
+        
         // اول باید کنترل کنیم که این تسک تکراری نباشد
         var isDuplicate = false;
         $('#task-table tr').each(function() {

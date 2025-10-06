@@ -1717,16 +1717,16 @@ class FormManager:
                         return {"success": False, "message": "امکان درج کاربر برای این تسک وجود ندارد<br/>" + str(e)}
                     
                     # لیست مجریان و تسترها را باید به خروجی ارسال کنیم
-                    executors = m.RequestTaskUser.objects.filter(user_role_code="E", request_task__task_id = task_id, request_task__request_id=request_id)
-                    testers = m.RequestTaskUser.objects.filter(user_role_code="T", request_task__task_id = task_id, request_task__request_id=request_id)
+                    executors = m.RequestTaskUser.objects.filter(user_role_code="E", request_task__task_id = task_id, request_task__request_id=request_id).values()
+                    testers = m.RequestTaskUser.objects.filter(user_role_code="T", request_task__task_id = task_id, request_task__request_id=request_id).values()
                     
                     return {'success': True, 'message': 'تسک مورد نظر با موفقیت به درخواست اضافه شد.',
                             'request_task_id':request_task.id,
                             'request_id':request_id,
                             'task_id':task_id,
                             'task_title':request_task.task.title,
-                            'executors':executors,
-                            'testers':testers
+                            'executors':list(executors),
+                            'testers':list(testers)
                             }
                 else:
                     # ابتدا آخرین شماره ترتیب را به دست می‌آوریم
