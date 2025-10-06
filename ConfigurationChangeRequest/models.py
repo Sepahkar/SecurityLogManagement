@@ -6,7 +6,7 @@ import jdatetime
 from django.core.validators import MinValueValidator
 from ConfigurationChangeRequest.validator import Validator as v, DefaultValue as d
 from django.core.exceptions import ValidationError
-from django.utils import timezone
+from django.utils import choices, timezone
 
 class BaseModel(models.Model):
     """
@@ -1081,3 +1081,44 @@ class NotificationLog(BaseModel):
 
     def __str__(self):
         return self.request.change_title +  ' - ' + self.template_code
+    
+    
+class DataHistory(BaseModel):
+    RECORDTYPE_CHOICES = [
+        ('R', 'درخواست'),
+        ('C', 'نوع تغییر'),
+    ]    
+    record_type = models.CharField(max_length=1,choices=RECORDTYPE_CHOICES, verbose_name='مربوط به درخواست است یا نوع تغییر؟')
+    old_data = models.JSONField(verbose_name='اطلاعات قدیمی', null=True)
+    new_data = models.JSONField(verbose_name='اطلاعات جدید', null=True)
+    record_id = models.IntegerField(verbose_name='شناسه رکورد')
+    
+    class Meta:
+        verbose_name = 'سابقه تغییرات رکورد'
+        verbose_name_plural = 'سوابق تغییرات رکورد ها'
+
+    def __str__(self):
+        if self.record_type == 'R':
+            obj = ConfigurationChangeRequest.objects.filter(id=self.record_id).first()
+            return obj.change_title if obj else 'شناسه نامعتبر'
+        
+        elif self.record_type =='C':
+            obj = ChangeType.objects.filter(id=self.record_id).first()
+            return obj.change_type_title if obj else 'شناسه نامعتبر'
+        else:
+            return 'نامشخص'
+        
+    @property
+    def title(self):
+        if self.record_type == 'R':
+            obj = ConfigurationChangeRequest.objects.filter(id=self.record_id).first()
+            return obj.change_title if obj else 'شناسه نامعتبر'
+        
+        elif self.record_type =='C':
+            obj = ChangeType.objects.filter(id=self.record_id).first()
+            return obj.change_type_title if obj else 'شناسه نامعتبر'
+        else:
+            return 'نامشخص'        
+    
+    
+    

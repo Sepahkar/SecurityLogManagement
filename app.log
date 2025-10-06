@@ -1329,3 +1329,16 @@ AttributeError: 'NoneType' object has no attribute 'national_code'
 2025-10-06 21:43:38,170 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-06 21:44:28,707 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
 2025-10-06 22:18:13,665 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-06 22:58:46,835 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-06 23:00:40,112 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-10-06 23:00:45,842 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-10-06 23:01:09,806 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-10-06 23:40:54,130 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-06 23:49:34,176 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-06 23:49:39,901 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-06 23:49:43,660 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-06 23:58:42,636 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 00:02:23,437 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 00:02:30,483 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 00:02:41,367 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 00:06:27,117 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.

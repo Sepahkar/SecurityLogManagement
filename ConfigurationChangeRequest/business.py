@@ -1938,7 +1938,10 @@ class FormManager:
         record_data = {}
         try:
             # داده های رکورد اصلی
-            record_data['main'] = json.loads(serializers.serialize('json', [record_instance]))[0]['fields']
+            # record_data['main'] = json.loads(serializers.serialize('json', [record_instance]))[0]['fields']
+            from django.forms.models import model_to_dict
+            record_data['main'] = model_to_dict(record_instance)
+            
             # اطلاعات تکمیلی را اضافه می کنیم
 
             # اطلاعات شرکت های مرتبط
@@ -2420,137 +2423,45 @@ class FormManager:
             else: 
                 record_instance.reason_other_description = ''
 
-            # # جدول RequestNotifyGroup: گروه‌های اطلاع‌رسانی مرتبط با درخواست تغییر
-            # try:
-            #     request_notify_group_data = form_data.get('request_notify_groups')
-            #     if request_notify_group_data is not None:
-            #         for ng_item in request_notify_group_data:
-            #             ng_id = ng_item.get('id')
-            #             is_deleted = ng_item.get('is_deleted', False)
-            #             if ng_id:
-            #                 ng_instance = m.RequestNotifyGroup.objects.filter(id=ng_id, request=record_instance).first()
-            #                 if ng_instance:
-            #                     if is_deleted:
-            #                         ng_instance.delete()
-            #                     else:
-            #                         # کد گروه اطلاع‌رسانی
-            #                         if 'notify_group_code' in ng_item:
-            #                             # verbose_name: 'کد گروه اطلاع‌رسانی'
-            #                             ng_instance.notify_group_code = ng_item['notify_group_code']
-            #                         # نام گروه اطلاع‌رسانی
-            #                         if 'notify_group_name' in ng_item:
-            #                             # verbose_name: 'نام گروه اطلاع‌رسانی'
-            #                             ng_instance.notify_group_name = ng_item['notify_group_name']
-            #                         # توضیحات
-            #                         if 'description' in ng_item:
-            #                             # verbose_name: 'توضیحات'
-            #                             ng_instance.description = ng_item['description']
-            #                         ng_instance.save()
-            #             else:
-            #                 if not is_deleted:
-            #                     create_fields = {}
-            #                     # کد گروه اطلاع‌رسانی
-            #                     if 'notify_group_code' in ng_item:
-            #                         # verbose_name: 'کد گروه اطلاع‌رسانی'
-            #                         create_fields['notify_group_code'] = ng_item['notify_group_code']
-            #                     # نام گروه اطلاع‌رسانی
-            #                     if 'notify_group_name' in ng_item:
-            #                         # verbose_name: 'نام گروه اطلاع‌رسانی'
-            #                         create_fields['notify_group_name'] = ng_item['notify_group_name']
-            #                     # توضیحات
-            #                     if 'description' in ng_item:
-            #                         # verbose_name: 'توضیحات'
-            #                         create_fields['description'] = ng_item['description']
-            #                     create_fields['request'] = record_instance
-            #                     m.RequestNotifyGroup.objects.create(**create_fields)
-            # except Exception as e:
-            #     error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی: {str(e)}')
-
-            # # جدول RequestTask: تسک‌های مرتبط با درخواست تغییر
-            # try:
-            #     request_task_data = form_data.get('request_tasks')
-            #     if request_task_data is not None:
-            #         for task_item in request_task_data:
-            #             task_id = task_item.get('id')
-            #             is_deleted = task_item.get('is_deleted', False)
-            #             if task_id:
-            #                 task_instance = m.RequestTask.objects.filter(id=task_id, request=record_instance).first()
-            #                 if task_instance:
-            #                     if is_deleted:
-            #                         task_instance.delete()
-            #                     else:
-            #                         # شناسه تسک
-            #                         if 'task' in task_item:
-            #                             # verbose_name: 'شناسه تسک'
-            #                             task_instance.task_id = task_item['task']
-            #                         # وضعیت
-            #                         if 'status' in task_item:
-            #                             # verbose_name: 'وضعیت'
-            #                             task_instance.status = task_item['status']
-            #                         # توضیحات
-            #                         if 'description' in task_item:
-            #                             # verbose_name: 'توضیحات'
-            #                             task_instance.description = task_item['description']
-            #                         task_instance.save()
-            #             else:
-            #                 if not is_deleted:
-            #                     create_fields = {}
-            #                     # شناسه تسک
-            #                     if 'task' in task_item:
-            #                         # verbose_name: 'شناسه تسک'
-            #                         create_fields['task_id'] = task_item['task']
-            #                     # وضعیت
-            #                     if 'status' in task_item:
-            #                         # verbose_name: 'وضعیت'
-            #                         create_fields['status'] = task_item['status']
-            #                     # توضیحات
-            #                     if 'description' in task_item:
-            #                         # verbose_name: 'توضیحات'
-            #                         create_fields['description'] = task_item['description']
-            #                     create_fields['request'] = record_instance
-            #                     m.RequestTask.objects.create(**create_fields)
-            # except Exception as e:
-            #     error_message.append(f'خطا در پردازش تسک‌های درخواست: {str(e)}')
-
-
-            # except Exception as e:
-            #     error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی نوع درخواست: {str(e)}')
-
-            # جدول RequestTask_ChangeType: تسک‌های نوع درخواست تغییر
-            # try:
-            #     request_task_changetype_data = form_data.get('request_task_changetypes')
-            #     if request_task_changetype_data is not None:
-            #         for tct_item in request_task_changetype_data:
-            #             tct_id = tct_item.get('id')
-            #             is_deleted = tct_item.get('is_deleted', False)
-            #             if tct_id:
-            #                 tct_instance = m.RequestTask_ChangeType.objects.filter(id=tct_id, task__request=record_instance).first()
-            #                 if tct_instance:
-            #                     if is_deleted:
-            #                         tct_instance.delete()
-            #                     else:
-            #                         for field, value in tct_item.items():
-            #                             if field not in ['id', 'task', 'is_deleted'] and hasattr(tct_instance, field):
-            #                                 setattr(tct_instance, field, value)
-            #                         tct_instance.save()
-            #             else:
-            #                 if not is_deleted:
-            #                     create_fields = {k: v for k, v in tct_item.items() if k not in ['id', 'is_deleted']}
-            #                     # باید task را به صورت صحیح مقداردهی کنید
-            #                     m.RequestTask_ChangeType.objects.create(**create_fields)
-            # except Exception as e:
-            #     error_message.append(f'خطا در پردازش تسک‌های نوع درخواست: {str(e)}')
-
-            if error_message:
-                return {'success':False, 'message':error_message}
-                
-            record_instance.last_modifier_user_id = current_user_nationalcode
-            record_instance.save()
-
-            return {"success": True, "message": "درخواست با موفقیت به‌روزرسانی شد"}
-
         except Exception as e:
             return {"success": False, "message": f"خطا در به‌روزرسانی درخواست: {str(e)}"}
+        
+        # 6- در صورتی که خطایی وجود نداشته باشد، رکورد را ذخیره می کنیم
+        if error_message:
+            return {'success':False, 'message':error_message}
+            
+        record_instance.last_modifier_user_id = current_user_nationalcode
+        record_instance.save()
+
+        # 7- اطلاعات جدید رکورد را به دست می آوریم
+        result = self.get_record_json(request_changetype=request_changetype, id=id)
+        
+        if not result.get('success', False):
+            return result
+        
+        if 'record_data' not in result:
+            return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+        new_data = result['record_data']
+        
+        # تبدیل به JSON با حفظ حروف فارسی
+        new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+        old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+        # 8- حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
+        try:
+            m.DataHistory.objects.create(
+                record_type=request_changetype,
+                old_data= old_data or {},
+                new_data= new_data or {},
+                record_id=id,
+                creator_user_id=current_user_nationalcode,
+                last_modifier_user_id=current_user_nationalcode
+            )
+        except Exception as e:
+            return {"success": False, "message": f"خطا ثبت سوابق درخواست: {str(e)}"}
+
+        return {"success": True, "message": "درخواست با موفقیت به‌روزرسانی شد"}        
+
 
 class Task:
     task_id: int = -1
