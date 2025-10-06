@@ -177,9 +177,9 @@
                     <div class="content">
                         <div class="content-row col-12">
                             <div class="col-3 check-list-main-checkbox">
-                                <input class="form-check-input" name="change_location_data_center" type="checkbox" id="data_center" value=true
+                                <input class="form-check-input" name="change_location_DataCenter" type="checkbox" id="DataCenter" value=true
                                     {% if request.change_location_data_center %}checked="checked"{% endif %}>
-                                <label class="form-check-label" for="change_location_data_center">مرکز داده</label>
+                                <label class="form-check-label" for="change_location_DataCenter">مرکز داده</label>
                             </div>
                             <div class="check-list-detail col-9 data-center-list">
                                 {% for value in data_center_values %}
@@ -187,7 +187,7 @@
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in data_center_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}">
-                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="data_center_items_{{value.Code}}"
+                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="DataCenter_items_{{value.Code}}"
                                         {% if value.Code in data_center_selected %}checked="checked"{% endif %}>
                                     </div>
                                     <div class='check-list-caption'>            
@@ -199,9 +199,9 @@
                         </div>
                         <div class="content-row col-12 database-list">
                             <div class="col-3 check-list-main-checkbox">
-                                <input class="form-check-input" type="checkbox" name="change_location_database" id="database" value=true
+                                <input class="form-check-input" type="checkbox" name="change_location_Database" id="Database" value=true
                                     {% if request.change_location_database %}checked="checked"{% endif %}>
-                                <label class="form-check-label" for="change_location_database">پایگاه داده</label>
+                                <label class="form-check-label" for="change_location_Database">پایگاه داده</label>
                             </div>
                             <div class="check-list-detail col-9">
                                 {% for value in database_values %}
@@ -209,7 +209,7 @@
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in database_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}">
-                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="database_items_{{value.Code}}"
+                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="Database_items_{{value.Code}}"
                                         {% if value.Code in database_selected %}checked="checked"{% endif %}>
                                     </div>
                                     <div class='check-list-caption'>            
@@ -221,17 +221,17 @@
                         </div>
                         <div class="content-row col-12 systems-list">
                             <div class="col-3 check-list-main-checkbox">
-                                <input class="form-check-input" type="checkbox" name="change_location_system_services" id="systems" value=true
+                                <input class="form-check-input" type="checkbox" name="change_location_SystemServices" id="SystemsServices" value=true
                                     {% if request.change_location_system_services %}checked="checked"{% endif %}>
-                                <label class="form-check-label" for="change_location_system_services">سیستم ها و سرویس ها</label>
+                                <label class="form-check-label" for="change_location_SystemServices">سیستم ها و سرویس ها</label>
                             </div>
                             <div class="check-list-detail col-9">
-                                {% for value in systems_services_values %}
+                                {% for value in system_services_values %}
                                 <div class='check-list-box {% if value.Code in system_services_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in system_services_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}">
-                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="system_services_items_{{value.Code}}"
+                                        <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="SystemServices_items_{{value.Code}}"
                                         {% if value.Code in system_services_selected %}checked="checked"{% endif %}>
                                     </div>
                                     <div class='check-list-caption'>            
@@ -439,7 +439,7 @@
                     <hr/>
                     <input type="hidden" id="task-data" name="task-data" value="">
                     <input type="hidden" id="notification-data" name="notification-data" value="">
-                    <table class="width-table">
+                    <table class="width-table" id="task-table">
                         <thead>
                             <tr>
                                 <th>نام وظیفه</th>
@@ -519,7 +519,7 @@
                                 </td>
                                 <td>
                                     <div class="task-actions">
-                                        <button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="{{ request_task.task.id }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="{{ request_task.task.id }}" data-request-id="{{ request_task.request.id }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -536,6 +536,13 @@
                         <button type="button" class="btn btn-success add-task-btn" id="add-task-btn">
                             <i class="fas fa-plus"></i> اضافه کردن تسک جدید
                         </button>
+                        <select name="task-list" id="task-list" style="display:none">
+                            {% for task in task_list%}
+                            <option value="{{task.id}}" data-task-id="{{ task.id }}" data-request-id={{ request.id }}>
+                                {{ task.title }}
+                            </option>
+                            {% endfor%}
+                        </select>
                     </div>
                 </div>                
             </div><!-- تقسیم وظایف -->

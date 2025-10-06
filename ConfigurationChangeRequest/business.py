@@ -6,6 +6,8 @@ from django.core.signals import request_started
 from django.db.transaction import commit
 # from requests import request
 from datetime import datetime
+
+from urllib3 import request
 import Utility
 
 # from ConfigurationChangeRequest.views import commitee
@@ -29,6 +31,7 @@ from django.db.models import QuerySet
 from .singleton import singleton
 
 APP_CODE = settings.APPCODE
+
 
 
 class Cartable:
@@ -500,7 +503,7 @@ class FormManager:
                 request_obj.user_requestor.national_code,
                 request_obj.user_direct_manager.national_code,
                 request_obj.user_related_manager.national_code,
-                request_obj.user_committee.national_code,
+                getattr(request_obj.user_committee, 'national_code', None),
             ):
                 form = "TaskList"
                 mode = "READONLY"
@@ -545,7 +548,7 @@ class FormManager:
                 # مجری انتخاب شده است
                 elif task_status == 'EXESEL':
                     # اگر کاربر مجری منتخب باشد
-                    if user_nationalcode == task.selected_executor.national_code:
+                    if task.selected_executor and user_nationalcode == task.selected_executor.national_code:
                         form = 'TaskReport'
                         mode = "UPDATE"
                     # اگر کاربر مجری منتخب نباشد، ولی در لیست مجریان باشد
@@ -567,7 +570,7 @@ class FormManager:
                         form = 'TaskSelect'
                         mode = "UPDATE"
                     # اگر کاربر مجری منتخب باشد
-                    elif user_nationalcode == task.selected_executor.national_code:
+                    elif task.selected_executor and user_nationalcode == task.selected_executor.national_code:
                         form = 'TaskReport'
                         mode = "READONLY"
                     # اگر کاربر در لیست مجریان باشد
@@ -581,11 +584,11 @@ class FormManager:
                 # تستر انتخاب شده است
                 elif task_status == 'TESSEL':
                     # اگر کاربر تستر منتخب باشد
-                    if user_nationalcode == task.selected_tester.national_code:
+                    if task.selected_tester and user_nationalcode == task.selected_tester.national_code:
                         form = 'TaskReport'
                         mode = "UPDATE"
                     # اگر کاربر مجری منتخب باشد
-                    elif user_nationalcode == task.selected_executor.national_code:
+                    elif task.selected_executor and user_nationalcode == task.selected_executor.national_code:
                         form = 'TaskReport'
                         mode = "READONLY"
                     # اگر کاربر در لیست تسترها باشد
@@ -980,40 +983,42 @@ class FormManager:
             #     national_code=form_data["manager_nationalcode"]
             # ).exists():
             #     error_message.append("کد ملی مدیر نامعتبر است.")
+            
+            # کنترل کمیته مربوطه و کاربر آن، در صورتی انجام می شود که گزینه نیاز به کمیته دارد انتخاب شده باشد
+            if form_data.get("need_committee", False):
+                # شناسه کمیته
+                if (
+                    form_data.get("committee")
+                    and not m.Committee.objects.filter(id=form_data["committee"]).exists()
+                ):
+                    error_message.append("شناسه کمیته نامعتبر است.")
 
-            # شناسه کمیته
-            if (
-                form_data.get("committee")
-                and not m.Committee.objects.filter(id=form_data["committee"]).exists()
-            ):
-                error_message.append("شناسه کمیته نامعتبر است.")
+                # کد ملی کاربر کمیته
+                if (
+                    form_data.get("committee_user_nationalcode")
+                    and not m.User.objects.filter(
+                        national_code=form_data["committee_user_nationalcode"]
+                    ).exists()
+                ):
+                    error_message.append("کد ملی دبیر کمیته نامعتبر است.")
 
-            # کد ملی کاربر کمیته
-            if (
-                form_data.get("committee_user_nationalcode")
-                and not m.User.objects.filter(
-                    national_code=form_data["committee_user_nationalcode"]
-                ).exists()
-            ):
-                error_message.append("کد ملی دبیر کمیته نامعتبر است.")
-
-            if not form_data.get("committee_user_nationalcode"):
-                committee_user_nationalcode = (
-                    m.Committee.objects.filter(id=form_data["committee"])
-                    .values("administrator_nationalCode")
-                    .first()
-                )
-                if committee_user_nationalcode:
-                    form_data["committee_user_nationalcode"] = (
-                        committee_user_nationalcode["administrator_nationalCode"]
+                if not form_data.get("committee_user_nationalcode"):
+                    committee_user_nationalcode = (
+                        m.Committee.objects.filter(id=form_data.get("committee",-1))
+                        .values("administrator_nationalcode")
+                        .first()
                     )
-                # حالتی است که دبیر کمیته پیدا نشده است
-                else:
-                    error_message.append("امکان تشخیص دادن دبیر کمیته وجود ندارد")
-            elif not m.User.objects.filter(
-                national_code=form_data["committee_user_nationalcode"]
-            ).exists():
-                error_message.append("کد ملی دبیر کمیته نامعتبر است.")
+                    if committee_user_nationalcode:
+                        form_data["committee_user_nationalcode"] = (
+                            committee_user_nationalcode["administrator_nationalcode"]
+                        )
+                    # حالتی است که دبیر کمیته پیدا نشده است
+                    else:
+                        error_message.append("امکان تشخیص دادن دبیر کمیته وجود ندارد")
+                elif not m.User.objects.filter(
+                    national_code=form_data["committee_user_nationalcode"]
+                ).exists():
+                    error_message.append("کد ملی دبیر کمیته نامعتبر است.")
 
             # گستردگی تغییرات
             if (
@@ -1483,10 +1488,10 @@ class FormManager:
             data["data_center_values"] = data_center_values
 
             # فیلتر کردن رکوردهای مربوط به سیستم ها و سرویس ها
-            systems_services_values = m.ConstValue.objects.filter(
-                Code__startswith="SystemsServices_", IsActive=True
+            system_services_values = m.ConstValue.objects.filter(
+                Code__startswith="SystemServices_", IsActive=True
             )
-            data["systems_services_values"] = systems_services_values
+            data["system_services_values"] = system_services_values
 
             # فیلتر کردن رکوردهای مربوط به محدوده تغییر
             domain_values = m.ConstValue.objects.filter(
@@ -1517,6 +1522,9 @@ class FormManager:
             # نوع تغییر را از جدول مربوطه می گیریم
             change_type = m.ChangeType.objects.all()
             data["change_type"] = change_type
+
+            # لیست تسک ها را هم اضافه می کنیم
+            data["task_list"] = m.Task.objects.all()
 
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -1618,6 +1626,142 @@ class FormManager:
 
         return selected_items
 
+
+    def task_management(self, request_id:int, task_id:int, operation_type:str='A', request_change_type:str='R')-> dict:
+        """
+        این تابع تسک های ذیل یک درخواست (یا نوع درخواست) را مدیریت می کند
+
+        Args:
+            request (_type_): درخواست http
+            task_id (int): شناسه تسک مورد نظر در درخواست و یا نوع درخواست
+            operation_type (_type_): یکی از موارد زیر است:
+                a: اضافه کردن تسک جدید
+                d: حذف تسک مربوطه
+            request_changetype (str, optional): مشخص کننده این است که این تسک مربوط به درخواست می شود یا مربوط به نوع درخواست
+                R: تسک درخواست
+                T: تسک نوع درخواست
+                        
+        Return value:
+            یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+                {'success':, 'message':''}
+                success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+                message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+        
+        """
+        # برای اینکه تابع با هر یک از این مقادیر ورودی کار کند
+        valid_operation_type_add = ['add','a']
+        valid_operation_type_delete = ['delete', 'd']
+        
+        # برای اینکه مشکلی در مقایسه پیش نیاید همه حروف را کوچک می کنیم
+        operation_type = operation_type.lower()
+        
+        # کنترل می کنیم که نوع عملیات مقدار مجاز داشته باشد
+        if operation_type not in valid_operation_type_add+valid_operation_type_delete:
+            return {'success': False, 'message': 'نوع عملیات نامعتبر است.'}
+        
+        # کنترل می کنیم که مقدار متغییر آخر که مشخص می کند این تسک مربوط به درخواست است و یا نوع تغییر، معتبر باشد
+        if request_change_type not in ['R', 'T']:
+            return {'success': False, 'message': 'نوع تسک (درخواست/نوع درخواست) نامعتبر است.'}
+        
+
+        # کنترل می کنیم که چنین تسکی برای چنین درخواست/نوع درخواستی وجود دارد؟
+        if request_change_type == 'R':
+            # تسک مربوط به درخواست
+            exists = m.RequestTask.objects.filter(task_id=task_id, request_id=request_id).exists()
+        else:
+            # تسک مربوط به نوع درخواست
+            exists = m.RequestTask_ChangeType.objects.filter(taks_id=task_id, changetype=request_id).exists()
+
+       
+        # اگر تسکی با این مشخصات تعریف شده است و هدف اضافه کردن است، خطا داریم
+        if operation_type in valid_operation_type_add and exists:
+            return {'success': False, 'message': 'این تسک قبلاً به این تسک اضافه شده است.'}
+        # اگر تسکی با این مشخصات تعریف نشده باشد و هدف حذف کردن است، خطا داریم 
+        elif operation_type in valid_operation_type_delete and not exists:
+            return {'success': False, 'message': 'این تسک برای این تسک تعریف نشده است.'}
+        
+        
+        # اگر تغییر اضافه کردن تسک جدید است، با توجه به اینکه موضوع مربوط به شناسه تسک و نوع تغییر است یا شناسه تسک درخواست، 
+        # اگر کد ملی قبلا برای این تسک درج نشده باشد، عملیات درج را انجام می دهد
+        if operation_type in valid_operation_type_add:
+            try:
+                if request_change_type == 'R':
+                    # ابتدا آخرین شماره ترتیب را به دست می‌آوریم
+                    last_task = m.RequestTask.objects.filter(request_id=request_id).order_by('-order_number').first()
+                    if last_task is not None and last_task.order_number:
+                        order_number = last_task.order_number + 1
+                    else:
+                        order_number = 1
+                        
+                    request_task = m.RequestTask.objects.create(
+                        task_id=task_id,
+                        request_id=request_id,
+                        status_code='DEFINE',
+                        order_number=order_number
+                    )
+                    # حالا باید به ازای هر یک از افرادی که به صورت پیش فرض ذیل این تسک تعریف شده اند، یک رکورد در جدول RequestTaskUser درج کنیم
+                    try:
+                        task_users = m.TaskUser.objects.filter(task_id=task_id)
+
+                        # به ازای هر کاربر عملیات درج در تسک جدید را انجام می دهیم
+                        for task_user in task_users:
+                            m.RequestTaskUser.objects.create(
+                                    request_task=request_task,
+                                    user_nationalcode=task_user.user_nationalcode,
+                                    user_role_id=task_user.user_role_id,
+                                    user_team_code=task_user.user_team_code,
+                                    user_role_code=task_user.user_role_code
+                                )
+
+                    except Exception as e:
+                        return {"success": False, "message": "امکان درج کاربر برای این تسک وجود ندارد<br/>" + str(e)}
+                    
+                    # لیست مجریان و تسترها را باید به خروجی ارسال کنیم
+                    executors = m.RequestTaskUser.objects.filter(user_role_code="E", request_task__task_id = task_id, request_task__request_id=request_id)
+                    testers = m.RequestTaskUser.objects.filter(user_role_code="T", request_task__task_id = task_id, request_task__request_id=request_id)
+                    
+                    return {'success': True, 'message': 'تسک مورد نظر با موفقیت به درخواست اضافه شد.',
+                            'request_task_id':request_task.id,
+                            'request_id':request_id,
+                            'task_id':task_id,
+                            'task_title':request_task.task.title,
+                            'executors':executors,
+                            'testers':testers
+                            }
+                else:
+                    # ابتدا آخرین شماره ترتیب را به دست می‌آوریم
+                    last_task = m.RequestTask_ChangeType.objects.filter(changetype_id=request_id).order_by('-order_number').first()
+                    if last_task is not None and last_task.order_number:
+                        order_number = last_task.order_number + 1
+                    else:
+                        order_number = 1
+                                            
+                    change_type_task = m.RequestTask_ChangeType.objects.create(
+                        task_id=task_id,
+                        changetype_id=request_id,
+                        order_number =order_number
+                    )
+                    return {'success': True, 'message': 'تسک مورد نظر با موفقیت به نوع درخواست اضافه شد.',
+                            'request_task_id':change_type_task.id,
+                            'request_id':request_id,
+                            'task_id':task_id,                            
+                            }
+            except Exception as e:
+                return {'success': False, 'message': f'خطا در افزودن تسک: {str(e)}'}
+            
+        # در صورتی که حذف کاربر باشد، بر مبنای اینکه تسک مربوط به درخواست تغییر است یا نوع تغییر زکوزد مربوطه حذ می شود.
+        if operation_type in valid_operation_type_delete:
+            try:
+                if request_change_type == 'R':
+                    m.RequestTask.objects.filter(task_id=task_id, request_id=request_id).delete()
+                else:
+                    m.RequestTask_ChangeType.objects.filter(task_id=task_id, changetype=request_id).delete()
+                    
+                return {'success': True, 'message': 'تسک مورد نظر با موفقیت از درخواست حذف شد.'}
+            except Exception as e:
+                return {'success': False, 'message': f'خطا در حذف تسک: {str(e)}'}        
+
+
     def task_user_management(self, task_id:int,  operation_type:str='A', user_national_code:str='', user_role_id:int=-1, user_team_code:str='', user_role_code:str='E', request_change_type:str='R')-> dict:
         """
         این تابع افراد ذیل یک تسک را مدیریت می کند.
@@ -1666,7 +1810,7 @@ class FormManager:
                 task_instance = m.RequestTask.objects.get(pk=task_id)
             else:
                 # تسک مربوط به نوع درخواست
-                task_instance = m.Task.objects.get(pk=task_id)
+                task_instance = m.RequestTask_ChangeType.objects.get(pk=task_id)
         except Exception:
             return {'success': False, 'message': 'شناسه تسک نامعتبر است.'}
         
@@ -1743,6 +1887,670 @@ class FormManager:
             except Exception as e:
                 return {'success': False, 'message': f'خطا در حذف کاربر: {str(e)}'}        
 
+
+    def get_record_json(self, request_changetype: str, id: int)->dict:
+        """
+        این تابع برای تبدیل داده های مرتبط با یک درخواست یا نوع درخواست در قالب جیسون در راستای ذخیره سازی برای سوابق تغییرات استفاده می شود
+
+        Args:
+            request_changetype (str): یک کارکتر که مشخص می کند باید اطلاعات رکورد درخواست به روزرسانی شود یا اطلاعات رکورد نوع درخواست
+            R: Request
+            C: ChangeType
+            form_data (dict): داده های فرم است که باید به روزرسانی شود
+            id (int): شناسه رکورد مورد نظر است که باید به روزرسانی شود
+
+        Returns:
+            dict: یک دیکشنری با قالب زیر است:
+            {'success':True, 'message':'با موفقیت انجام شد', 'record_data':record_data}
+        """
+  
+        # مقدار متغییر request_change_type را بررسی می کنیم که معتبر باشد
+        # می تواند یکی از این دو مقدار را داشته باشد:
+        # R: برای درخواست
+        # C: برای نوع تغییرات
+        if request_changetype not in ['R', 'C']:
+            return {"success": False, "message": "نوع رکورد ارسالی نامعتبر است. مقدار باید یکی از 'R' یا 'C' باشد."}
+
+
+        # 2- مقدار شناسه ارسالی id را کنترل می کنیم
+        # اگر درخواست باشد، باید شناسه در جدول مربوطه وجود داشته باشد
+        # اگر نوع تغییر باشد، یا باید -1 باشد که یعنی رکورد جدید درج شود، یا اگر مقدار عددی داشته باشد باید در جدول وجود داشته باشد.
+        if request_changetype == 'R':
+            try:
+                record_instance = m.ConfigurationChangeRequest.objects.get(id=id)
+            except m.ConfigurationChangeRequest.DoesNotExist:
+                return {"success": False, "message": "درخواست مورد نظر یافت نشد."}
+        else:  # 'C'
+            if id == -1:
+                return {"success": True, "message": "رکورد تازه فاقد اطلاعات است.", 'record_data':{}}
+            else:
+                try:
+                    record_instance = m.ChangeType.objects.get(id=id)
+                except m.ChangeType.DoesNotExist:
+                    return {"success": False, "message": "نوع تغییر مورد نظر یافت نشد."}
+
+        # 3- مقدار فعلی داده ها باید در یک متغییر به نام old_data ذخیره شود
+        # باید داده های رکورد اصلی به صورت json تبدیل شود
+        #  سایر جداول وابسته مثل شرکت های مرتبط و ... هم باید به صورت جیسون به داده های قبلی اضافه شود
+        import json
+        from django.core import serializers
+
+        record_data = {}
+        try:
+            # داده های رکورد اصلی
+            record_data['main'] = json.loads(serializers.serialize('json', [record_instance]))[0]['fields']
+            # اطلاعات تکمیلی را اضافه می کنیم
+
+            # اطلاعات شرکت های مرتبط
+            if request_changetype == 'R':
+                corp_records = m.RequestCorp.objects.filter(request=record_instance)
+            else:
+                corp_records = m.RequestCorp_ChangeType.objects.filter(changetype=record_instance)
+            corp_list = [rec['fields'] for rec in json.loads(serializers.serialize('json', corp_records))]
+            record_data['corps'] = corp_list
+
+            # تیم های مرتبط
+            if request_changetype == 'R':
+                team_records = m.RequestTeam.objects.filter(request=record_instance)
+            else:
+                team_records = m.RequestTeam_ChangeType.objects.filter(changetype=record_instance)
+            team_list = [rec['fields'] for rec in json.loads(serializers.serialize('json', team_records))]
+            record_data['teams'] = team_list
+
+            # اطلاعات اضافه
+            if request_changetype == 'R':
+                extra_info_records = m.RequestExtraInformation.objects.filter(request=record_instance)
+            else:
+                extra_info_records = m.RequestExtraInformation_ChangeType.objects.filter(changetype=record_instance)
+            extra_info_list = [rec['fields'] for rec in json.loads(serializers.serialize('json', extra_info_records))]
+            record_data['extra_information'] = extra_info_list
+
+            # اطلاعات تسک ها به همراه کاربران هر تسک
+            task_list = []
+            if request_changetype == 'R':
+                task_records = m.RequestTask.objects.filter(request=record_instance)
+            else:
+                task_records = m.RequestTask_ChangeType.objects.filter(changetype=record_instance)
+            for rec in json.loads(serializers.serialize('json', task_records)):
+                task_fields = rec['fields']
+                task_id = rec['pk']
+                # دریافت کاربران مرتبط با هر تسک
+                if request_changetype == 'R':
+                    user_records = m.RequestTaskUser.objects.filter(request_task_id=task_id)
+                else:
+                    user_records = m.TaskUser.objects.filter(task_id=task_id)
+                user_list = [user_rec['fields'] for user_rec in json.loads(serializers.serialize('json', user_records))]
+                task_fields['users'] = user_list
+                task_list.append(task_fields)
+            record_data['task'] = task_list
+
+            # اطلاعات گروه های اطلاع رسانی
+            if request_changetype == 'R':
+                notify_group_records = m.RequestNotifyGroup.objects.filter(request=record_instance)
+            else:
+                notify_group_records = m.RequestNotifyGroup_ChangeType.objects.filter(changetype=record_instance)
+            notify_group_list = [rec['fields'] for rec in json.loads(serializers.serialize('json', notify_group_records))]
+            record_data['notify_group'] = notify_group_list
+        except Exception as e:
+            return {"success":False, "error": f"خطا در دریافت داده‌های قبلی: {str(e)}"}
+        
+        
+        return {'success':True, 'message':'با موفقیت واکشی شد','record_data':record_data}
+ 
+ 
+    def update_extra_information(self,form_data:dict, code:str,field_value:bool, request_changetype:str, id:int)->dict:
+        """
+        این تابع اطلاعات اضافی مربوط به محل تغییر را از داده های ورودی استخراج می کند
+
+        Args:
+            form_data (dict): اطلاعات ورودی از فرم
+            code (str): مشخص می کند که مثلا اطلاعات مربوط به دیتاسنتر، یا سیستم ها و ... را استخراج کنیم
+                DataCenter : تغییرات مرکز داده
+                SystemsServices : سیستم ها و سرویس ها
+                Database : دیتابیس ها
+            field_value: در صورتی که این فیلد  در ورودی باشد و مقدار صحیح داشته باشد صحیح و در غیر این صورت مقدار false برمی گرداند
+            request_changetype (str): یک کارکتر که مشخص می کند باید اطلاعات رکورد درخواست به روزرسانی شود یا اطلاعات رکورد نوع درخواست
+                R: Request
+                C: ChangeType
+            id (int): شناسه رکورد مورد نظر است که باید به روزرسانی شود
+        
+        Returns:
+            dict: یک دیکشنری با قالب زیر است:
+            {'success':True, 'message':'با موفقیت انجام شد'}
+        """
+        
+        if request_changetype == 'R':
+            try:
+                record_instance = m.ConfigurationChangeRequest.objects.get(id=id)
+            except m.ConfigurationChangeRequest.DoesNotExist:
+                return {"success": False, "message": "درخواست مورد نظر یافت نشد."}
+        else:  # 'C'
+            try:
+                record_instance = m.ChangeType.objects.get(id=id)
+            except m.ChangeType.DoesNotExist:
+                return {"success": False, "message": "نوع تغییر مورد نظر یافت نشد."}
+                
+                        
+        # رکوردهای متناظر را از جدول مقادیر ثابت استخراج می کنیم
+        # مثلا انواع تغییراتی که در دیتاسنتر می تواند اتفاق بیافتد
+        # مثلا اگر مقدار کد برابر با DataCenter 
+        # است، رکوردهایی با مقادیر 
+        # DataCenter_Telecommunications و DataCenter_Networking 
+        # بازگشت داده شوند.
+        const_value_records = m.ConstValue.objects.filter(Code__startswith=code + '_', IsActive=True).order_by('OrderNumber')
+        # شناسه رکوردهای مربوطه را به دست می آوریم
+        const_value_ids = [rec.id for rec in const_value_records]
+
+        # اگر گزینه تغییرات در دیتاسنترها انتخاب شده باشد
+        if field_value:
+            # به ازای هر یک از شناسه های مقادیر ثابت مربوطه
+            for const_id in const_value_ids:
+                # اگر در مقادیر ورودی باشد
+                if const_id in form_data.get('extra_information',[]):
+                    # کنترل می کنیم که آیا در رکوردهای موجود هست یا خیر
+                    if request_changetype == 'R':
+                        exists = m.RequestExtraInformation.objects.filter(extra_info_id=const_id, request=record_instance)
+                        # اگر در رکوردهای موجود نباشد باید درج شود
+                        if not exists:
+                            m.RequestExtraInformation.objects.create(extra_info_id=const_id, request=record_instance)
+                    else:
+                        exists = m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id=const_id, change_type=record_instance)
+                        # اگر در رکوردهای موجود نباشد باید درج شود
+                        if not exists:
+                            m.RequestExtraInformation_ChangeType.objects.create(extra_info_id=const_id, change_type=record_instance)
+                # اگر در داده های ورودی نباشد
+                else:
+                    # اگر در داده های موجود هست، آن را حذف می کنیم
+                    if request_changetype == 'R':
+                        m.RequestExtraInformation.objects.filter(extra_info_id=const_id, request=record_instance).delete()
+                    else:
+                        exists = m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id=const_id, change_type=record_instance).delete()
+        # اگر در داده های ورودی نیست هم باید رکوردها حذف شوند
+        else:
+            if request_changetype == 'R':
+                m.RequestExtraInformation.objects.filter(extra_info_id__in=const_value_ids, request=record_instance).delete()
+            else:
+                m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id__in=const_value_ids, change_type=record_instance).delete()              
+        
+        
+        return {'success':True, 'message':'با موفقیت انجام شد'}
+
+    def update_record(self, request_changetype: str, form_data: dict, id: int, current_user_nationalcode: str) -> dict:
+        """
+        این تابع برای به روزرسانی اطلاعات درخواست، یا نوع درخواست استفاده می شود
+        چون عملیات مشترک است به جای پیاده سازی تکراری یک تابع عمومی داریم که در هر دو حالت استفاده می شود
+
+        Args:
+            request_changetype (str): یک کارکتر که مشخص می کند باید اطلاعات رکورد درخواست به روزرسانی شود یا اطلاعات رکورد نوع درخواست
+                R: Request
+                C: ChangeType
+            form_data (dict): داده های فرم است که باید به روزرسانی شود
+            id (int): شناسه رکورد مورد نظر است که باید به روزرسانی شود
+
+        Returns:
+            dict: یک دیکشنری با قالب زیر است:
+            {'success':True, 'message':'با موفقیت انجام شد'}
+        """
+
+        # مقدار متغییر request_change_type را بررسی می کنیم که معتبر باشد
+        # می تواند یکی از این دو مقدار را داشته باشد:
+        # R: برای درخواست
+        # C: برای نوع تغییرات
+        if request_changetype not in ['R', 'C']:
+            return {"success": False, "message": "نوع رکورد ارسالی نامعتبر است. مقدار باید یکی از 'R' یا 'C' باشد."}
+
+        # 2- مقدار شناسه ارسالی id را کنترل می کنیم
+        # اگر درخواست باشد، باید شناسه در جدول مربوطه وجود داشته باشد
+        # اگر نوع تغییر باشد، یا باید -1 باشد که یعنی رکورد جدید درج شود، یا اگر مقدار عددی داشته باشد باید در جدول وجود داشته باشد.
+        if request_changetype == 'R':
+            try:
+                record_instance = m.ConfigurationChangeRequest.objects.get(id=id)
+            except m.ConfigurationChangeRequest.DoesNotExist:
+                return {"success": False, "message": "درخواست مورد نظر یافت نشد."}
+        else:  # 'C'
+            if id == -1:
+                record_instance = m.ChangeType.objects.create()
+                id = record_instance.id
+            else:
+                try:
+                    record_instance = m.ChangeType.objects.get(id=id)
+                except m.ChangeType.DoesNotExist:
+                    return {"success": False, "message": "نوع تغییر مورد نظر یافت نشد."}
+
+        # 3- مقدار فعلی داده ها باید در یک متغییر به نام old_data ذخیره شود
+        # باید داده های رکورد اصلی به صورت json تبدیل شود
+        #  سایر جداول وابسته مثل شرکت های مرتبط و ... هم باید به صورت جیسون به داده های قبلی اضافه شود
+        result = self.get_record_json(request_changetype=request_changetype, id=id)
+        
+        if not result.get('success', False):
+            return result
+        
+        if 'record_data' not in result:
+            return {'success':False, 'message': 'امکان واکشی اطلاعات قبلی رکورد وجود ندارد'}
+
+        old_data = result['record_data']
+
+
+        # 4- بررسی می کنیم که current_user_national_code مقدار معتبر داشته باشد
+        try:
+            user_instance = m.User.objects.get(national_code=current_user_nationalcode)
+        except m.User.DoesNotExist:
+            return {"success": False, "message": "کد ملی کاربر جاری نامعتبر است."}
+
+        
+        # 5- حالا به ازای هر فیلد باید بررسی کنیم که اگر اطلاعات آن در داده های ورودی وجود دارد، رکورد مورد نظر را به روز کنیم
+        error_message = []
+        try:
+
+            # اطلاعات درخواست را از داده های فرم استخراج می کنیم
+            # result = self.get_record_data(form_data)
+            # if not result.get('success', True):
+            #     return {"success": False, "message": "امکان فراخوانی اطلاعات تکمیلی درخواست وجود ندارد\n" + result['message']}
+            
+
+            
+            #  برخی از اطلاعات باید با توجه به نوع تغییر تکمیل شوند
+            # چیزهایی که ممکن است عوض شده باشند، کمیته و مدیر مربوطه است
+            # result = self.get_change_type_data(form_data)
+            # if not result.get('success', True):
+            #     return {"success": False, "message": "امکان فراخوانی اطلاعات بر اساس نوع درخواست وجود ندارد\n" + result['message']}
+            # form_data.update(result)                        
+            
+            # حالا بر اساس داده های ورودی، مقادیر را به روزرسانی می کنیم
+            # کد وضعیت
+            if 'status_code' in form_data:
+                record_instance.status_code = form_data['status_code']
+                # همگام‌سازی وضعیت و عنوان متناظر شی جاری
+                self.status_code = record_instance.status_code
+                self._sync_status_title()
+            # عنوان تغییر
+            if 'change_title' in form_data:
+                record_instance.change_title = form_data['change_title']
+            # توضیحات
+            if 'change_description' in form_data:
+                record_instance.change_description = form_data['change_description']
+
+            # کد ملی مدیر مستقیم
+            if 'direct_manager_nationalcode' in form_data:
+                record_instance.direct_manager_nationalcode.national_code = form_data['direct_manager_nationalcode']
+            
+            # کد ملی مدیر مربوطه
+            if 'related_manager_nationalcode' in form_data:
+                record_instance.related_manager_nationalcode.national_code = form_data['related_manager_nationalcode']
+                                
+           
+            # نیاز به کمیته
+            if 'need_committee' in form_data:
+                record_instance.need_committee = form_data['need_committee']
+
+                # اگر نیاز به کمیته باشد، باید کمیته مربوطه و دبیر کمیته را به دست بیاوریم
+                if record_instance.need_committee:
+                    # کد ملی کاربر کمیته
+                    if 'committee_user_nationalcode' in form_data:
+                        record_instance.committee_user_nationalcode_id = form_data['committee_user_nationalcode']
+                
+                    # کمیته
+                    if 'committee' in form_data:
+                        record_instance.committee_id = form_data['committee']
+                # در صورتی که نیاز به کمیته نباشد، فیلدهای مربوطه باید نال شوند
+                else:
+                    record_instance.committee_user_nationalcode = None
+                    record_instance.committee = None
+
+            # در صورتی که نیاز به کمیته نباشد، فیلدهای مربوطه باید نال شوند
+            else:
+                record_instance.committee_user_nationalcode = None
+                record_instance.committee = None
+
+                
+            # --------------------------ویژگی های تغییر------------------------
+            # گستردگی تغییرات
+            if 'change_level' in form_data:
+                record_instance.change_level_id = form_data['change_level']
+            # طبقه‌بندی
+            if 'classification' in form_data:
+                record_instance.classification_id= form_data['classification']
+            # اولویت
+            if 'priority' in form_data:
+                record_instance.priority_id = form_data['priority']
+            # سطح ریسک
+            if 'risk_level' in form_data:
+                record_instance.risk_level_id = form_data['risk_level']
+            
+            # --------------------------محل تغییر------------------------
+            # محل تغییرات دیتاسنترها باشد
+            if 'change_location_DataCenter' in form_data:
+                record_instance.change_location_data_center = form_data['change_location_DataCenter']
+                self.update_extra_information (form_data=form_data, code='DataCenter', field_value=record_instance.change_location_data_center,request_changetype=request_changetype, id=id)
+            else:
+                self.update_extra_information (form_data=form_data, code='DataCenter', field_value=False,request_changetype=request_changetype, id=id)
+                
+            # محل تغییرات دیتابیس ها باشد
+            if 'change_location_Database' in form_data:
+                record_instance.change_location_database = form_data['change_location_Database']
+                self.update_extra_information (form_data=form_data, code='Database', field_value=record_instance.change_location_database,request_changetype=request_changetype, id=id)
+            else:
+                self.update_extra_information (form_data=form_data, code='Database', field_value=False,request_changetype=request_changetype, id=id)
+            
+            # محل تغییرات سیستم ها و سرویس ها باشد
+            if 'change_location_SystemServices' in form_data:
+                record_instance.change_location_system_services = form_data['change_location_SystemServices']
+                self.update_extra_information (form_data=form_data, code='SystemServices', field_value=record_instance.change_location_system_services,request_changetype=request_changetype, id=id)
+
+            else:
+                self.update_extra_information (form_data=form_data, code='SystemServices', field_value=False,request_changetype=request_changetype, id=id)
+
+
+            # محل تغییرات سایر محل ها باشد
+            if 'change_location_other' in form_data:
+                record_instance.change_location_other = form_data['change_location_other']
+                # اگر این گزینه انتخاب شده باشد، باید مقدار متناظر را به روز کنیم
+                if record_instance.change_location_other:
+                    record_instance.change_location_other_description = form_data.get('change_location_other_description','')
+                # در صورتی که این گزینه انتخاب نشده باشد باید توضیحات پاک شوند
+                else:
+                    record_instance.change_location_other_description = ''
+            # در صورتی که این گزینه وجود نداشته باشد باید توضیحات پاک شوند
+            else:
+                record_instance.change_location_other_description = ''
+            
+
+            # --------------------------دامنه تغییرات------------------------
+            # دامنه تغییر
+            if 'domain' in form_data:
+                domain_code = form_data.get('domain')
+                domain_obj = m.ConstValue.objects.filter(Code=domain_code).first()
+                if not domain_obj:
+                    return {"success": False, "message": "شناسه دامنه تغییرات نادرست است."}
+                domain_id = domain_obj.id
+
+                record_instance.change_domain_id = domain_id
+                
+                # اگر درون سازمانی باشد، باید اطلاعات شرکت ها حذف شوند
+                if domain_code == 'Domain_Inside':
+                    if request_changetype =='R':
+                        m.RequestCorp.objects.filter(request=record_instance).delete()
+                    else:
+                        m.RequestCorp_ChangeType.objects.filter(changetype=record_instance).delete()
+                
+                # اگر برون سازمانی باشد، باید اطلاعات تیم ها حذف شود
+                elif domain_code == 'Domain_Outside':
+                    if request_changetype =='R':
+                        m.RequestTeam.objects.filter(request=record_instance).delete()
+                    else:
+                        m.RequestTeam_ChangeType.objects.filter(changetype=record_instance).delete()
+                    
+                # در صورتی که تغییرات برون سازمانی یا بین سازمانی باشد، اطلاعات شرکت ها را به روز می کنیم
+                if domain_code in ['Domain_Between','Domain_Outside']:
+                    # به‌روزرسانی و درج رکوردهای جداول وابسته مانند RequestCorp
+                    error_message = []
+                    try:
+                        request_corp_data = form_data.get('corps', [])
+                        # دریافت همه شرکت‌های مرتبط فعلی با این درخواست
+                        existing_corp_qs = None
+                        if request_changetype =='R':
+                            existing_corp_qs = m.RequestCorp.objects.filter(request=record_instance)
+                        else:
+                            existing_corp_qs = m.RequestCorp_ChangeType.objects.filter(changetype=record_instance)
+
+                        existing_corp_codes = set(existing_corp_qs.values_list('corp_code', flat=True))
+                        # استخراج corp_code های جدید از داده‌های فرم
+                        new_corp_codes = set(request_corp_data)
+                        # حذف شرکت‌هایی که دیگر در فرم نیستند
+                        to_delete_codes = existing_corp_codes - new_corp_codes
+                        if to_delete_codes:
+                            if request_changetype =='R':
+                                m.RequestCorp.objects.filter(request=record_instance, corp_code__in=to_delete_codes).delete()
+                            else:
+                                m.RequestCorp_ChangeType.objects.filter(changetype=record_instance, corp_code__in=to_delete_codes).delete()
+                            
+                        # اضافه کردن شرکت‌های جدیدی که قبلاً وجود نداشتند
+                        to_add_codes = new_corp_codes - existing_corp_codes
+                        for corp_code in to_add_codes:
+                            if request_changetype =='R':
+                                m.RequestCorp.objects.create(request=record_instance, corp_code_id=corp_code)
+                            else:
+                                m.RequestCorp_ChangeType.objects.create(changetype=record_instance, corp_code_id=corp_code)
+
+
+                    except Exception as e:
+                        error_message.append(f'خطا در پردازش شرکت‌ها: {str(e)}')
+                
+                # در صورتی که تغییرات درون سازمانی یا بین سازمانی باشد، اطلاعات تیم ها را به روز می کنیم
+                if domain_code in ['Domain_Between','Domain_Inside']:
+                    # پردازش اطلاعات تیم ها
+                    try:
+                        request_team_data = form_data.get('teams', [])
+                        # دریافت همه تیم‌های مرتبط فعلی با این درخواست
+                        existing_team_qs = None
+                        if request_changetype =='R':
+                            existing_team_qs = m.RequestTeam.objects.filter(request=record_instance)
+                        else:
+                            existing_team_qs = m.RequestTeam_ChangeType.objects.filter(changetype=record_instance)
+                    
+                        existing_team_codes = set(existing_team_qs.values_list('team_code', flat=True))
+                        # استخراج team_code های جدید از داده‌های فرم
+                        new_team_codes = set(request_team_data)
+                        # حذف تیم‌هایی که دیگر در فرم نیستند
+                        to_delete_codes = existing_team_codes - new_team_codes
+                        if to_delete_codes:
+                            if request_changetype =='R':
+                                m.RequestTeam.objects.filter(request=record_instance, team_code__in=to_delete_codes).delete()
+                            else:
+                                m.RequestTeam_ChangeType.objects.filter(changetype=record_instance, team_code__in=to_delete_codes).delete()
+
+                        # اضافه کردن تیم‌های جدیدی که قبلاً وجود نداشتند
+                        to_add_codes = new_team_codes - existing_team_codes
+                        for team_code in to_add_codes:
+                            if request_changetype =='R':
+                                m.RequestTeam.objects.create(request=record_instance, team_code_id=team_code)
+                            else:
+                                m.RequestTeam_ChangeType.objects.create(changetype=record_instance, team_code_id=team_code)
+
+                    except Exception as e:
+                        error_message.append(f'خطا در پردازش تیم ها: {str(e)}')
+
+                
+
+            # --------------------------حوزه اثرگذاری------------------------
+            # بدترین مدت زمان توقف
+            if 'downtime_duration_worstcase' in form_data:
+                record_instance.downtime_duration_worstcase = int(form_data['downtime_duration_worstcase']) if form_data['downtime_duration_worstcase'] else None
+            # توقف خدمات بحرانی
+            if 'stop_critical_service' in form_data:
+                record_instance.stop_critical_service = form_data['stop_critical_service']
+                # در صورتی که گزینه خدمات بحرانی انتخاب شده باشد و عنوان خدمات بحرانی ارسال شده باشد
+                if 'critical_service_title' in form_data and record_instance.stop_critical_service:
+                    record_instance.critical_service_title = form_data['critical_service_title']
+                else:
+                    record_instance.critical_service_title = ''
+            else:
+                record_instance.critical_service_title = ''
+            # توقف خدمات حساس
+            if 'stop_sensitive_service' in form_data:
+                record_instance.stop_sensitive_service = form_data['stop_sensitive_service']
+                # در صورتی که توقف خدمات حساس انتخاب شده باشد و عنوان خدمات حساس هم وجود داشته باشد
+                if 'stop_service_title' in form_data and record_instance.stop_sensitive_service:
+                    record_instance.stop_service_title = form_data['stop_service_title']
+                else:
+                    record_instance.stop_service_title = ''
+            else:
+                record_instance.stop_service_title = ''
+                
+            # عدم توقف هیچ خدماتی
+            if 'not_stop_any_service' in form_data:
+                record_instance.not_stop_any_service = form_data['not_stop_any_service']
+
+            # --------------------------بازگشت تغییرات------------------------
+
+            # برنامه بازگشت وجود دارد
+            if 'has_role_back_plan' in form_data:
+                record_instance.has_role_back_plan = form_data['has_role_back_plan']
+
+                # توضیحات برنامه بازگشت
+                if 'role_back_plan_description' in form_data and record_instance.has_role_back_plan:
+                    record_instance.role_back_plan_description = form_data['role_back_plan_description']
+                else:
+                    record_instance.role_back_plan_description = ''
+            else:
+                record_instance.role_back_plan_description = ''
+
+            # --------------------------الزام به تغییر------------------------
+
+            # الزام قانونی
+            if 'reason_regulatory' in form_data:
+                record_instance.reason_regulatory = form_data['reason_regulatory']
+            # الزام فنی
+            if 'reason_technical' in form_data:
+                record_instance.reason_technical = form_data['reason_technical']
+            # الزام امنیتی
+            if 'reason_security' in form_data:
+                record_instance.reason_security = form_data['reason_security']
+            # الزام کسب و کاری
+            if 'reason_business' in form_data:
+                record_instance.reason_business = form_data['reason_business']
+            # سایر الزامات
+            if 'reason_other' in form_data:
+                record_instance.reason_other = form_data['reason_other']
+                # توضیحات الزامات دیگر
+                if 'reason_other_description' in form_data and  record_instance.reason_other:
+                    record_instance.reason_other_description = form_data['reason_other_description']
+                else: 
+                    record_instance.reason_other_description = ''
+            else: 
+                record_instance.reason_other_description = ''
+
+            # # جدول RequestNotifyGroup: گروه‌های اطلاع‌رسانی مرتبط با درخواست تغییر
+            # try:
+            #     request_notify_group_data = form_data.get('request_notify_groups')
+            #     if request_notify_group_data is not None:
+            #         for ng_item in request_notify_group_data:
+            #             ng_id = ng_item.get('id')
+            #             is_deleted = ng_item.get('is_deleted', False)
+            #             if ng_id:
+            #                 ng_instance = m.RequestNotifyGroup.objects.filter(id=ng_id, request=record_instance).first()
+            #                 if ng_instance:
+            #                     if is_deleted:
+            #                         ng_instance.delete()
+            #                     else:
+            #                         # کد گروه اطلاع‌رسانی
+            #                         if 'notify_group_code' in ng_item:
+            #                             # verbose_name: 'کد گروه اطلاع‌رسانی'
+            #                             ng_instance.notify_group_code = ng_item['notify_group_code']
+            #                         # نام گروه اطلاع‌رسانی
+            #                         if 'notify_group_name' in ng_item:
+            #                             # verbose_name: 'نام گروه اطلاع‌رسانی'
+            #                             ng_instance.notify_group_name = ng_item['notify_group_name']
+            #                         # توضیحات
+            #                         if 'description' in ng_item:
+            #                             # verbose_name: 'توضیحات'
+            #                             ng_instance.description = ng_item['description']
+            #                         ng_instance.save()
+            #             else:
+            #                 if not is_deleted:
+            #                     create_fields = {}
+            #                     # کد گروه اطلاع‌رسانی
+            #                     if 'notify_group_code' in ng_item:
+            #                         # verbose_name: 'کد گروه اطلاع‌رسانی'
+            #                         create_fields['notify_group_code'] = ng_item['notify_group_code']
+            #                     # نام گروه اطلاع‌رسانی
+            #                     if 'notify_group_name' in ng_item:
+            #                         # verbose_name: 'نام گروه اطلاع‌رسانی'
+            #                         create_fields['notify_group_name'] = ng_item['notify_group_name']
+            #                     # توضیحات
+            #                     if 'description' in ng_item:
+            #                         # verbose_name: 'توضیحات'
+            #                         create_fields['description'] = ng_item['description']
+            #                     create_fields['request'] = record_instance
+            #                     m.RequestNotifyGroup.objects.create(**create_fields)
+            # except Exception as e:
+            #     error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی: {str(e)}')
+
+            # # جدول RequestTask: تسک‌های مرتبط با درخواست تغییر
+            # try:
+            #     request_task_data = form_data.get('request_tasks')
+            #     if request_task_data is not None:
+            #         for task_item in request_task_data:
+            #             task_id = task_item.get('id')
+            #             is_deleted = task_item.get('is_deleted', False)
+            #             if task_id:
+            #                 task_instance = m.RequestTask.objects.filter(id=task_id, request=record_instance).first()
+            #                 if task_instance:
+            #                     if is_deleted:
+            #                         task_instance.delete()
+            #                     else:
+            #                         # شناسه تسک
+            #                         if 'task' in task_item:
+            #                             # verbose_name: 'شناسه تسک'
+            #                             task_instance.task_id = task_item['task']
+            #                         # وضعیت
+            #                         if 'status' in task_item:
+            #                             # verbose_name: 'وضعیت'
+            #                             task_instance.status = task_item['status']
+            #                         # توضیحات
+            #                         if 'description' in task_item:
+            #                             # verbose_name: 'توضیحات'
+            #                             task_instance.description = task_item['description']
+            #                         task_instance.save()
+            #             else:
+            #                 if not is_deleted:
+            #                     create_fields = {}
+            #                     # شناسه تسک
+            #                     if 'task' in task_item:
+            #                         # verbose_name: 'شناسه تسک'
+            #                         create_fields['task_id'] = task_item['task']
+            #                     # وضعیت
+            #                     if 'status' in task_item:
+            #                         # verbose_name: 'وضعیت'
+            #                         create_fields['status'] = task_item['status']
+            #                     # توضیحات
+            #                     if 'description' in task_item:
+            #                         # verbose_name: 'توضیحات'
+            #                         create_fields['description'] = task_item['description']
+            #                     create_fields['request'] = record_instance
+            #                     m.RequestTask.objects.create(**create_fields)
+            # except Exception as e:
+            #     error_message.append(f'خطا در پردازش تسک‌های درخواست: {str(e)}')
+
+
+            # except Exception as e:
+            #     error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی نوع درخواست: {str(e)}')
+
+            # جدول RequestTask_ChangeType: تسک‌های نوع درخواست تغییر
+            # try:
+            #     request_task_changetype_data = form_data.get('request_task_changetypes')
+            #     if request_task_changetype_data is not None:
+            #         for tct_item in request_task_changetype_data:
+            #             tct_id = tct_item.get('id')
+            #             is_deleted = tct_item.get('is_deleted', False)
+            #             if tct_id:
+            #                 tct_instance = m.RequestTask_ChangeType.objects.filter(id=tct_id, task__request=record_instance).first()
+            #                 if tct_instance:
+            #                     if is_deleted:
+            #                         tct_instance.delete()
+            #                     else:
+            #                         for field, value in tct_item.items():
+            #                             if field not in ['id', 'task', 'is_deleted'] and hasattr(tct_instance, field):
+            #                                 setattr(tct_instance, field, value)
+            #                         tct_instance.save()
+            #             else:
+            #                 if not is_deleted:
+            #                     create_fields = {k: v for k, v in tct_item.items() if k not in ['id', 'is_deleted']}
+            #                     # باید task را به صورت صحیح مقداردهی کنید
+            #                     m.RequestTask_ChangeType.objects.create(**create_fields)
+            # except Exception as e:
+            #     error_message.append(f'خطا در پردازش تسک‌های نوع درخواست: {str(e)}')
+
+            if error_message:
+                return {'success':False, 'message':error_message}
+                
+            record_instance.last_modifier_user_id = current_user_nationalcode
+            record_instance.save()
+
+            return {"success": True, "message": "درخواست با موفقیت به‌روزرسانی شد"}
+
+        except Exception as e:
+            return {"success": False, "message": f"خطا در به‌روزرسانی درخواست: {str(e)}"}
 
 class Task:
     task_id: int = -1
@@ -2092,15 +2900,15 @@ class Task:
 
 
 class Request:
-    obj_form_manager: FormManager
-    obj_cartable: Cartable
+    obj_form_manager: FormManager = None
+    obj_cartable: Cartable = None
 
     current_user_national_code: str = ''
     error_message: str = ''
 
     request_id: int  = -1
-    request_instance: m.ConfigurationChangeRequest
-    change_type_instance: m.ChangeType
+    request_instance: m.ConfigurationChangeRequest = None
+    change_type_instance: m.ChangeType = None
     status_code: str = ''
     # ('DRAFTD', 'پیش نویس'): CON->DIRMAN, RET->FAILED, REJ->FAILED
     # ('DIRMAN', 'اظهار نظر مدیر مستقیم'): CON->RELMAN, RET->DRAFTD, REJ->FAILED
@@ -2115,23 +2923,23 @@ class Request:
     need_committee: bool = False
 
     # اطلاعات افراد درگیر
-    user_requestor: m.User
-    user_requestor_team_code: m.Team
-    user_requestor_role_id: m.Role
-    user_direct_manager: m.User
-    user_related_manager: m.User
-    user_committee: m.User
+    user_requestor: m.User = None
+    user_requestor_team_code: m.Team = None
+    user_requestor_role_id: m.Role = None
+    user_direct_manager: m.User = None
+    user_related_manager: m.User = None
+    user_committee: m.User = None
 
     # اطلاعات تسک ها
-    task_users: List[m.User]
-    task_executors: List[m.User]
-    task_selected_executors: List[m.User]
-    task_testers: List[m.User]
-    task_selected_testers: List[m.User]
+    task_users: List[m.User] = []
+    task_executors: List[m.User] = []
+    task_selected_executors: List[m.User] = []
+    task_testers: List[m.User] = []
+    task_selected_testers: List[m.User] = []
 
     # اطلاعات تسک ها
-    tasks = List[Task]
-    current_task: Task
+    tasks: List[Task] = None
+    current_task: Task = None
     has_any_task_left: bool = False
 
     def _sync_status_title(self, status_code: str = None):
@@ -2212,10 +3020,10 @@ class Request:
                     )  # فرض بر این است که فیلد committee یک شیء است
                     if committee and committee.is_active:
                         self.request_instance.committee_user_nationalcode = (
-                            committee.administrator_nationalCode
+                            committee.administrator_nationalcode
                         )
                         self.request_instance.save()
-                        self.user_committee = committee.administrator_nationalCode
+                        self.user_committee = committee.administrator_nationalcode
                     else:
                         self.user_committee = None
                         # این تکه کد برای این است که اگر قبلا نیاز به کمیته داشته و الان حذف شده، کاربر مربوطه نیز حذف شود
@@ -2451,7 +3259,7 @@ class Request:
                 )
             if 'committee_user_nationalcode' not in form_data:
                 form_data['committee_user_nationalcode'] = (  # کد ملی کاربر کمیته
-                    change_type_obj.committee.administrator_nationalCode
+                    change_type_obj.committee.administrator_nationalcode
                     if change_type_obj.committee is not None
                     else None
                 )
@@ -2853,378 +3661,14 @@ class Request:
         """
         به‌روزرسانی درخواست موجود
         """
-        try:
-            request_instance = self.request_instance
-
-            # اطلاعات درخواست را از داده های فرم استخراج می کنیم
-            result = self.get_record_data(form_data)
-            if not result.get('success', True):
-                return {"success": False, "message": "امکان فراخوانی اطلاعات تکمیلی درخواست وجود ندارد\n" + result['message']}
-            
-            form_data.update(result)
-            
-            #  برخی از اطلاعات باید با توجه به نوع تغییر تکمیل شوند
-            # چیزهایی که ممکن است عوض شده باشند، کمیته و مدیر مربوطه است
-            # result = self.get_change_type_data(form_data)
-            # if not result.get('success', True):
-            #     return {"success": False, "message": "امکان فراخوانی اطلاعات بر اساس نوع درخواست وجود ندارد\n" + result['message']}
-            # form_data.update(result)                        
-            
-            # حالا بر اساس داده های ورودی، مقادیر را به روزرسانی می کنیم
-            # کد وضعیت
-            if 'status_code' in form_data:
-                request_instance.status_code = form_data['status_code']
-                # همگام‌سازی وضعیت و عنوان متناظر شی جاری
-                self.status_code = request_instance.status_code
-                self._sync_status_title()
-            # عنوان تغییر
-            if 'change_title' in form_data:
-                request_instance.change_title = form_data['change_title']
-            # توضیحات
-            if 'change_description' in form_data:
-                request_instance.change_description = form_data['change_description']
-
-            # کد ملی مدیر مستقیم
-            if 'direct_manager_nationalcode' in form_data:
-                request_instance.direct_manager_nationalcode.national_code = form_data['direct_manager_nationalcode']
-            
-            # کد ملی مدیر مربوطه
-            if 'related_manager_nationalcode' in form_data:
-                request_instance.related_manager_nationalcode.national_code = form_data['related_manager_nationalcode']
-                                
-            # کد ملی کاربر کمیته
-            if 'committee_user_nationalcode' in form_data:
-                request_instance.committee_user_nationalcode.national_code = form_data['committee_user_nationalcode']
-           
-            # نیاز به کمیته
-            if 'need_committee' in form_data:
-                request_instance.need_committee = form_data['need_committee']
-                
-            # کمیته
-            if 'committee' in form_data:
-                request_instance.committee.id = form_data['committee']
-                
-            # گستردگی تغییرات
-            if 'change_level' in form_data:
-                request_instance.change_level.id = form_data['change_level']
-            # طبقه‌بندی
-            if 'classification' in form_data:
-                request_instance.classification.id= form_data['classification']
-            # اولویت
-            if 'priority' in form_data:
-                request_instance.priority.id = form_data['priority']
-            # سطح ریسک
-            if 'risk_level' in form_data:
-                request_instance.risk_level.id = form_data['risk_level']
-            # دامنه تغییر
-            if 'change_domain' in form_data:
-                request_instance.change_domain.id = form_data['change_domain']
-            # مدت زمان تغییرات
-            if 'changing_duration' in form_data:
-                request_instance.changing_duration = int(form_data['changing_duration']) if form_data['changing_duration'] else None
-            # مدت زمان توقف
-            if 'downtime_duration' in form_data:
-                request_instance.downtime_duration = int(form_data['downtime_duration'])  if form_data['downtime_duration'] else None
-            # بدترین مدت زمان توقف
-            if 'downtime_duration_worstcase' in form_data:
-                request_instance.downtime_duration_worstcase = int(form_data['downtime_duration_worstcase']) if form_data['downtime_duration_worstcase'] else None
-            # توقف خدمات بحرانی
-            if 'stop_critical_service' in form_data:
-                request_instance.stop_critical_service = form_data['stop_critical_service']
-            # خدمات بحرانی
-            if 'critical_service_title' in form_data:
-                request_instance.critical_service_title = form_data['critical_service_title']
-            # توقف خدمات حساس
-            if 'stop_sensitive_service' in form_data:
-                request_instance.stop_sensitive_service = form_data['stop_sensitive_service']
-            # عنوان خدمات متوقف شده
-            if 'stop_service_title' in form_data:
-                request_instance.stop_service_title = form_data['stop_service_title']
-            # عدم توقف هیچ خدماتی
-            if 'not_stop_any_service' in form_data:
-                request_instance.not_stop_any_service = form_data['not_stop_any_service']
-            # برنامه بازگشت وجود دارد
-            if 'has_role_back_plan' in form_data:
-                request_instance.has_role_back_plan = form_data['has_role_back_plan']
-            # توضیحات برنامه بازگشت
-            if 'role_back_plan_description' in form_data:
-                request_instance.role_back_plan_description = form_data['role_back_plan_description']
-            # الزام قانونی
-            if 'reason_regulatory' in form_data:
-                request_instance.reason_regulatory = form_data['reason_regulatory']
-            # الزام فنی
-            if 'reason_technical' in form_data:
-                request_instance.reason_technical = form_data['reason_technical']
-            # الزام امنیتی
-            if 'reason_security' in form_data:
-                request_instance.reason_security = form_data['reason_security']
-            # الزام کسب و کاری
-            if 'reason_business' in form_data:
-                request_instance.reason_business = form_data['reason_business']
-            # سایر الزامات
-            if 'reason_other' in form_data:
-                request_instance.reason_other = form_data['reason_other']
-            # توضیحات الزامات دیگر
-            if 'reason_other_description' in form_data:
-                request_instance.reason_other_description = form_data['reason_other_description']
-
-            # به‌روزرسانی و درج رکوردهای جداول وابسته مانند RequestCorp
-            error_message = []
-            # مثال برای جدول RequestCorp
-            # فرض: اطلاعات رکورد RequestCorp در form_data['request_corp'] به صورت دیکشنری است (نه لیست)
-            # جدول RequestCorp: شرکت‌های مرتبط با درخواست تغییر
-            try:
-                request_corp_data = form_data.get('corps')
-                if request_corp_data is not None:
-                    for corp_item in request_corp_data:
-                        corp_id = corp_item.get('id')
-                        is_deleted = corp_item.get('is_deleted', False)
-                        if corp_id:
-                            corp_instance = m.RequestCorp.objects.filter(id=corp_id, request=request_instance).first()
-                            if corp_instance:
-                                if is_deleted:
-                                    corp_instance.delete()
-                                else:
-                                    if 'corp_code' in corp_item:
-                                        corp_instance.corp_code_id = corp_item['corp_code']
-                                    corp_instance.save()
-                        else:
-                            if not is_deleted:
-                                corp_code = corp_item.get('corp_code')
-                                if corp_code is not None:
-                                    corp_obj = m.Corp.objects.filter(pk=corp_code).first()
-                                    if corp_obj is not None:
-                                        m.RequestCorp.objects.create(
-                                            corp_code=corp_obj,
-                                            request=request_instance
-                                        )
-                                    else:
-                                        error_message.append(f'کد شرکت {corp_code} معتبر نیست')
-            except Exception as e:
-                error_message.append(f'خطا در پردازش شرکت‌ها: {str(e)}')
-
-            # جدول RequestSystem: سامانه‌های مرتبط با درخواست تغییر
-            try:
-                request_system_data = form_data.get('teams')
-                if request_system_data is not None:
-                    for sys_item in request_system_data:
-                        sys_id = sys_item.get('id')
-                        is_deleted = sys_item.get('is_deleted', False)
-                        if sys_id:
-                            sys_instance = m.RequestSystem.objects.filter(id=sys_id, request=request_instance).first()
-                            if sys_instance:
-                                if is_deleted:
-                                    sys_instance.delete()
-                                else:
-                                    # کد سامانه
-                                    if 'system_code' in sys_item:
-                                        # verbose_name: 'کد سامانه'
-                                        sys_instance.system_code = sys_item['system_code']
-                                    # نام سامانه
-                                    if 'system_name' in sys_item:
-                                        # verbose_name: 'نام سامانه'
-                                        sys_instance.system_name = sys_item['system_name']
-                                    # توضیحات
-                                    if 'description' in sys_item:
-                                        # verbose_name: 'توضیحات'
-                                        sys_instance.description = sys_item['description']
-                                    sys_instance.save()
-                        else:
-                            if not is_deleted:
-                                create_fields = {}
-                                # کد سامانه
-                                if 'system_code' in sys_item:
-                                    # verbose_name: 'کد سامانه'
-                                    create_fields['system_code'] = sys_item['system_code']
-                                # نام سامانه
-                                if 'system_name' in sys_item:
-                                    # verbose_name: 'نام سامانه'
-                                    create_fields['system_name'] = sys_item['system_name']
-                                # توضیحات
-                                if 'description' in sys_item:
-                                    # verbose_name: 'توضیحات'
-                                    create_fields['description'] = sys_item['description']
-                                create_fields['request'] = request_instance
-                                m.RequestSystem.objects.create(**create_fields)
-            except Exception as e:
-                error_message.append(f'خطا در پردازش سامانه‌ها: {str(e)}')
-
-            # جدول RequestDatabase: پایگاه‌های داده مرتبط با درخواست تغییر
-            try:
-                request_database_data = form_data.get('request_database')
-                if request_database_data is not None:
-                    for db_item in request_database_data:
-                        db_id = db_item.get('id')
-                        is_deleted = db_item.get('is_deleted', False)
-                        if db_id:
-                            db_instance = m.RequestDatabase.objects.filter(id=db_id, request=request_instance).first()
-                            if db_instance:
-                                if is_deleted:
-                                    db_instance.delete()
-                                else:
-                                    # کد پایگاه داده
-                                    if 'database_code' in db_item:
-                                        # verbose_name: 'کد پایگاه داده'
-                                        db_instance.database_code = db_item['database_code']
-                                    # نام پایگاه داده
-                                    if 'database_name' in db_item:
-                                        # verbose_name: 'نام پایگاه داده'
-                                        db_instance.database_name = db_item['database_name']
-                                    # توضیحات
-                                    if 'description' in db_item:
-                                        # verbose_name: 'توضیحات'
-                                        db_instance.description = db_item['description']
-                                    db_instance.save()
-                        else:
-                            if not is_deleted:
-                                create_fields = {}
-                                # کد پایگاه داده
-                                if 'database_code' in db_item:
-                                    # verbose_name: 'کد پایگاه داده'
-                                    create_fields['database_code'] = db_item['database_code']
-                                # نام پایگاه داده
-                                if 'database_name' in db_item:
-                                    # verbose_name: 'نام پایگاه داده'
-                                    create_fields['database_name'] = db_item['database_name']
-                                # توضیحات
-                                if 'description' in db_item:
-                                    # verbose_name: 'توضیحات'
-                                    create_fields['description'] = db_item['description']
-                                create_fields['request'] = request_instance
-                                m.RequestDatabase.objects.create(**create_fields)
-            except Exception as e:
-                error_message.append(f'خطا در پردازش پایگاه‌های داده: {str(e)}')
-
-            # جدول RequestNotifyGroup: گروه‌های اطلاع‌رسانی مرتبط با درخواست تغییر
-            try:
-                request_notify_group_data = form_data.get('request_notify_groups')
-                if request_notify_group_data is not None:
-                    for ng_item in request_notify_group_data:
-                        ng_id = ng_item.get('id')
-                        is_deleted = ng_item.get('is_deleted', False)
-                        if ng_id:
-                            ng_instance = m.RequestNotifyGroup.objects.filter(id=ng_id, request=request_instance).first()
-                            if ng_instance:
-                                if is_deleted:
-                                    ng_instance.delete()
-                                else:
-                                    # کد گروه اطلاع‌رسانی
-                                    if 'notify_group_code' in ng_item:
-                                        # verbose_name: 'کد گروه اطلاع‌رسانی'
-                                        ng_instance.notify_group_code = ng_item['notify_group_code']
-                                    # نام گروه اطلاع‌رسانی
-                                    if 'notify_group_name' in ng_item:
-                                        # verbose_name: 'نام گروه اطلاع‌رسانی'
-                                        ng_instance.notify_group_name = ng_item['notify_group_name']
-                                    # توضیحات
-                                    if 'description' in ng_item:
-                                        # verbose_name: 'توضیحات'
-                                        ng_instance.description = ng_item['description']
-                                    ng_instance.save()
-                        else:
-                            if not is_deleted:
-                                create_fields = {}
-                                # کد گروه اطلاع‌رسانی
-                                if 'notify_group_code' in ng_item:
-                                    # verbose_name: 'کد گروه اطلاع‌رسانی'
-                                    create_fields['notify_group_code'] = ng_item['notify_group_code']
-                                # نام گروه اطلاع‌رسانی
-                                if 'notify_group_name' in ng_item:
-                                    # verbose_name: 'نام گروه اطلاع‌رسانی'
-                                    create_fields['notify_group_name'] = ng_item['notify_group_name']
-                                # توضیحات
-                                if 'description' in ng_item:
-                                    # verbose_name: 'توضیحات'
-                                    create_fields['description'] = ng_item['description']
-                                create_fields['request'] = request_instance
-                                m.RequestNotifyGroup.objects.create(**create_fields)
-            except Exception as e:
-                error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی: {str(e)}')
-
-            # جدول RequestTask: تسک‌های مرتبط با درخواست تغییر
-            try:
-                request_task_data = form_data.get('request_tasks')
-                if request_task_data is not None:
-                    for task_item in request_task_data:
-                        task_id = task_item.get('id')
-                        is_deleted = task_item.get('is_deleted', False)
-                        if task_id:
-                            task_instance = m.RequestTask.objects.filter(id=task_id, request=request_instance).first()
-                            if task_instance:
-                                if is_deleted:
-                                    task_instance.delete()
-                                else:
-                                    # شناسه تسک
-                                    if 'task' in task_item:
-                                        # verbose_name: 'شناسه تسک'
-                                        task_instance.task_id = task_item['task']
-                                    # وضعیت
-                                    if 'status' in task_item:
-                                        # verbose_name: 'وضعیت'
-                                        task_instance.status = task_item['status']
-                                    # توضیحات
-                                    if 'description' in task_item:
-                                        # verbose_name: 'توضیحات'
-                                        task_instance.description = task_item['description']
-                                    task_instance.save()
-                        else:
-                            if not is_deleted:
-                                create_fields = {}
-                                # شناسه تسک
-                                if 'task' in task_item:
-                                    # verbose_name: 'شناسه تسک'
-                                    create_fields['task_id'] = task_item['task']
-                                # وضعیت
-                                if 'status' in task_item:
-                                    # verbose_name: 'وضعیت'
-                                    create_fields['status'] = task_item['status']
-                                # توضیحات
-                                if 'description' in task_item:
-                                    # verbose_name: 'توضیحات'
-                                    create_fields['description'] = task_item['description']
-                                create_fields['request'] = request_instance
-                                m.RequestTask.objects.create(**create_fields)
-            except Exception as e:
-                error_message.append(f'خطا در پردازش تسک‌های درخواست: {str(e)}')
-
-
-            except Exception as e:
-                error_message.append(f'خطا در پردازش گروه‌های اطلاع‌رسانی نوع درخواست: {str(e)}')
-
-            # جدول RequestTask_ChangeType: تسک‌های نوع درخواست تغییر
-            try:
-                request_task_changetype_data = form_data.get('request_task_changetypes')
-                if request_task_changetype_data is not None:
-                    for tct_item in request_task_changetype_data:
-                        tct_id = tct_item.get('id')
-                        is_deleted = tct_item.get('is_deleted', False)
-                        if tct_id:
-                            tct_instance = m.RequestTask_ChangeType.objects.filter(id=tct_id, task__request=request_instance).first()
-                            if tct_instance:
-                                if is_deleted:
-                                    tct_instance.delete()
-                                else:
-                                    for field, value in tct_item.items():
-                                        if field not in ['id', 'task', 'is_deleted'] and hasattr(tct_instance, field):
-                                            setattr(tct_instance, field, value)
-                                    tct_instance.save()
-                        else:
-                            if not is_deleted:
-                                create_fields = {k: v for k, v in tct_item.items() if k not in ['id', 'is_deleted']}
-                                # باید task را به صورت صحیح مقداردهی کنید
-                                m.RequestTask_ChangeType.objects.create(**create_fields)
-            except Exception as e:
-                error_message.append(f'خطا در پردازش تسک‌های نوع درخواست: {str(e)}')
-
-
-            request_instance.last_modifier_user_id = current_user_nationalcode
-            request_instance.save()
-
-            return {"success": True, "message": "درخواست با موفقیت به‌روزرسانی شد"}
-
-        except Exception as e:
-            return {"success": False, "message": f"خطا در به‌روزرسانی درخواست: {str(e)}"}
-
+        result = self.obj_form_manager.update_record(request_changetype='R', form_data=form_data, id=self.request_id, current_user_nationalcode=current_user_nationalcode)
+        if not result.get('success',False):
+            return result
+        
+        # باید نسخه جاری را با نسخه ذخیره شده عوض کنیم
+        self.request_instance.refresh_from_db() 
+        
+        return {"success": True, "message": "اطلاعات با موفقیت به روزرسانی شد"}
 
     def send_cartable(self, from_user: str, to_user: str, doc_state: str):
         """
@@ -3886,7 +4330,7 @@ class Request:
                     extra_info.filter(extra_info__Code__startswith='Database_').values_list('extra_info__Code', flat=True)
                 )
                 data["system_services_selected"] = list(
-                    extra_info.filter(extra_info__Code__startswith='SystemsServices_').values_list('extra_info__Code', flat=True)
+                    extra_info.filter(extra_info__Code__startswith='SystemServices_').values_list('extra_info__Code', flat=True)
                 )
 
                 # اطلاعات تیم های مرتبط
@@ -4639,9 +5083,9 @@ class Request:
 #         errors.append("کد ملی کاربر کمیته نامعتبر است.")
 
 #     if not form_data.get('committee_user_nationalcode'):
-#         committee_user_nationalcode = m.Committee.objects.filter(id=form_data['committee']).values('administrator_nationalCode').first()
+#         committee_user_nationalcode = m.Committee.objects.filter(id=form_data['committee']).values('administrator_nationalcode').first()
 #         if committee_user_nationalcode:
-#             form_data['committee_user_nationalcode'] = committee_user_nationalcode['administrator_nationalCode']
+#             form_data['committee_user_nationalcode'] = committee_user_nationalcode['administrator_nationalcode']
 #         # حالتی است که مدیر کاربر پیدا نشده است
 #         else:
 #             errors.append("امکان تشخیص دادن کاربر کمیته وجود ندارد")

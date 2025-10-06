@@ -215,7 +215,7 @@ class Committee(models.Model):
     ولی در صورت نیاز باید سوابق تغییرات دبیرکمیته در یک جدول دیگر ذخیره شود
     """
     title = models.CharField(max_length=50, verbose_name='عنوان کمیته', null=False)
-    administrator_nationalCode = models.ForeignKey(to='User', on_delete=models.SET_NULL, 
+    administrator_nationalcode = models.ForeignKey(to='User', on_delete=models.SET_NULL, 
                                             related_name='administrator', null=True,
                                             db_column='administrator_nationalcode',
                                             verbose_name='کد ملی دبیر کمیته')
@@ -747,7 +747,7 @@ class RequestTask(models.Model):
         ('FINISH', 'انجام موفق'),
         ('FAILED', 'انجام ناموفق'),
     ]
-    status_code = models.CharField(max_length=6, verbose_name='وضعیت تسک' , choices=STATUS_CHOICES)
+    status_code = models.CharField(max_length=6, verbose_name='وضعیت تسک' , choices=STATUS_CHOICES, default='DEFINE')
     
     class Meta:
         verbose_name = 'تسک درخواست'

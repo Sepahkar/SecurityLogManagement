@@ -96,6 +96,7 @@
         <div class="row mt-4 form-button">
             <div class="col-12">
                 {% comment %} mode = {{ mode }} {% endcomment %}
+                <input type="hidden" name="action" value=""/>
                 {%if not is_task %}
                     {% if mode == 'UPDATE' %}
                         <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>

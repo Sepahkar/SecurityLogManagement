@@ -104,7 +104,7 @@ function addUserBadge(user_national_code, username, fullname, taskId, roleId, te
 
 // Function to get all users for a specific task and role
 function getUsersForTask(taskId, role) {
-    const container = document.querySelector(`.users-container[data-task-id="${taskId}"][data-role="${role}"]`);
+    const container = document.querySelector('.users-container[data-task-id="${taskId}"][data-role="${role}"]');
     const users = [];
     
     container.querySelectorAll('.user-badge:not(.hidden)').forEach(function(badge) {
@@ -127,7 +127,7 @@ function getAllUserChanges() {
     document.querySelectorAll('.users-container').forEach(function(container) {
         const taskId = container.getAttribute('data-task-id');
         const role = container.getAttribute('data-role');
-        const key = `${taskId}_${role}`;
+        const key = '${taskId}_${role}';
         
         changes[key] = {
             taskId: taskId,
@@ -368,7 +368,7 @@ function showTaskSelector() {
     // Create modal or dropdown for task selection
     const modal = document.createElement('div');
     modal.className = 'task-selector-modal';
-    modal.innerHTML = `
+    modal.innerHTML = '
         <div class="modal-content">
             <div class="modal-header">
                 <h5>انتخاب تسک جدید</h5>
@@ -378,7 +378,7 @@ function showTaskSelector() {
                 <select class="form-select" id="new-task-select">
                     <option value="">انتخاب تسک...</option>
                     ${availableTasks.map(task => 
-                        `<option value="${task.id}">${task.title}</option>`
+                        '<option value="${task.id}">${task.title}</option>'
                     ).join('')}
                 </select>
             </div>
@@ -387,11 +387,11 @@ function showTaskSelector() {
                 <button type="button" class="btn btn-secondary" id="cancel-add-task">انصراف</button>
             </div>
         </div>
-    `;
+    ';
     
     // Add modal styles
     const style = document.createElement('style');
-    style.textContent = `
+    style.textContent = '
         .task-selector-modal {
             position: fixed;
             top: 0;
@@ -429,7 +429,7 @@ function showTaskSelector() {
         .modal-footer button {
             margin-left: 10px;
         }
-    `;
+    ';
     document.head.appendChild(style);
     
     document.body.appendChild(modal);
@@ -478,7 +478,7 @@ function addNewTask(task) {
     const newRow = document.createElement('tr');
     newRow.setAttribute('data-task-id', task.id);
     newRow.setAttribute('data-new-task', 'true');
-    newRow.innerHTML = `
+    newRow.innerHTML = '
         <td>${task.title}</td>
         <td>
             <div class="users-container" data-task-id="${task.id}" data-role="E">
@@ -515,7 +515,7 @@ function addNewTask(task) {
                 </button>
             </div>
         </td>
-    `;
+    ';
     
     tbody.appendChild(newRow);
 
@@ -793,7 +793,7 @@ function validateCompleteForm() {
     const requiredFields = document.querySelectorAll('.required');
     requiredFields.forEach(function(field) {
         if (!field.value.trim()) {
-            errors.push(`فیلد ${field.getAttribute('data-field-name') || field.name} الزامی است`);
+            errors.push('فیلد ${field.getAttribute('data-field-name') || field.name} الزامی است');
         }
     });
     
@@ -1010,9 +1010,9 @@ function form_validation() {
         errors.push("لطفا نوع تغییر را مشخص کنید.");
     }
 
-    if (!$('input[name="change_location_DataCenter"]').is(':checked') && 
-        !$('input[name="change_location_Database"]').is(':checked') && 
-        !$('input[name="change_location_SystemsServices"]').is(':checked') &&
+    if (!$('input[name="change_location_data_center"]').is(':checked') && 
+        !$('input[name="change_location_database"]').is(':checked') && 
+        !$('input[name="change_location_systems"]').is(':checked') &&
         !$('input[name="change_location_other"]').is(':checked')) {
         errors.push("لطفا یکی از گزینه های محل تغییر را انتخاب کنید");
     }
@@ -1505,7 +1505,46 @@ function FetchData(jsonData) {
         $('input[name="ReasonOtherDescription"]').val(jsonData.reasonOtherDescription);
     }
 }
-
+function AJAX_call(url, data, on_success, on_error)
+{
+    const message_manager_obj = new message_manager();
+    const csrftoken = getCookie('csrftoken');
+    // فراخوانی سرور  
+    $.ajax({
+        url: url,
+        type: 'POST', // در jQuery بهتر است از type به جای method استفاده شود
+        data: data,
+        headers: { "X-CSRFToken": csrftoken },
+        success: function(response) {
+            if (response && response.success) {
+                if (typeof on_success === "function") {
+                    on_success(response);
+                }
+            } else {
+                let msg = 'خطا: ';
+                if (response && response.message) {
+                    msg += response.message;
+                } else {
+                    msg += 'پاسخ نامعتبر از سرور دریافت شد.';
+                }
+                message_manager_obj.showErrorMessage(msg);
+                if (typeof on_error === "function") {
+                    on_error(response);
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            let errorMessage = 'خطا در ارتباط با سرور: ' + xhr.status + " - " + error;
+            if (xhr.responseText) {
+                errorMessage += "\nاطلاعات سرور:\n" + xhr.responseText;
+            }
+            message_manager_obj.showErrorMessage(errorMessage);
+            if (typeof on_error === "function") {
+                on_error(xhr);
+            }
+        }
+    });
+}
 
 /**
  * مدیریت کاربران تسک
@@ -1533,7 +1572,7 @@ function task_user_management(select_obj, operation_type, on_success)
         // شناسه تیم کاربر
         const teamCode = select_obj.data('team-code');
 
-        const message_manager_obj = new message_manager()
+
 
         const data = {
             operation_type: operation_type,//برای اضافه کردن کاربر جدید به تسک
@@ -1543,6 +1582,8 @@ function task_user_management(select_obj, operation_type, on_success)
             role_code: role_type_code,
         }
         console.log(data)
+
+
 
         url = '/ConfigurationChangeRequest/task-user/' + request_taskId  +'/';
         console.log('url:'+url)
@@ -1572,78 +1613,76 @@ function task_management(select_obj, operation_type, on_success)
         AJAX_call(url,data,on_success)
     }
 }
+            // تابع کمکی برای ساخت سلول کاربران (مجری یا تستر)
+            function buildUserCellHtml(data, role) {
+                // role: 'E' برای مجری، 'T' برای تستر
+                var users = (role === 'E') ? data.executors : data.testers;
+                var roleTitle = (role === 'E') ? 'مجری' : 'تستر';
+                var usersHtml = '';
+                if (users && users.length > 0) {
+                    usersHtml = users.map(function(user) {
+                        return (
+                            '<div class="user-badge" data-user-id="' + user.national_code + '">' +
+                                '<img class="person-small-avatar" src="/static/ConfigurationChangeRequest/images/personnel/' + ((user.username || '').split('@')[0]) + '.jpg"' +
+                                    ' alt="' + (user.fullname || '') + '" title="' + (user.fullname || '') + '"' +
+                                    ' onerror="this.src=\'/static/ConfigurationChangeRequest/images/Avatar.png\';" />' +
+                                '<i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر"' +
+                                    ' data-task-id="' + data.id + '" data-user-natioalcode="' + user.national_code + '"' +
+                                    ' data-role-id="' + user.role_id + '" data-team-code="' + user.team_code + '"></i>' +
+                            '</div>'
+                        );
+                    }).join('');
+                } else {
+                    usersHtml = '<span class="text-muted">هیچ ' + roleTitle + 'ی تعریف نشده</span>';
+                }
 
-    // تابع کمکی برای ساخت سلول کاربران (مجری یا تستر)
-function buildUserCellHtml(data, users, role) 
-{
-    // role: 'E' برای مجری، 'T' برای تستر
+                // ساخت گزینه‌های سلکتور کاربران
+                var selectorOptions = (data.user_team_roles || []).map(function(utr) {
+                    return (
+                        '<option value="' + utr.national_code + '" data-username="' + utr.username + '" data-fullname="' + utr.fullname + '" data-team-code="' + utr.team_code + '" data-role-id="' + utr.role_id + '">' +
+                            utr.fullname + ' (' + utr.role_id + ' تیم ' + utr.team_code + ')' +
+                        '</option>'
+                    );
+                }).join('');
 
-    var roleTitle = (role === 'E') ? 'مجری' : 'تستر';
-    var usersHtml = '';
-
-    if (users && users.length > 0) 
-        {
-        usersHtml = users.map(function(user) {
-            return (
-                '<div class="user-badge" data-user-id="' + user.national_code + '">' +
-                    '<img class="person-small-avatar" src="/static/ConfigurationChangeRequest/images/personnel/' + ((user.username || '').split('@')[0]) + '.jpg"' +
-                        ' alt="' + (user.fullname || '') + '" title="' + (user.fullname || '') + '"' +
-                        ' onerror="this.src=\'/static/ConfigurationChangeRequest/images/Avatar.png\';" />' +
-                    '<i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر"' +
-                        ' data-task-id="' + data.id + '" data-user-natioalcode="' + user.national_code + '"' +
-                        ' data-role-id="' + user.role_id + '" data-team-code="' + user.team_code + '"></i>' +
-                '</div>'
-            );
-            }).join('');
-        } 
-        else 
-        {
-        usersHtml = '<span class="text-muted">هیچ ' + roleTitle + 'ی تعریف نشده</span>';
-        }
-
-    // ساخت گزینه‌های سلکتور کاربران
-    var selectorOptions = (data.user_team_roles || []).map(function(utr) {
-        return (
-            '<option value="' + utr.national_code + '" data-username="' + utr.username + '" data-fullname="' + utr.fullname + '" data-team-code="' + utr.team_code + '" data-role-id="' + utr.role_id + '">' +
-                utr.fullname + ' (' + utr.role_id + ' تیم ' + utr.team_code + ')' +
-            '</option>'
-        );
-    }).join('');
-
-    // ساخت کل سلول
-    var cellHtml =
-        '<td>' +
-            '<div class="users-container" data-request-task-id="' + data.id + '" data-role="' + role + '">' +
-                usersHtml +
-                '<div class="add-user-btn" data-task-id="' + data.task.id + '" data-role="' + role + '" title="اضافه کردن ' + roleTitle + '">' +
-                    '<i class="fas fa-plus"></i>' +
-                '</div>' +
-                '<div class="user-selector" style="display: none;">' +
-                    '<select class="form-select user-combo" data-task-id="' + data.task.id + '" data-role="' + role + '" data-request-task-id="' + data.id + '">' +
-                        '<option value="">انتخاب کاربر...</option>' +
-                        selectorOptions +
-                    '</select>' +
-                '</div>' +
-            '</div>' +
-        '</td>';
-    return cellHtml;
-}
+                // ساخت کل سلول
+                var cellHtml =
+                    '<td>' +
+                        '<div class="users-container" data-request-task-id="' + data.id + '" data-role="' + role + '">' +
+                            usersHtml +
+                            '<div class="add-user-btn" data-task-id="' + data.task.id + '" data-role="' + role + '" title="اضافه کردن ' + roleTitle + '">' +
+                                '<i class="fas fa-plus"></i>' +
+                            '</div>' +
+                            '<div class="user-selector" style="display: none;">' +
+                                '<select class="form-select user-combo" data-task-id="' + data.task.id + '" data-role="' + role + '" data-request-task-id="' + data.id + '">' +
+                                    '<option value="">انتخاب کاربر...</option>' +
+                                    selectorOptions +
+                                '</select>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>';
+                return cellHtml;
+            }
 
 $(document).ready(function() {
+    console.log('request-full.js loaded successfully!');  
+
     // مقداردهی سبک و سریع: داده‌ها را همگام می‌کنیم تا ورودی‌های مخفی به‌روز باشند
     try { updateTaskData(); updateNotificationDataInForm(); } catch (e) {}
 
     // Initialize Select2 on user combo selects
-    $('.user-combo').select2({
-        placeholder: "انتخاب کاربر...",
-        allowClear: true,
-        width: '100%'
-    }).on('select2:close', function() {
+    $('.user-combo').select2
+        ({
+            placeholder: "انتخاب کاربر...",
+            allowClear: true,
+            width: '100%'
+        }).on('select2:close', function() 
+        {
         const $container = $(this).closest('.users-container');
         $container.find('.user-selector').hide();
         $container.find('.add-user-btn').css('display', 'inline-block');
         $(this).val('').trigger('change');
-    });
+        });
 
     // اضافه کردن رویداد برای Ctrl + S
     $(document).on('keydown', function(e) {
@@ -1690,50 +1729,33 @@ $(document).ready(function() {
 
     });
 
-
     // رویداد نمایش سلکتور افزودن تسک (delegated)
     $(document).on('click', '#add-task-btn', function(e) {
         // کومبوی لیست تسک ها را نشان می دهیم
-        $(this).next('select[name="task-list"]').show()
+        $(this).nexts('select[name="task-list"]').show()
     });
 
     // رویداد نمایش سلکتور انتخاب تسک جدید (delegated)
     $(document).on('change', '#task-list', function(e) {
         // کومبوی لیست تسک ها را نشان می دهیم
         const select_obj = $(this).find('option:selected');
-
-        // اول باید کنترل کنیم که این تسک تکراری نباشد
-        var isDuplicate = false;
-        $('#task-table tr').each(function() {
-            if ($(this).data('task-id') == select_obj.val()) {
-                isDuplicate = true;
-                return false; // break loop
-            }
-        });
-        if (isDuplicate) {
-            const message_manager_obj = new message_manager();            
-            message_manager_obj.showErrorMessage('امکان اضافه کردن تسک تکراری وجود ندارد.<br/> لطفا یک تسک دیگر را انتخاب کنید');
-            return;
-        }
-
         task_management(select_obj,'A', 
         function(data)
         {
             // اگر درست باشد باید این کارها را انجام دهیم
-            // 1- کومبوی لیست تسک ها را مخفی کنیم
+            // 1- کومبوی لیست تسک ها را پاک کنیم
             $("#task-list").hide()
-            
             // 2- هر td را جدا تعریف می‌کنیم و برای سلول مجریان و تسترها از یک تابع مشترک استفاده می‌کنیم
 
 
             // ستون عنوان تسک
-            var tdTitle = '<td>' + (data.task_title || '') + '</td>';
+            var tdTitle = '<td>' + (data.task.title || '') + '</td>';
 
             // ستون مجریان (Executors)
-            var tdExecutors = buildUserCellHtml(data, data.executors, 'E');
+            var tdExecutors = buildUserCellHtml(data, 'E');
 
             // ستون تسترها (Testers)
-            var tdTesters = buildUserCellHtml(data, data.testers, 'T');
+            var tdTesters = buildUserCellHtml(data, 'T');
 
             // ستون عملیات (Actions)
             var tdActions =
@@ -1841,7 +1863,7 @@ $(document).ready(function() {
             ActiveInActiveImages($(this).find('img'), 'active')
             $(this).removeClass('inactive').addClass('active')
             $(this).find('input[type="radio"]').prop('checked', true);
-        })
+    })
 
 
     $('.check-list-detail img').click(
@@ -1867,7 +1889,7 @@ $(document).ready(function() {
                 ActiveInActiveImages($(this), 'active')
                 check_list_box.parents('.content-row').find('.check-list-main-checkbox input[type="checkbox"]').prop('checked', true);
             }
-        });
+    });
         // مربوط به لیست شرکت ها و لیست تیم ها
     $('.change-team-corp .icon-list img').click(
         function()
@@ -1876,19 +1898,19 @@ $(document).ready(function() {
             if ($(this).hasClass('active'))
                 {
                     $(this).removeClass('active').addClass('inactive')
-                    $(this).prevAll('input[type="checkbox"]').first().prop('checked', false);
+                    $(this).prev('input[type="checkbox"]').prop('checked', false);
                 }
                 else
                 {
                     $(this).removeClass('inactive').addClass('active')
-                    $(this).prevAll('input[type="checkbox"]').first().prop('checked', true);
+                    $(this).prev('input[type="checkbox"]').prop('checked', true);
                 } 
             // در پایان باید کنترل کنیم که اگر تیمی/شرکتی انتخاب نشده باشد، چک باکس مربوطه را انتخاب کرده و یا از حالت انتخاب خارج کنیم
             if ($('.change-team-corp .icon-list img.inactive').length == 0)
                 $(this).parent().parent().find('.team-corp-checkbox').prop('checked', true)
             else
                 $(this).parent().parent().find('.team-corp-checkbox').prop('checked', false)
-        });
+    });
 
     $('.change-team-corp .team-corp-checkbox').click(function()
     {
@@ -1972,7 +1994,7 @@ $(document).ready(function() {
                 })
                 $(this).find('.team-corp-checkbox.team').prop('checked', false)
             }
-        });
+    });
     $('.corp-icons img').click(function () {
         if ($(this).hasClass('active'))
             ActiveInActiveImages($(this), 'active')
@@ -2267,107 +2289,107 @@ function reject()
 }
 
 
-function confirm() {
-    return new Promise(function(on_success,  on_failure) 
-    {
-    var error_message = []
-    //اگر مدیر باشد نیازی به ورود اطلاعات ندارد
-    //اگر کاربر کمیته باشد باید فیلدهای کاربر کمیته بررسی شوند
-    // if (request_status == 'COMITE')
-    // {
-    //     error_message = form_validation_committee()
-    // }
-    //اگر کاربر مجری باشد، باید فیلدهای کاربر مجری بررسی شوند
-    if (request_status == 'EXECUT')
-    {
-        error_message = form_validation_executor()
-    }
-    //اگر کاربر تستر باشد، باید فیلدهای کاربر تستر بررسی شوند
-    else if (request_status == 'TESTER')
-    {
-        error_message = form_validation_tester()
-    }
-    
+// function confirm() {
+//     return new Promise(function(on_success,  on_failure) 
+//     {
+//         var error_message = []
+//         //اگر مدیر باشد نیازی به ورود اطلاعات ندارد
+//         //اگر کاربر کمیته باشد باید فیلدهای کاربر کمیته بررسی شوند
+//         // if (request_status == 'COMITE')
+//         // {
+//         //     error_message = form_validation_committee()
+//         // }
+//         //اگر کاربر مجری باشد، باید فیلدهای کاربر مجری بررسی شوند
+//         if (request_status == 'EXECUT')
+//         {
+//             error_message = form_validation_executor()
+//         }
+//         //اگر کاربر تستر باشد، باید فیلدهای کاربر تستر بررسی شوند
+//         else if (request_status == 'TESTER')
+//         {
+//             error_message = form_validation_tester()
+//         }
+        
 
-    // اگر خطا وجود دارد، نمایش پیام خطا
-    if (error_message.length > 0) {
-        $.alert({
-            title: 'خطا',
-            content: error_message.join('<br>'),
-        });
-        $('html, body').animate({
-            scrollTop: $(document).height()
-        }, 1000);
-        on_failure()
-        return; // جلوگیری از ادامه
-    }
-    
-    //شناسه درخواست را به دست می آوریم
-    var requestId = $('input[name="request_id"]').val();
-    
-    //به سراغ مرحله بعدی می رویم
-    var url = '/ConfigurationChangeRequest/request/next_step/' + requestId + '/CON/';
+//         // اگر خطا وجود دارد، نمایش پیام خطا
+//         if (error_message.length > 0) {
+//             $.alert({
+//                 title: 'خطا',
+//                 content: error_message.join('<br>'),
+//             });
+//             $('html, body').animate({
+//                 scrollTop: $(document).height()
+//             }, 1000);
+//             on_failure()
+//             return; // جلوگیری از ادامه
+//         }
+        
+//         //شناسه درخواست را به دست می آوریم
+//         var requestId = $('input[name="request_id"]').val();
+        
+//         //به سراغ مرحله بعدی می رویم
+//         var url = '/ConfigurationChangeRequest/request/next_step/' + requestId + '/CON/';
 
-    // جمع‌آوری داده‌های فرم
-    var formData = $('form').serialize();
+//         // جمع‌آوری داده‌های فرم
+//         var formData = $('form').serialize();
 
-    // ارسال درخواست AJAX
-    $.ajax({
-        url: url,
-        method: 'POST',
-        data: formData,
-        success: function(response) 
-        {
-            if (response.success) 
-            {
-                if (response.message)
-                    msg = response.message
-                else
-                    msg = 'اطلاعات با موفقیت ذخیره شده و فرم به مرحله بعدی ارسال شد'
-                
-                $.alert({
-                    title: 'ارسال موفقیت آمیز',
-                    content: msg,
-                    buttons: {
-                        confirm: {
-                            text: 'بستن',
-                            btnClass: 'btn-blue',
-                            action: function() {
-                                window.location.href = '/ConfigurationChangeRequest/request/view/'+response.request_id+'/';
-                            }
-                        }
-                    }});                                
-            } 
-            else 
-            {
-                // در صورت بروز خطا، پیام‌های خطا را نمایش دهید
-                var errorMessage = response.message;
-                $.alert({
-                    title: 'خطا',
-                    content: errorMessage,
-                });
-                on_failure()
-            }
-        },
-        error: function(xhr) 
-        {
-            // در صورت بروز خطا، پیام خطا را نمایش می‌دهیم
-            // ایجاد یک عنصر موقتی
-            var tempDiv = $('<div>').html(xhr.responseText);
+//         // ارسال درخواست AJAX
+//         $.ajax({
+//             url: url,
+//             method: 'POST',
+//             data: formData,
+//             success: function(response) 
+//             {
+//                 if (response.success) 
+//                 {
+//                     if (response.message)
+//                         msg = response.message
+//                     else
+//                         msg = 'اطلاعات با موفقیت ذخیره شده و فرم به مرحله بعدی ارسال شد'
+                    
+//                     $.alert({
+//                         title: 'ارسال موفقیت آمیز',
+//                         content: msg,
+//                         buttons: {
+//                             confirm: {
+//                                 text: 'بستن',
+//                                 btnClass: 'btn-blue',
+//                                 action: function() {
+//                                     window.location.href = '/ConfigurationChangeRequest/request/view/'+response.request_id+'/';
+//                                 }
+//                             }
+//                         }});                                
+//                 } 
+//                 else 
+//                 {
+//                     // در صورت بروز خطا، پیام‌های خطا را نمایش دهید
+//                     var errorMessage = response.message;
+//                     $.alert({
+//                         title: 'خطا',
+//                         content: errorMessage,
+//                     });
+//                     on_failure()
+//                 }
+//             },
+//             error: function(xhr) 
+//             {
+//                 // در صورت بروز خطا، پیام خطا را نمایش می‌دهیم
+//                 // ایجاد یک عنصر موقتی
+//                 var tempDiv = $('<div>').html(xhr.responseText);
 
-            // استخراج متن از div با شناسه summary
-            var errorMessage = tempDiv.find('#summary').text().trim(); // استفاده از #summary
-            $.alert({
-                title: 'خطا',
-                content: errorMessage,
-            });
-            on_failure()
-        }
-        });
-    
-    //در صورت موفقیت آمیز بودن
-    on_success
-})}
+//                 // استخراج متن از div با شناسه summary
+//                 var errorMessage = tempDiv.find('#summary').text().trim(); // استفاده از #summary
+//                 $.alert({
+//                     title: 'خطا',
+//                     content: errorMessage,
+//                 });
+//                 on_failure()
+//             }
+//             });
+        
+//         //در صورت موفقیت آمیز بودن
+//         on_success
+//     })}
 
 function return_form()
 {

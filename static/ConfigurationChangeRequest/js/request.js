@@ -179,6 +179,90 @@ function toggleFieldValidation(selector, isValid, errorMessage, showError) {
         return cookieValue;
     }
 
+
+    // helper: اطمینان از اینکه body شامل csrfmiddlewaretoken با مقدار cookie است
+    function ensureCSRFInData(data) {
+        const csrftoken = getCookie('csrftoken') || $('input[name="csrfmiddlewaretoken"]').val();
+    
+        // اگر فرم از نوع FormData است
+        if (typeof FormData !== 'undefined' && data instanceof FormData) {
+        data.set('csrfmiddlewaretoken', csrftoken);
+        return { data, csrftoken, isFormData: true };
+        }
+    
+        // اگر data رشته serialize شده است (query string)
+        if (typeof data === 'string') {
+        // اگر پارامتر csrfmiddlewaretoken وجود دارد، مقدارش را جایگزین کن
+        if (/csrfmiddlewaretoken=/.test(data)) {
+            data = data.replace(/(csrfmiddlewaretoken=)[^&]*/, '$1' + encodeURIComponent(csrftoken));
+        } else {
+            // اضافه کن
+            if (data.length) data += '&';
+            data += 'csrfmiddlewaretoken=' + encodeURIComponent(csrftoken);
+        }
+        return { data, csrftoken, isFormData: false };
+        }
+    
+        // اگر data یک شیء جاوااسکریپتی است (برای JSON)
+        if (data && typeof data === 'object') {
+        data.csrfmiddlewaretoken = csrftoken;
+        return { data, csrftoken, isJSON: true };
+        }
+    
+        // fallback: هیچ داده‌ای نداریم — فقط هدر می‌فرستیم
+        return { data, csrftoken, isFormData: false };
+    }    
+
+    function AJAX_call(url, data, on_success, on_error)
+    {
+        const message_manager_obj = new message_manager();
+
+        // let csrftoken = $('input[name="csrfmiddlewaretoken"]').val() || getCookie('csrftoken');
+        
+        
+        // مشکل اینه که گاهی توکن موجود در بدنه درخواست با توکن موجود در هدر که از کوکی می خواند فرق می کند
+        // این اتفاق در درخواست های AJAX رخ می دهد
+        // بنابراین ما باید توکن را از بدنه درخواست حذف کنیم و فقط در هدر بفرستیم
+        const res = ensureCSRFInData(data);
+        const csrftoken = res.csrftoken;
+
+        // فراخوانی سرور  
+        $.ajax({
+            url: url,
+            type: 'POST', // در jQuery بهتر است از type به جای method استفاده شود
+            data: res.data,
+            headers: { "X-CSRFToken": csrftoken },
+            success: function(response) {
+                if (response && response.success) {
+                    if (typeof on_success === "function") {
+                        on_success(response);
+                    }
+                } else {
+                    let msg = 'خطا: ';
+                    if (response && response.message) {
+                        msg += response.message;
+                    } else {
+                        msg += 'پاسخ نامعتبر از سرور دریافت شد.';
+                    }
+                    message_manager_obj.showErrorMessage(msg);
+                    if (typeof on_error === "function") {
+                        on_error(response);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMessage = 'خطا در ارتباط با سرور: ' + xhr.status + " - " + error;
+                if (xhr.responseText) {
+                    errorMessage += "\nاطلاعات سرور:\n" + xhr.responseText;
+                }
+                message_manager_obj.showErrorMessage(errorMessage);
+                if (typeof on_error === "function") {
+                    on_error(xhr);
+                }
+            }
+        });
+    }
+    
 // function handleFormSubmit(e, actionType = null) 
 // {
 
@@ -276,33 +360,24 @@ function handleFormSubmit(e, actionType = null) {
     // نمایش loading
     form_manager_obj.showLoading(actionType);
 
-    // داده‌های فرم
-    const formEl = $('#requestForm')[0];
-    const formData = new FormData(formEl);
 
     // تنظیم action
     const resolvedAction = actionType || 'start';
-    formData.set('action', resolvedAction);
+    // formData.set('action', resolvedAction);
+    $('#requestForm').find('input[name="action"]').val(resolvedAction);
+
+    // داده‌های فرم
+    const formEl = $('#requestForm')[0];
+    // const formData = new FormData(formEl);
+    const formData = $('#requestForm').serialize();
+
 
     // تنظیم URL (یا خالی برای URL فعلی یا از متغیر جنگو)
     const submitUrl = window.submitUrl || ''; // فرض می‌کنیم submitUrl توی HTML تعریف شده
-    // ارسال درخواست
-    fetch(submitUrl, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('خطا در ارتباط با سرور: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        form_manager_obj.hideLoading(actionType);
-        if (data.success) {
+
+    AJAX_call(submitUrl,formData,
+        function on_success(data)
+        {
             message_manager_obj.showSuccessMessage(data.message);
 
             if (data.request_id) {
@@ -310,18 +385,52 @@ function handleFormSubmit(e, actionType = null) {
                     window.location.href = window.location.origin + '/ConfigurationChangeRequest/' + data.request_id + '/';
                 }, 2000);
             }
-        } else {
-            message_manager_obj.showErrorMessage('خطا: ' + data.message);
-        }
-    })
-    .catch(error => {
-        form_manager_obj.hideLoading(actionType);
-        console.log('Error during fetch:', error);
-        message_manager_obj.showErrorMessage('خطا در ارسال درخواست: ' + error.message);
-    })
-    .finally(() => {
-        isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
-    });
+            isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
+
+        },
+        function on_error(data)
+        {
+            // message_manager_obj.showErrorMessage('خطا: ' + data.message);
+            isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
+        })
+
+
+    // // ارسال درخواست
+    // fetch(submitUrl, {
+    //     method: 'POST',
+    //     body: formData,
+    //     headers: {
+    //         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+    //     }
+    // })
+    // .then(response => {
+    //     if (!response.ok) {
+    //         throw new Error('خطا در ارتباط با سرور: ' + response.status);
+    //     }
+    //     return response.json();
+    // })
+    // .then(data => {
+    //     form_manager_obj.hideLoading(actionType);
+    //     if (data.success) {
+    //         message_manager_obj.showSuccessMessage(data.message);
+
+    //         if (data.request_id) {
+    //             setTimeout(() => {
+    //                 window.location.href = window.location.origin + '/ConfigurationChangeRequest/' + data.request_id + '/';
+    //             }, 2000);
+    //         }
+    //     } else {
+    //         message_manager_obj.showErrorMessage('خطا: ' + data.message);
+    //     }
+    // })
+    // .catch(error => {
+    //     form_manager_obj.hideLoading(actionType);
+    //     console.log('Error during fetch:', error);
+    //     message_manager_obj.showErrorMessage('خطا در ارسال درخواست: ' + error.message);
+    // })
+    // .finally(() => {
+    //     isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
+    // });
 }
 
 

@@ -13,17 +13,24 @@ urlpatterns = [
     # اضافه/حذف کردن مجری به/از یک درخواست
     path('task-user/<int:request_task_id>/', views.request_task_user_management, name='request_task_user_management'),
 
+    # اضافه/حذف کردن تسک به/از درخواست
+    path('<int:request_id>/task/<str:operation_type>/<int:task_id>/', views.request_task_management, name='request_task_management'),
+
     # لیست انواع درخواست
-    path('change_type/list/', views.change_type_list, name='change_type_list'),
+    path('change-type/list/', views.change_type_list, name='change_type_list'),
     
     #ویرایش  یک نوع درخواست با شناسه ارسال شده
-    path('change_type/<int:change_type_id>/',views.change_type_edit, name='change_type_edit'),
+    path('change-type/<int:change_type_id>/',views.change_type_edit, name='change_type_edit'),
         
     # ایجاد یک نوع درخواست
-    path('change_type/', views.change_type_create, name='change_type'),
+    path('change-type/', views.change_type_create, name='change_type'),
     
     # اضافه/حذف کردن مجری به/از یک نوع درخواست
-    path('change_type/task-user/<int:task_id>/', views.change_type_user_management, name='change_type_user_managment'),
+    path('change-type/task-user/<int:task_id>/', views.change_type_user_management, name='change_type_user_managment'),
+
+    # اضافه/حذف کردن تسک به/از درخواست
+    path('change-type/<int:change_type_id>/task/<str:operation_type>/<int:task_id>/', views.change_type_task_management, name='request_task_management'),
+
     
     # انتخاب تسک (برای مجری/تستر)
     path('task/select/<int:request_id>/<int:task_id>/', views.task_select_view, name='task_select'),

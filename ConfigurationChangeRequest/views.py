@@ -11,7 +11,7 @@ def get_current_user(request):
     if in_EIT:
         current_user = request.user.national_code
     else:
-        request_id = 89
+        request_id = 4
         from . import models as m
         objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         
@@ -19,7 +19,7 @@ def get_current_user(request):
             requestor = objRequest.requestor_nationalcode.national_code
             rel_manger = objRequest.related_manager_nationalcode.national_code
             manager = objRequest.direct_manager_nationalcode.national_code
-            commitee = objRequest.committee_user_nationalcode.national_code
+            commitee = objRequest.committee_user_nationalcode.national_code if objRequest.committee_user_nationalcode else None
             # استخراج همه تسک‌های مربوط به این درخواست
             tasks = m.RequestTask.objects.filter(request_id=request_id)
             Task = []
@@ -56,7 +56,9 @@ def get_current_user(request):
 
         # حالا بر اساس مرحله، کاربر جاری را مشخص می کنیم
         if objRequest:
-            if objRequest.status_code == 'DIRMAN':
+            if objRequest.status_code == 'DRAFTD':
+                current_user = requestor
+            elif objRequest.status_code == 'DIRMAN':
                 current_user = manager
             elif objRequest.status_code == 'RELMAN':
                 current_user = rel_manger
@@ -80,6 +82,9 @@ def get_current_user(request):
                     current_user = ''  # اگر تسک معتبری نبود
         else:     
             current_user = requestor
+
+    if not current_user:
+        current_user = requestor
 
     print(current_user)
     return current_user
@@ -162,19 +167,19 @@ def get_full_form_data(request,objFormManager :FormManager):
     #################################سطر دوم#############################
     #-----------------------------قسمت اول-----------------------------
     # محل تغییر
-    form_data['change_location_data_center'] = request.POST.get('change_location_data_center') == 'true'  # محل تغییر: مرکز داده (Boolean)
+    form_data['change_location_DataCenter'] = request.POST.get('change_location_DataCenter') == 'true'  # محل تغییر: مرکز داده (Boolean)
     form_data['extra_information'] = []
     # دریافت چک باکس‌های داینامیک برای DataCenter
     extra_information = objFormManager.get_dynamic_checkbox('DataCenter', request)
     form_data['extra_information'].extend(extra_information)                    
     
-    form_data['change_location_database'] = request.POST.get('change_location_database') == 'true'  # محل تغییر: پایگاه داده (Boolean)
+    form_data['change_location_Database'] = request.POST.get('change_location_Database') == 'true'  # محل تغییر: پایگاه داده (Boolean)
     extra_information = objFormManager.get_dynamic_checkbox('Database', request)
     form_data['extra_information'].extend(extra_information)                    
     
-    form_data['change_location_system_services'] = request.POST.get('change_location_system_services') == 'true'  # محل تغییر: سیستم‌ها (Boolean)
+    form_data['change_location_SystemServices'] = request.POST.get('change_location_SystemServices') == 'true'  # محل تغییر: سیستم‌ها (Boolean)
     # دریافت چک باکس‌های داینامیک برای SystemsServices
-    extra_information = objFormManager.get_dynamic_checkbox('SystemsServices', request)
+    extra_information = objFormManager.get_dynamic_checkbox('SystemServices', request)
     form_data['extra_information'].extend(extra_information)                    
 
     form_data['change_location_other'] = request.POST.get('change_location_other') == 'true'  # محل تغییر: سایر (Boolean)
@@ -363,7 +368,9 @@ def request_view(request, request_id):
                         return JsonResponse({'success': False, 'message': result['message']})        
 
             else:
-                return JsonResponse({'success': False, 'message': result['message']})        
+                return JsonResponse({'success': False, 'message': result['message']})     
+        else:
+            return JsonResponse({'success': False, 'message': result['message']})         
         
         
     # بارگذاری داده‌های فرم
@@ -609,6 +616,9 @@ def change_type_user_management(request, change_type_id:int)-> dict:
     user_role_id = request.POST.get('role_id', -1)
     user_team_code = request.POST.get('team_code', '')
     user_role_code = request.POST.get('role_code', 'E')
+    
+    # ########################################داده تستی باید اصلاح شود
+    task_id = 1
     
     obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
     result = obj_form_manager.task_user_management(task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'C')
