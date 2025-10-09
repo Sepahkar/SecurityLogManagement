@@ -279,7 +279,7 @@ def request_create(request):
             return JsonResponse({'success': False, 'message': validation_result['message']})
     
     # بارگذاری داده‌های فرم
-    data = form_manager.load_form_data(-1, current_user_nationalcode)
+    data = form_manager.get_form_data(-1, current_user_nationalcode)
     if data['success'] == False:
         return JsonResponse({'success': False, 'message': data['message']})
     
@@ -374,7 +374,7 @@ def request_view(request, request_id):
         
         
     # بارگذاری داده‌های فرم
-    data = form_manager.load_form_data(request_id, current_user_nationalcode)    
+    data = request_obj.load_record_data(request_id, current_user_nationalcode)    
 
     # اگر فرم درخواست ساده باشد
     if form == 'RequestSimple':
@@ -410,7 +410,7 @@ def request_full_view(request, request_id, data, readonly=False):
     """
     current_user_nationalcode =  get_current_user(request)
     form_manager = FormManager(current_user_nationalcode)
-    
+    request_obj: Request = None
     if request.method == 'POST':
         # دریافت اطلاعات فرم کامل
         form_data = request.POST.dict()
@@ -433,7 +433,7 @@ def request_full_view(request, request_id, data, readonly=False):
     
     # بارگذاری داده‌های فرم
     if not data:
-        data = form_manager.load_form_data(request_id, current_user_nationalcode)
+        data = request_obj.load_record_data(request_id, current_user_nationalcode)
     
     # اضافه کردن لیست کاربران برای کومبو
     if 'all_users' in data:
@@ -515,6 +515,31 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
 
 
 
+def request_notify_group_management(request, request_id:int, operation_type:str, notify_group_id:int)-> dict:
+    """
+    این تابع گروه های اطلاع رسانی ذیل یک درخواست را مدیریت می کند.
+
+    Args:
+        request (_type_): درخواست http
+        notify_group_id (int): شناسه گروه اطلاع رسانی مورد نظر 
+        request_id (int): شناسه  درخواست
+        operation_type (_type_): یکی از موارد زیر است:
+            A: برای اضافه کردن
+            D: برای حذف کردن
+    Return value:
+        یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+            {'success':, 'message':''}
+            success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+            message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+    
+    """
+    
+    current_user_national_code = get_current_user(request)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    result = obj_form_manager.notify_group_managment(request_id, notify_group_id, operation_type, 'R')
+    return JsonResponse(result)
+
+
 def request_task_management(request, request_id:int, operation_type:str, task_id:int)-> dict:
     """
     این تابع افراد ذیل یک تسک را مدیریت می کند.
@@ -566,6 +591,32 @@ def request_task_user_management(request, request_task_id:int)-> dict:
     obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
     result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
     return JsonResponse(result)
+
+
+def change_type_notify_group_management(request, change_type_id:int, operation_type:str, notify_group_id:int)-> dict:
+    """
+    این تابع گروه های اطلاع رسانی ذیل یک نوع درخواست را مدیریت می کند.
+
+    Args:
+        request (_type_): درخواست http
+        notify_group_id (int): شناسه تسک مورد نظر 
+        change_type_id (int): شناسه نوع درخواست
+        operation_type (_type_): یکی از موارد زیر است:
+            A: برای اضافه کردن
+            D: برای حذف کردن
+    Return value:
+        یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+            {'success':, 'message':''}
+            success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+            message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+    
+    """
+    
+    current_user_national_code = get_current_user(request)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    result = obj_form_manager.notify_group_managment(change_type_id, notify_group_id, operation_type, 'C')
+    return JsonResponse(result)
+
 
 
 def change_type_task_management(request, change_type_id:int, operation_type:str, task_id:int)-> dict:
@@ -630,16 +681,16 @@ def change_type_list(request):
     from . import models as m
     change_type_list = m.ChangeType.objects.all()
     data={'change_type_list':change_type_list}
-    return render(request, 'ConfigurationChangeRequest/changetype-list.html', data)
+    return render(request, 'ConfigurationChangeRequest/change-type-list.html', data)
 
 def change_type_create(request):
     pass
 
 def change_type_edit(request, change_type_id):
-    ...
+    data={'change_type_list':change_type_list}
+    return render(request, 'ConfigurationChangeRequest/change-type.html', data)
+
     
-
-
 def request_action_view(request, request_id, action):
     """
     عملیات روی درخواست (تایید/رد/بازگشت)

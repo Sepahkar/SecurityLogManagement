@@ -1392,3 +1392,219 @@ Traceback (most recent call last):
     raise TypeError(f'Object of type {o.__class__.__name__} '
                     f'is not JSON serializable')
 TypeError: Object of type QuerySet is not JSON serializable
+2025-10-07 00:27:03,918 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-07 00:27:39,402 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-07 00:27:56,300 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-07 15:21:16,511 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 15:21:56,063 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-07 15:22:56,124 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 15:23:02,812 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 15:23:09,135 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 15:23:19,207 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 15:29:34,609 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 16:56:54,210 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 16:57:02,061 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:04:21,923 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:05:24,211 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:05:32,946 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:10:41,824 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 17:13:18,651 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:13:23,134 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:14:36,338 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:14:40,540 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:14:48,795 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:17:14,828 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 17:19:58,979 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:20:59,652 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 17:22:10,958 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-07 17:28:13,198 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 17:28:45,637 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-07 17:30:36,155 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 17:35:18,345 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:35:25,261 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:35:49,443 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:36:57,511 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:37:07,493 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 17:49:49,974 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 21:35:40,096 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 21:36:00,048 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 21:36:05,242 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 21:36:15,918 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 21:36:24,042 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 21:52:23,057 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 21:55:57,491 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 21:56:06,026 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-07 21:58:26,740 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task-user/300/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 567, in request_task_user_management
+    result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 1936, in task_user_management
+    if not result.get('success', False):
+           ^^^^^^
+UnboundLocalError: cannot access local variable 'result' where it is not associated with a value
+2025-10-07 21:59:40,232 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task-user/300/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 567, in request_task_user_management
+    result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 1936, in task_user_management
+    if not result.get('success', False):
+           ^^^^^^
+UnboundLocalError: cannot access local variable 'result' where it is not associated with a value
+2025-10-07 22:00:03,377 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 22:01:40,177 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 22:07:39,814 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 22:08:10,272 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 22:08:21,365 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-07 22:09:06,158 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 12:12:20,774 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 12:12:25,811 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 12:13:48,917 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 12:13:53,155 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 12:13:58,617 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 12:14:35,218 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 12:15:34,782 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 12:15:39,576 - ERROR - Internal Server Error: /ConfigurationChangeRequest/4/notify-group/A/1/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+TypeError: request_notify_group_management() got an unexpected keyword argument 'task_id'
+2025-10-09 12:20:10,870 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 12:20:56,075 - ERROR - Internal Server Error: /ConfigurationChangeRequest/4/notify-group/A/2/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+TypeError: request_notify_group_management() got an unexpected keyword argument 'task_id'
+2025-10-09 12:21:44,463 - ERROR - Internal Server Error: /ConfigurationChangeRequest/4/notify-group/A/1/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+TypeError: request_notify_group_management() got an unexpected keyword argument 'task_id'
+2025-10-09 12:22:16,597 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-09 12:22:21,131 - ERROR - Internal Server Error: /ConfigurationChangeRequest/4/notify-group/A/5/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+TypeError: request_notify_group_management() got an unexpected keyword argument 'task_id'
+2025-10-09 12:22:40,829 - ERROR - Internal Server Error: /ConfigurationChangeRequest/4/notify-group/A/4/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+TypeError: request_notify_group_management() got an unexpected keyword argument 'task_id'
+2025-10-09 12:25:04,837 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 12:25:11,701 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 12:26:14,688 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-09 12:29:14,239 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 12:45:05,865 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 12:45:14,059 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 12:50:53,188 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 12:51:37,888 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 12:53:10,526 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 12:57:39,684 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 13:00:24,112 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 13:02:45,244 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:04:27,269 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 13:06:44,979 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:10:57,100 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 13:12:44,579 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 13:13:23,124 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 13:13:30,036 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 13:13:36,048 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:14:02,694 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 13:14:08,334 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:14:44,615 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-09 13:14:49,969 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:15:31,160 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 13:16:26,267 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 13:16:35,681 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 13:16:36,630 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:16:39,594 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:16:40,981 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 13:18:57,118 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:19:10,894 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:19:15,744 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-09 13:25:37,680 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:31:56,280 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:32:07,851 - WARNING - Not Found: /changetype/edit/3
+2025-10-09 13:32:08,011 - WARNING - Not Found: /favicon.ico
+2025-10-09 13:33:39,915 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:33:41,687 - WARNING - Not Found: /ConfigurationChangeRequest/changetype/3
+2025-10-09 13:33:41,841 - WARNING - Not Found: /favicon.ico
+2025-10-09 13:37:57,440 - WARNING - Not Found: /ConfigurationChangeRequest/changetype/3
+2025-10-09 13:38:31,375 - WARNING - Not Found: /ConfigurationChangeRequest/changetype/3
+2025-10-09 13:38:31,565 - WARNING - Not Found: /favicon.ico
+2025-10-09 13:38:33,960 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:38:36,018 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:38:38,141 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.change_type_edit didn't return an HttpResponse object. It returned None instead.
+2025-10-09 13:38:38,386 - WARNING - Not Found: /favicon.ico
+2025-10-09 13:39:23,285 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 13:39:27,352 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 13:39:31,609 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 13:39:40,571 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 13:40:00,546 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 13:40:24,304 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:40:27,590 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 691, in change_type_edit
+    return render(request, 'ConfigurationChangeRequest/change-type.html', data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: ConfigurationChangeRequest/changetype.html
+2025-10-09 13:40:27,750 - WARNING - Not Found: /favicon.ico
+2025-10-09 13:40:55,485 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-09 13:40:57,537 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 691, in change_type_edit
+    return render(request, 'ConfigurationChangeRequest/change-type.html', data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: ConfigurationChangeRequest/changetype.html
+2025-10-09 13:40:57,708 - WARNING - Not Found: /favicon.ico
+2025-10-09 13:41:09,526 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-09 13:41:44,999 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.

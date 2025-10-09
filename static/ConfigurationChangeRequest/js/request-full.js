@@ -957,7 +957,7 @@ function ActiveInActiveImages(imgs, active_inactive) {
             //چون مسیر تصویر هر آیکون متفاوت است نمی توانیم از یک دستور واحد استفاده کنیم
             //
             function() {
-                active_src = $(this).attr('src').replace('_Gray','')
+                active_src = $(this).attr('src').replace(/_gray/i, '')
                 $(this).attr('src', active_src)
             })                
     }
@@ -1572,6 +1572,27 @@ function task_management(select_obj, operation_type, on_success)
         AJAX_call(url,data,on_success)
     }
 }
+/** 
+* مدیریت  گروه های اطلاع رسانی
+* @param {jQuery} select_obj - شیء سلکتور jQuery
+* @param {string} operation_type - نوع عملیات (یک کاراکتر، مثلاً 'A' یا 'D')
+*/
+function notify_group_management(select_obj, operation_type, on_success)
+{
+   // مقادیر را از المان مورد نظر استخراج می کنیم
+   const notify_group_id = select_obj.data('notify-group-id')
+   const request_id = select_obj.data('request-id')
+
+   // در صورتی که هر دو متغییر مقدار داشته باشند
+   if (notify_group_id && request_id)
+   {
+       const csrftoken = getCookie('csrftoken');
+       url = '/ConfigurationChangeRequest/' + request_id  +'/notify-group/'+operation_type+'/'+notify_group_id+'/';
+       data = {}
+       AJAX_call(url,data,on_success)
+   }
+}
+
 
     // تابع کمکی برای ساخت سلول کاربران (مجری یا تستر)
 function buildUserCellHtml(data, users, role) 
@@ -1581,31 +1602,31 @@ function buildUserCellHtml(data, users, role)
     var roleTitle = (role === 'E') ? 'مجری' : 'تستر';
     var usersHtml = '';
 
-    if (users && users.length > 0) 
-        {
-        usersHtml = users.map(function(user) {
-            return (
-                '<div class="user-badge" data-user-id="' + user.national_code + '">' +
-                    '<img class="person-small-avatar" src="/static/ConfigurationChangeRequest/images/personnel/' + ((user.username || '').split('@')[0]) + '.jpg"' +
-                        ' alt="' + (user.fullname || '') + '" title="' + (user.fullname || '') + '"' +
+    if (users && users.length > 0) {
+        $.each(users, function(index, user) {
+            usersHtml += 
+                '<div class="user-badge" data-user-id="' + (user.user_nationalcode_id || '') + '">' +
+                    '<img class="person-small-avatar" src="/static/ConfigurationChangeRequest/images/personnel/' + ((user.user_nationalcode__username || '').split('@')[0]) + '.jpg"' +
+                        ' alt="' + (user.user_nationalcode__fullname || '') + '" title="' + (user.user_nationalcode__fullname || '') + '"' +
                         ' onerror="this.src=\'/static/ConfigurationChangeRequest/images/Avatar.png\';" />' +
                     '<i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر"' +
-                        ' data-task-id="' + data.id + '" data-user-natioalcode="' + user.national_code + '"' +
-                        ' data-role-id="' + user.role_id + '" data-team-code="' + user.team_code + '"></i>' +
-                '</div>'
-            );
-            }).join('');
-        } 
-        else 
-        {
+                        ' data-task-id="' + (data.request_task_id || '') + '"' +
+                        ' data-user-natioalcode="' + (user.user_nationalcode_id || '') + '"' +
+                        ' data-role-id="' + (user.user_role_id || '') + '"' +
+                        ' data-team-code="' + (user.user_team_code || '') + '"' +
+                    '></i>' +
+                '</div>';
+        });
+    } else {
         usersHtml = '<span class="text-muted">هیچ ' + roleTitle + 'ی تعریف نشده</span>';
-        }
+    }
+
 
     // ساخت گزینه‌های سلکتور کاربران
     var selectorOptions = (data.user_team_roles || []).map(function(utr) {
         return (
-            '<option value="' + utr.national_code + '" data-username="' + utr.username + '" data-fullname="' + utr.fullname + '" data-team-code="' + utr.team_code + '" data-role-id="' + utr.role_id + '">' +
-                utr.fullname + ' (' + utr.role_id + ' تیم ' + utr.team_code + ')' +
+            '<option value="' + utr.national_code + '" data-username="' + utr.national_code__username + '" data-fullname="' + utr.national_code__first_name + ' ' +  utr.national_code__last_name + '" data-team-code="' + utr.team_code + '" data-role-id="' + utr.role_id + '">' +
+                utr.national_code__first_name + ' ' +  utr.national_code__last_name + ' (' + utr.role_id__role_title + ' تیم ' + utr.team_code__team_name + ')' +
             '</option>'
         );
     }).join('');
@@ -1613,13 +1634,13 @@ function buildUserCellHtml(data, users, role)
     // ساخت کل سلول
     var cellHtml =
         '<td>' +
-            '<div class="users-container" data-request-task-id="' + data.id + '" data-role="' + role + '">' +
+            '<div class="users-container" data-request-task-id="' + data.request_task_id + '" data-role="' + role + '">' +
                 usersHtml +
-                '<div class="add-user-btn" data-task-id="' + data.task.id + '" data-role="' + role + '" title="اضافه کردن ' + roleTitle + '">' +
+                '<div class="add-user-btn" data-task-id="' + data.request_task_id + '" data-role="' + role + '" title="اضافه کردن ' + roleTitle + '">' +
                     '<i class="fas fa-plus"></i>' +
                 '</div>' +
                 '<div class="user-selector" style="display: none;">' +
-                    '<select class="form-select user-combo" data-task-id="' + data.task.id + '" data-role="' + role + '" data-request-task-id="' + data.id + '">' +
+                    '<select class="form-select user-combo" data-task-id="' + data.request_task_id + '" data-role="' + role + '" data-request-task-id="' + data.request_task_id + '">' +
                         '<option value="">انتخاب کاربر...</option>' +
                         selectorOptions +
                     '</select>' +
@@ -1697,7 +1718,6 @@ $(document).ready(function() {
         $(this).next('select[name="task-list"]').show()
     });
 
-    // رویداد نمایش سلکتور انتخاب تسک جدید (delegated)
     $(document).on('change', '#task-list', function(e) {
         // کومبوی لیست تسک ها را نشان می دهیم
         const select_obj = $(this).find('option:selected');
@@ -1705,7 +1725,7 @@ $(document).ready(function() {
         // اگر گزینه انتخاب کنید باشد
         if (select_obj.val() == -1)
             return
-        
+
         // اول باید کنترل کنیم که این تسک تکراری نباشد
         var isDuplicate = false;
         $('#task-table tr').each(function() {
@@ -1743,7 +1763,7 @@ $(document).ready(function() {
             var tdActions =
                 '<td>' +
                     '<div class="task-actions">' +
-                        '<button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="' + data.task.id + '" data-request-id="' + (data.request_id || '') + '">' +
+                        '<button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="' + data.request_task_id + '" data-request-id="' + (data.request_id || '') + '">' +
                             '<i class="fas fa-trash"></i>' +
                         '</button>' +
                     '</div>' +
@@ -1751,7 +1771,7 @@ $(document).ready(function() {
 
             // ساخت سطر نهایی
             var tr =
-                '<tr data-task-id="' + data.task.id + '">' +
+                '<tr data-task-id="' + data.request_task_id + '">' +
                     tdTitle +
                     tdExecutors +
                     tdTesters +
@@ -1759,8 +1779,150 @@ $(document).ready(function() {
                 '</tr>';
             // 3- رکورد جدید را به جدول اضافه کنیم
             $('#task-table tbody').append(tr)
+
+            // 4- اگر رکوردی مبنی بر خالی بودن جدول باشد، باید آن را هم حذف کنیم
+            $('#notify-group-table tbody .no-record').remove()
+
         })
     });
+
+    // رویداد نمایش سلکتور افزودن تسک (delegated)
+    $(document).on('click', '#add-notify-group-btn', function(e) {
+        // کومبوی لیست تسک ها را نشان می دهیم
+        $(this).next('select[name="notify-group-list"]').show()
+    });
+
+    $(document).on('change', '#notify-group-list', function(e) {
+        // کومبوی لیست گروه های اطلاع رسانی را نشان می دهیم
+        const select_obj = $(this).find('option:selected');
+        
+        // اگر گزینه انتخاب کنید باشد
+        if (select_obj.val() == -1)
+            return
+
+        // اول باید کنترل کنیم که این  گروه اطلاع رسانی تکراری نباشد
+        var isDuplicate = false;
+        $('#notify-group-table tr').each(function() {
+            if ($(this).data('notify-group-id') == select_obj.val()) {
+                isDuplicate = true;
+                return false; // break loop
+            }
+        });
+        if (isDuplicate) {
+            const message_manager_obj = new message_manager();            
+            message_manager_obj.showErrorMessage('امکان اضافه کردن گروه اطلاع رسانی تکراری وجود ندارد.<br/> لطفا یک گروه اطلاع رسانی دیگر را انتخاب کنید');
+            return;
+        }
+
+        notify_group_management(select_obj,'A', 
+        function(data)
+        {
+            // اگر درست باشد باید این کارها را انجام دهیم
+            // 1- کومبوی لیست گروه اطلاع رسانی ها را مخفی کنیم
+            $("#notify-group-list").hide()
+            
+            // 2- هر td را جدا تعریف می‌کنیم و برای سلول افراد از یک تابع مشترک استفاده می‌کنیم
+            var tdStatus = '<td>'
+            tdStatus += '<div class="checkbox-wrapper-14">'
+            tdStatus += '<input id="notify-'+data.notify_group_id+'" type="checkbox" class="switch notify-group-checkbox"  data-notify-group-id="'+data.notify_group_id+'" checked>'
+            tdStatus += '</div>'
+            tdStatus += '</td>'
+
+            // ستون عنوان گروه اطلاع رسانی
+            var tdTitle = '<td>' + (data.notify_group_title || '') + '</td>';
+
+            // ستون سمت ها (Role)
+            // اگر اطلاعات role_title وجود داشت، نمایش بده، در غیر این صورت خط تیره
+            var tdRole = '<td>' + (data.role_title ? data.role_title : '<span class="text-muted">-</span>') + '</td>';
+
+            // ستون تیم ها (Team)
+            // اگر اطلاعات team_code و team_name وجود داشت، آیکون تیم را نمایش بده، در غیر این صورت خط تیره
+            var tdTeam = '<td>';
+            if (data.team_code && data.team_name) {
+                tdTeam += '<img src="/static/ConfigurationChangeRequest/images/icon/team/' + data.team_code + '.png" ' +
+                          'alt="' + data.team_name + '" ' +
+                          'title="' + data.team_name + '" ' +
+                          'class="team-icon" />';
+            } else {
+                tdTeam += '<span class="text-muted">-</span>';
+            }
+            tdTeam += '</td>';
+
+            // ستون افراد (Users)
+            // اگر لیست notify_users وجود داشت، برای هر کاربر آواتار نمایش بده، در غیر این صورت خط تیره
+            var tdUsers = '<td>';
+            if (Array.isArray(data.notify_users) && data.notify_users.length > 0) {
+                data.notify_users.forEach(function(user) {
+                    // اگر username وجود داشت، آواتار را نمایش بده
+                    if (user.user_nationalcode__username && user.user_nationalcode__fullname) {
+                        var username = user.user_nationalcode__username.split('@')[0];
+                        tdUsers += '<img class="person-small-avatar" ' +
+                            'src="/static/ConfigurationChangeRequest/images/personnel/' + username + '.jpg" ' +
+                            'alt="' + user.user_nationalcode__fullname + '" ' +
+                            'title="' + user.user_nationalcode__fullname + '" ' +
+                            "onerror=\"this.src='/static/ConfigurationChangeRequest/images/Avatar.png';\" />";
+                    }
+                });
+            }
+            if (tdUsers === '<td>') {
+                // اگر هیچ کاربری نبود
+                tdUsers += '<span class="text-muted">-</span>';
+            }
+            tdUsers += '</td>';
+
+            // ستون نحوه اطلاع رسانی (Notification Type)
+            // بر اساس مقادیر by_email, by_sms, by_phone آیکون فعال/غیرفعال را نمایش بده
+            var tdNotificationType = '<td>';
+            // ایمیل
+            tdNotificationType += '<img class="notification-icon email-notification ' + (data.by_email ? 'active' : 'inactive') + '" ' +
+                'src="/static/ConfigurationChangeRequest/images/icon/' + (data.by_email ? 'notification-email.png' : 'notification-email_gray.png') + '" ' +
+                'alt="اطلاع رسانی با ایمیل" ' +
+                'title="اطلاع رسانی با ایمیل" ' +
+                'data-notify-group-id="' + data.request_notify_group_id + '" ' +
+                'data-notification-type="email" />';
+            // پیامک
+            tdNotificationType += '<img class="notification-icon sms-notification ' + (data.by_sms ? 'active' : 'inactive') + '" ' +
+                'src="/static/ConfigurationChangeRequest/images/icon/' + (data.by_sms ? 'notification-sms.png' : 'notification-sms_gray.png') + '" ' +
+                'alt="اطلاع رسانی با پیامک" ' +
+                'title="اطلاع رسانی با پیامک" ' +
+                'data-notify-group-id="' + data.request_notify_group_id + '" ' +
+                'data-notification-type="sms" />';
+            // تلفن گویا
+            tdNotificationType += '<img class="notification-icon phone-notification ' + (data.by_phone ? 'active' : 'inactive') + '" ' +
+                'src="/static/ConfigurationChangeRequest/images/icon/' + (data.by_phone ? 'notification-phone.png' : 'notification-phone_gray.png') + '" ' +
+                'alt="اطلاع رسانی با تلفن گویا" ' +
+                'title="اطلاع رسانی با تلفن گویا" ' +
+                'data-notify-group-id="' + data.request_notify_group_id + '" ' +
+                'data-notification-type="phone" />';
+            tdNotificationType += '</td>';
+            // ستون عملیات (Actions)
+            var tdActions =
+                '<td>' +
+                    '<div class="task-actions">' +
+                        '<button type="button" class="btn btn-sm btn-outline-danger deactivate-notify-group-btn" data-notify-group-id="' + data.request_notify_group_id + '" data-request-id="' + (data.request_id || '') + '">' +
+                            '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</td>';
+
+            // ساخت سطر نهایی
+            var tr =
+                '<tr data-task-id="' + data.request_task_id + '">' +
+                    tdTitle +
+                    tdRole +
+                    tdTeam +
+                    tdUsers +
+                    tdNotificationType +
+                    tdActions +
+                '</tr>';
+            // 3- رکورد جدید را به جدول اضافه کنیم
+            $('#notify-group-table tbody').append(tr)
+
+            // 4- اگر رکوردی مبنی بر خالی بودن جدول باشد، باید آن را هم حذف کنیم
+            $('#notify-group-table tbody .no-record').remove()
+        })
+    });
+    // رویداد نمایش سلکتور انتخاب گروه اطلاع رسانی جدید (delegated)
 
 
     // رویداد نمایش سلکتور افزودن کاربر (delegated)
@@ -1829,6 +1991,16 @@ $(document).ready(function() {
         })
   
     });
+    // رویداد تغییر وضعیت تسک (delegated)
+    $(document).on('click', '.deactivate-notify-group-btn', function() {
+        const row = $(this).closest('tr');
+        notify_group_management($(this),'D', 
+        function(data)
+        {
+            row.remove()
+        })
+  
+    });    
 
     $('.radio-box').click(
         function()

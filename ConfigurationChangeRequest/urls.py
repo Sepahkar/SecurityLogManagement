@@ -16,6 +16,10 @@ urlpatterns = [
     # اضافه/حذف کردن تسک به/از درخواست
     path('<int:request_id>/task/<str:operation_type>/<int:task_id>/', views.request_task_management, name='request_task_management'),
 
+    # اضافه/حذف کردن گروه اطلاع رسانی به/از نوع درخواست
+    path('<int:request_id>/notify-group/<str:operation_type>/<int:notify_group_id>/', views.request_notify_group_management, name='request_notify_management'),
+
+
     # لیست انواع درخواست
     path('change-type/list/', views.change_type_list, name='change_type_list'),
     
@@ -28,9 +32,11 @@ urlpatterns = [
     # اضافه/حذف کردن مجری به/از یک نوع درخواست
     path('change-type/task-user/<int:task_id>/', views.change_type_user_management, name='change_type_user_managment'),
 
-    # اضافه/حذف کردن تسک به/از درخواست
-    path('change-type/<int:change_type_id>/task/<str:operation_type>/<int:task_id>/', views.change_type_task_management, name='request_task_management'),
+    # اضافه/حذف کردن تسک به/از نوع درخواست
+    path('change-type/<int:change_type_id>/task/<str:operation_type>/<int:task_id>/', views.change_type_task_management, name='change_type_task_management'),
 
+    # اضافه/حذف کردن گروه اطلاع رسانی به/از نوع درخواست
+    path('change-type/<int:change_type_id>/notify-group/<str:operation_type>/<int:notify_group_id>/', views.change_type_notify_group_management, name='change_type_notify_group_management'),
     
     # انتخاب تسک (برای مجری/تستر)
     path('task/select/<int:request_id>/<int:task_id>/', views.task_select_view, name='task_select'),

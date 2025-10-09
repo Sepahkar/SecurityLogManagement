@@ -39,11 +39,11 @@
                         <td class="col-type" role="cell" data-label="نوع تغییر">{{ item.change_type_title }}</td>
                         <td class="col-title" role="cell" data-label="عنوان تغییر">{{ item.change_title }}</td>
                         <td class="col-actions" role="cell" data-label="عملیات">
-                            <a class="btn btn-edit" href="{{ baseurl }}/changetype/edit/{{ item.id }}" title="ویرایش" aria-label="ویرایش {{ item.change_title }}">
+                            <a class="btn btn-edit" href="{{ baseurl }}/ConfigurationChangeRequest/change-type/{{ item.id }}" title="ویرایش" aria-label="ویرایش {{ item.change_title }}">
                                 <i class="fa-solid fa-pen"></i>
                                 <span class="sr-only">ویرایش</span>
                             </a>
-                            <a class="btn btn-delete" href="{{ baseurl }}/changetype/delete/{{ item.id }}" title="حذف" aria-label="حذف {{ item.change_title }}" onclick="return confirmDelete('{{ item.change_title }}');">
+                            <a class="btn btn-delete" href="{{ baseurl }}/ConfigurationChangeRequest/change-type/d/{{ item.id }}" title="حذف" aria-label="حذف {{ item.change_title }}" onclick="return confirmDelete('{{ item.change_title }}');">
                                 <i class="fa-solid fa-trash"></i>
                                 <span class="sr-only">حذف</span>
                             </a>
@@ -59,7 +59,7 @@
         </div>
 
         <div class="actions-footer">
-            <a class="btn btn-add" href="{{ baseurl }}/changetype/add">
+            <a class="btn btn-add" href="{{ baseurl }}/ConfigurationChangeRequest/change-type/">
                 <i class="fa-solid fa-plus"></i>
                 <span>افزودن نوع تغییر</span>
             </a>

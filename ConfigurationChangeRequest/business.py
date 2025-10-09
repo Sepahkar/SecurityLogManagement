@@ -247,60 +247,6 @@ class FormManager:
         )
         return data
 
-    def load_form_data(self, request_id: int, user_nationalcode: str):
-        form_data = {"message": "", "success": True}
-
-        # مشخص می کنیم که وضعیت فعلی فرم چیست؟
-        form_status = self.check_form_status(
-            user_nationalcode=user_nationalcode,
-            request_id=request_id)
-        form_data["mode"] = form_status["mode"]
-        form_data["form"] = form_status["form"]
-
-        # اگر کاربر مربوطه مجاز به مشاهده اطلاعات نباشد
-        if form_status["mode"] == "INVALID":
-            form_data["message"] = "شما مجاز به مشاهده این فرم نیستید"
-            return form_data
-
-        # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
-        if form_status["mode"] in ["READONLY", "UPDATE"]:
-
-            # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
-            result = self.request_obj.get_request_data()
-
-            # اگر به هر دلیل امکان بارگذاری اطلاعات درخواست وجود نداشته باشد پیام خطا بازگشت داده می شود
-            if not result.get("success", False):
-                return result
-
-            form_data.update(result)
-
-        # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
-        result = self.get_form_data()
-        # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
-        if not result.get("success", False):
-            return result
-
-        form_data.update(result)
-
-        # اطلاعات کاربران را دریافت می کنیم
-        result = self.get_all_user_data()
-        # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
-        if not result.get("success", False):
-            return result
-
-        form_data.update(result)
-
-        # سایر اطلاعات مربوط به فرم را دریافت می کنیم
-        request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
-
-        form_data.update(
-            {
-                "request_number": request_id,
-                "request_date": request_date,
-            }
-        )
-
-        return form_data
 
     # این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
     def check_form_status(
@@ -1526,6 +1472,9 @@ class FormManager:
             # لیست تسک ها را هم اضافه می کنیم
             data["task_list"] = m.Task.objects.all()
 
+            # لیست گروه های اطلاع رسانی را اضافه می کنیم
+            data["notify_group_list"] = m.NotifyGroup.objects.all()
+
         except Exception as e:
             return {"success": False, "message": str(e)}
 
@@ -1627,12 +1576,237 @@ class FormManager:
         return selected_items
 
 
+    def notify_group_managment(self, request_id:int, notify_group_id:int, operation_type:str='A', request_change_type:str='R')-> dict:
+        """
+        این تابع گروه اطلاع رسانی های ذیل یک درخواست (یا نوع درخواست) را مدیریت می کند
+
+        Args:
+
+            notify_group_id (int): شناسه گروه اطلاع رسانی مورد نظر در درخواست و یا نوع درخواست
+            operation_type (_type_): یکی از موارد زیر است:
+                a: اضافه کردن گروه اطلاع رسانی جدید
+                d: حذف گروه اطلاع رسانی مربوطه
+            request_changetype (str, optional): مشخص کننده این است که این گروه اطلاع رسانی مربوط به درخواست می شود یا مربوط به نوع درخواست
+                R: گروه اطلاع رسانی درخواست
+                T: گروه اطلاع رسانی نوع درخواست
+                        
+        Return value:
+            یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
+                {'success':, 'message':''}
+                success: در صورتی که اجرا موفقیت آمیز باشد برابر با True و در غیر این صورت False خواهد بود
+                message پیام مرتبط خصوصا در صورت وقوع خطا نشان می دهد که چه خطایی رخ داده است
+        
+        """
+        # برای اینکه تابع با هر یک از این مقادیر ورودی کار کند
+        valid_operation_type_add = ['add','a']
+        valid_operation_type_delete = ['delete', 'd']
+        
+        # برای اینکه مشکلی در مقایسه پیش نیاید همه حروف را کوچک می کنیم
+        operation_type = operation_type.lower()
+        
+        # کنترل می کنیم که نوع عملیات مقدار مجاز داشته باشد
+        if operation_type not in valid_operation_type_add+valid_operation_type_delete:
+            return {'success': False, 'message': 'نوع عملیات نامعتبر است.'}
+        
+        # کنترل می کنیم که مقدار متغییر آخر که مشخص می کند این تسک مربوط به درخواست است و یا نوع تغییر، معتبر باشد
+        if request_change_type not in ['R', 'T']:
+            return {'success': False, 'message': 'نوع تسک (درخواست/نوع درخواست) نامعتبر است.'}
+        
+
+        # کنترل می کنیم که چنین گروه اطلاع رسانی ای برای چنین درخواست/نوع درخواستی وجود دارد؟
+        if request_change_type == 'R':
+            # تسک مربوط به درخواست
+            exists = m.RequestNotifyGroup.objects.filter(notify_group_id=notify_group_id, request_id=request_id).exists()
+        else:
+            # تسک مربوط به نوع درخواست
+            exists = m.RequestNotifyGroup_ChangeType.objects.filter(notify_group_id=notify_group_id, changetype=request_id).exists()
+
+       
+        # اگر گروه اطلاع رسانی ای با این مشخصات تعریف شده است و هدف اضافه کردن است، خطا داریم
+        if operation_type in valid_operation_type_add and exists:
+            return {'success': False, 'message': 'این تسک قبلاً به این تسک اضافه شده است.'}
+        # اگر گروه اطلاع رسانی ای با این مشخصات تعریف نشده باشد و هدف حذف کردن است، خطا داریم 
+        elif operation_type in valid_operation_type_delete and not exists:
+            return {'success': False, 'message': 'این تسک برای این تسک تعریف نشده است.'}
+        
+        # اطلاعات رکورد فعلی را برای درج در سوابق به دست می آوریم
+        result = self.get_record_json(request_changetype=request_change_type, id=request_id)
+        
+        if not result.get('success', False):
+            return result
+        
+        if 'record_data' not in result:
+            return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+        old_data = result['record_data']
+                
+        
+        # اگر تغییر، اضافه کردن باشد آن را درج می کنیم
+        if operation_type in valid_operation_type_add:
+            try:
+                if request_change_type == 'R':
+                        
+                    request_notify_group = m.RequestNotifyGroup.objects.create(
+                        notify_group_id=notify_group_id,
+                        request_id=request_id,
+                    )
+                             
+                    # در حال حاضر برای یک درخواست کاربر اطلاع رسانی تعریف نمی شود
+                    # یعنی اگر کاربری به گروه اضافه شود، به گروه اصلی اضافه می شود
+                    # و از این به بعد هر درخواستی از این گروه اطلاع رسانی استفاده کند، شامل این فرد هم می گردد
+                    # در صورتی که بعدا نیاز باشد که مانند تسک ها، کاربر انحصاری برای این درخواست تعریف شود
+                    # اینجا باید کاربران پیش فرض را درج کنیم
+                    # # حالا باید به ازای هر یک از افرادی که به صورت پیش فرض ذیل این تسک تعریف شده اند، یک رکورد در جدول RequestTaskUser درج کنیم
+                    # try:
+                    #     task_users = m.TaskUser.objects.filter(task_id=task_id)
+
+                    #     # به ازای هر کاربر عملیات درج در تسک جدید را انجام می دهیم
+                    #     for task_user in task_users:
+                    #         m.RequestTaskUser.objects.create(
+                    #                 request_task=request_task,
+                    #                 user_nationalcode=task_user.user_nationalcode,
+                    #                 user_role_id=task_user.user_role_id,
+                    #                 user_team_code=task_user.user_team_code,
+                    #                 user_role_code=task_user.user_role_code
+                    #             )
+
+                    # except Exception as e:
+                    #     return {"success": False, "message": "امکان درج کاربر برای این تسک وجود ندارد<br/>" + str(e)}
+                    
+
+
+                else:
+                    request_notify_group = m.RequestNotifyGroup_ChangeType.objects.create(
+                        notify_group_id=notify_group_id,
+                        changetype_id=request_id,
+                    )
+                        
+
+                # لیست کاربران مربوط به این گروه اطلاع رسانی را باید به خروجی ارسال کنیم
+                # چون fullname یک property است و فیلد دیتابیس نیست، نمی‌توانیم آن را با values بگیریم.
+                # بنابراین باید ابتدا آبجکت‌ها را بگیریم و سپس مقدار property را دستی اضافه کنیم.
+                notify_users_qs = m.NotifyGroupUser.objects.filter(
+                    notify_group_id = notify_group_id
+                ).select_related('user_nationalcode')                                            
+                    
+                notify_users = []
+                for notify_user in notify_users_qs:
+                    notify_users.append({
+                        'id': notify_user.id,
+                        'notify_group_id': notify_user.notify_group.id,
+                        'user_nationalcode': notify_user.user_nationalcode_id,
+                        'user_role_id': notify_user.user_role_id_id,
+                        'user_team_code': notify_user.user_team_code_id,
+                        'user_nationalcode__username': notify_user.user_nationalcode.username if notify_user.user_nationalcode else None,
+                        'user_nationalcode__fullname': notify_user.user_nationalcode.fullname if notify_user.user_nationalcode else None,
+                    })
+
+                user_team_roles = m.UserTeamRole.objects.select_related('national_code', 'team_code', 'role_id').values(
+                    'id',
+                    'national_code',  # کد ملی کاربر
+                    'role_id',        # شناسه سمت
+                    'team_code',      # کد تیم
+                    'manager_national_code',
+                    # فیلدهای اضافه شده:
+                    'national_code__username',   # نام کامل کاربر
+                    'national_code__first_name',   # نام کامل کاربر
+                    'national_code__last_name',   # نام کامل کاربر
+                    'team_code__team_name',      # نام تیم
+                    'role_id__role_title',       # عنوان سمت
+                )
+
+                # اطلاعات جدید را برای ذخیره در سوابق دریافت می کنیم
+                result = self.get_record_json(request_changetype=request_change_type, id=request_id)
+                
+                if not result.get('success', False):
+                    return result
+                
+                if 'record_data' not in result:
+                    return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+                new_data = result['record_data']
+                
+                # # تبدیل به JSON با حفظ حروف فارسی
+                # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+                # old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+                # حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
+                try:
+                    m.DataHistory.objects.create(
+                        record_type=request_change_type,
+                        old_data= old_data or {},
+                        new_data= new_data or {},
+                        record_id=request_id,
+                        creator_user_id=self.current_user_national_code,
+                        last_modifier_user_id=self.current_user_national_code
+                    )                    
+
+                    return {'success': True, 'message': 'گروه اطلاع رسانی مورد نظر با موفقیت به درخواست اضافه شد.',
+                            'request_notify_group_id':request_notify_group.id,
+                            'role_title':request_notify_group.notify_group.role_id.role_title if request_notify_group.notify_group.role_id else '-',
+                            'role_id':request_notify_group.notify_group.role_id.role_id if request_notify_group.notify_group.role_id else '-',
+                            'team_name':request_notify_group.notify_group.team_code.team_name if request_notify_group.notify_group.team_code else None,
+                            'team_code':request_notify_group.notify_group.team_code.team_code if request_notify_group.notify_group.team_code else None,
+                            'request_id':request_id,
+                            'notify_group_id':notify_group_id,
+                            'notify_group_title':request_notify_group.notify_group.title,
+                            'notify_users':list(notify_users),
+                            'user_team_roles':list(user_team_roles),
+                            'by_email':request_notify_group.by_email,
+                            'by_sms':request_notify_group.by_sms,
+                            'by_phone':request_notify_group.by_phone,
+                            }
+
+                except Exception as e:
+                    return {'success': False, 'message': f'خطا در ثبت سوابق: {str(e)}'}
+            except Exception as e:
+                return {'success': False, 'message': f'خطا در افزودن گروه اطلاع رسانی: {str(e)}'}
+            
+        # در صورتی که حذف کاربر باشد، بر مبنای اینکه گروه اطلاع رسانی مربوط به درخواست تغییر است یا نوع تغییر زکوزد مربوطه حذ می شود.
+        if operation_type in valid_operation_type_delete:
+            try:
+                if request_change_type == 'R':
+                    m.RequestNotifyGroup.objects.filter(notify_group_id=notify_group_id, request_id=request_id).delete()
+                else:
+                    m.RequestNotifyGroup_ChangeType.objects.filter(notify_group_id=notify_group_id, changetype=request_id).delete()
+
+            except Exception as e:
+                return {'success': False, 'message': f'خطا در حذف گروه اطلاع رسانی: {str(e)}'}        
+            result = self.get_record_json(request_changetype=request_change_type, id=request_id)
+            
+            if not result.get('success', False):
+                return result
+            
+            if 'record_data' not in result:
+                return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+            new_data = result['record_data']
+            
+            # # تبدیل به JSON با حفظ حروف فارسی
+            # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+            # old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+            # حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
+            try:
+                m.DataHistory.objects.create(
+                    record_type=request_change_type,
+                    old_data= old_data or {},
+                    new_data= new_data or {},
+                    record_id=request_id,
+                    creator_user_id=self.current_user_national_code,
+                    last_modifier_user_id=self.current_user_national_code
+                )                    
+            except Exception as e:
+                return {'success': False, 'message': f'خطا در ثبت سوابق: {str(e)}'}
+
+                                
+            return {'success': True, 'message': 'گروه اطلاع رسانی مورد نظر با موفقیت از درخواست حذف شد.'}
+
+
     def task_management(self, request_id:int, task_id:int, operation_type:str='A', request_change_type:str='R')-> dict:
         """
         این تابع تسک های ذیل یک درخواست (یا نوع درخواست) را مدیریت می کند
 
         Args:
-            request (_type_): درخواست http
+
             task_id (int): شناسه تسک مورد نظر در درخواست و یا نوع درخواست
             operation_type (_type_): یکی از موارد زیر است:
                 a: اضافه کردن تسک جدید
@@ -1680,9 +1854,18 @@ class FormManager:
         elif operation_type in valid_operation_type_delete and not exists:
             return {'success': False, 'message': 'این تسک برای این تسک تعریف نشده است.'}
         
+        # اطلاعات رکورد فعلی را جهت درج در سوابق ذخیره می کنیم
+        result = self.get_record_json(request_changetype=request_change_type, id=request_id)
         
-        # اگر تغییر اضافه کردن تسک جدید است، با توجه به اینکه موضوع مربوط به شناسه تسک و نوع تغییر است یا شناسه تسک درخواست، 
-        # اگر کد ملی قبلا برای این تسک درج نشده باشد، عملیات درج را انجام می دهد
+        if not result.get('success', False):
+            return result
+        
+        if 'record_data' not in result:
+            return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+        old_data = result['record_data']
+                
+        # اگر هدف اضافه کردن تسک باشد
         if operation_type in valid_operation_type_add:
             try:
                 if request_change_type == 'R':
@@ -1699,6 +1882,8 @@ class FormManager:
                         status_code='DEFINE',
                         order_number=order_number
                     )
+                    
+                                        
                     # حالا باید به ازای هر یک از افرادی که به صورت پیش فرض ذیل این تسک تعریف شده اند، یک رکورد در جدول RequestTaskUser درج کنیم
                     try:
                         task_users = m.TaskUser.objects.filter(task_id=task_id)
@@ -1717,17 +1902,21 @@ class FormManager:
                         return {"success": False, "message": "امکان درج کاربر برای این تسک وجود ندارد<br/>" + str(e)}
                     
                     # لیست مجریان و تسترها را باید به خروجی ارسال کنیم
-                    executors = m.RequestTaskUser.objects.filter(user_role_code="E", request_task__task_id = task_id, request_task__request_id=request_id).values()
-                    testers = m.RequestTaskUser.objects.filter(user_role_code="T", request_task__task_id = task_id, request_task__request_id=request_id).values()
-                    
-                    return {'success': True, 'message': 'تسک مورد نظر با موفقیت به درخواست اضافه شد.',
-                            'request_task_id':request_task.id,
-                            'request_id':request_id,
-                            'task_id':task_id,
-                            'task_title':request_task.task.title,
-                            'executors':list(executors),
-                            'testers':list(testers)
-                            }
+                    # چون fullname یک property است و فیلد دیتابیس نیست، نمی‌توانیم آن را با values بگیریم.
+                    # بنابراین باید ابتدا آبجکت‌ها را بگیریم و سپس مقدار property را دستی اضافه کنیم.
+                    executors_qs = m.RequestTaskUser.objects.filter(
+                        user_role_code="E",
+                        request_task__task_id=task_id,
+                        request_task__request_id=request_id
+                    ).select_related('user_nationalcode')
+
+                    testers_qs = m.RequestTaskUser.objects.filter(
+                        user_role_code="T",
+                        request_task__task_id=task_id,
+                        request_task__request_id=request_id
+                    ).select_related('user_nationalcode')
+
+
                 else:
                     # ابتدا آخرین شماره ترتیب را به دست می‌آوریم
                     last_task = m.RequestTask_ChangeType.objects.filter(changetype_id=request_id).order_by('-order_number').first()
@@ -1736,16 +1925,95 @@ class FormManager:
                     else:
                         order_number = 1
                                             
-                    change_type_task = m.RequestTask_ChangeType.objects.create(
+                    executors_qs = m.TaskUser.objects.filter(
+                        user_role_code="E",
                         task_id=task_id,
-                        changetype_id=request_id,
-                        order_number =order_number
-                    )
-                    return {'success': True, 'message': 'تسک مورد نظر با موفقیت به نوع درخواست اضافه شد.',
-                            'request_task_id':change_type_task.id,
+                    ).select_related('user_nationalcode')
+
+                    testers_qs = m.TaskUser.objects.filter(
+                        user_role_code="T",
+                        task_id=task_id,
+                    ).select_related('user_nationalcode')
+
+                    
+                executors = []
+                for executor in executors_qs:
+                    executors.append({
+                        'id': executor.id,
+                        'request_task_id': executor.request_task_id,
+                        'user_nationalcode': executor.user_nationalcode_id,
+                        'user_role_id': executor.user_role_id_id,
+                        'user_team_code': executor.user_team_code_id,
+                        'user_role_code': executor.user_role_code,
+                        'user_nationalcode__username': executor.user_nationalcode.username if executor.user_nationalcode else None,
+                        'user_nationalcode__fullname': executor.user_nationalcode.fullname if executor.user_nationalcode else None,
+                    })
+
+                testers = []
+                for tester in testers_qs:
+                    testers.append({
+                        'id': tester.id,
+                        'request_task_id': tester.request_task_id,
+                        'user_nationalcode': tester.user_nationalcode_id,
+                        'user_role_id': tester.user_role_id_id,
+                        'user_team_code': tester.user_team_code_id,
+                        'user_role_code': tester.user_role_code,
+                        'user_nationalcode__username': tester.user_nationalcode.username if tester.user_nationalcode else None,
+                        'user_nationalcode__fullname': tester.user_nationalcode.fullname if tester.user_nationalcode else None,
+                    })
+
+                user_team_roles = m.UserTeamRole.objects.select_related('national_code', 'team_code', 'role_id').values(
+                    'id',
+                    'national_code',  # کد ملی کاربر
+                    'role_id',        # شناسه سمت
+                    'team_code',      # کد تیم
+                    'manager_national_code',
+                    # فیلدهای اضافه شده:
+                    'national_code__username',   # نام کامل کاربر
+                    'national_code__first_name',   # نام کامل کاربر
+                    'national_code__last_name',   # نام کامل کاربر
+                    'team_code__team_name',      # نام تیم
+                    'role_id__role_title',       # عنوان سمت
+                )
+
+            
+                # وضعیت جدید رکورد را جهت درج در سوابق به دست می آوریم
+                result = self.get_record_json(request_changetype=request_change_type, id=request_id)
+                
+                if not result.get('success', False):
+                    return result
+                
+                if 'record_data' not in result:
+                    return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+                old_data = result['record_data']
+
+                # # تبدیل به JSON با حفظ حروف فارسی
+                # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+                # old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+                # حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
+                try:
+                    m.DataHistory.objects.create(
+                        record_type=request_change_type,
+                        old_data= old_data or {},
+                        new_data= new_data or {},
+                        record_id=request_id,
+                        creator_user_id=self.current_user_national_code,
+                        last_modifier_user_id=self.current_user_national_code
+                    )                    
+
+                    return {'success': True, 'message': 'تسک مورد نظر با موفقیت به درخواست اضافه شد.',
+                            'request_task_id':request_task.id,
                             'request_id':request_id,
-                            'task_id':task_id,                            
+                            'task_id':task_id,
+                            'task_title':request_task.task.title,
+                            'executors':list(executors),
+                            'testers':list(testers),
+                            'user_team_roles':list(user_team_roles),
                             }
+
+                except Exception as e:
+                    return {'success': False, 'message': f'خطا در ثبت سوابق: {str(e)}'}
             except Exception as e:
                 return {'success': False, 'message': f'خطا در افزودن تسک: {str(e)}'}
             
@@ -1756,10 +2024,37 @@ class FormManager:
                     m.RequestTask.objects.filter(task_id=task_id, request_id=request_id).delete()
                 else:
                     m.RequestTask_ChangeType.objects.filter(task_id=task_id, changetype=request_id).delete()
-                    
-                return {'success': True, 'message': 'تسک مورد نظر با موفقیت از درخواست حذف شد.'}
+
             except Exception as e:
                 return {'success': False, 'message': f'خطا در حذف تسک: {str(e)}'}        
+            result = self.get_record_json(request_changetype=request_change_type, id=request_id)
+            
+            if not result.get('success', False):
+                return result
+            
+            if 'record_data' not in result:
+                return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+            new_data = result['record_data']
+            
+            # # تبدیل به JSON با حفظ حروف فارسی
+            # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+            # old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+            # حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
+            try:
+                m.DataHistory.objects.create(
+                    record_type=request_change_type,
+                    old_data= old_data or {},
+                    new_data= new_data or {},
+                    record_id=request_id,
+                    creator_user_id=self.current_user_national_code,
+                    last_modifier_user_id=self.current_user_national_code
+                )                    
+            except Exception as e:
+                return {'success': False, 'message': f'خطا در ثبت سوابق: {str(e)}'}
+
+                                
+            return {'success': True, 'message': 'تسک مورد نظر با موفقیت از درخواست حذف شد.'}
 
 
     def task_user_management(self, task_id:int,  operation_type:str='A', user_national_code:str='', user_role_id:int=-1, user_team_code:str='', user_role_code:str='E', request_change_type:str='R')-> dict:
@@ -1801,18 +2096,33 @@ class FormManager:
         # کنترل می کنیم که مقدار متغییر آخر که مشخص می کند این تسک مربوط به درخواست است و یا نوع تغییر، معتبر باشد
         if request_change_type not in ['R', 'T']:
             return {'success': False, 'message': 'نوع تسک (درخواست/نوع درخواست) نامعتبر است.'}
-        
-        # با توجه به اینکه تسک مربوط به نوع درخواست و یا درخواست است، کنترل می کنیم که شناسه تسک معتبر باشد.
 
+
+        # با توجه به اینکه تسک مربوط به نوع درخواست و یا درخواست است، کنترل می کنیم که شناسه تسک معتبر باشد.
+        id = -1 
         try:
             if request_change_type == 'R':
                 # تسک مربوط به درخواست
                 task_instance = m.RequestTask.objects.get(pk=task_id)
+                id = task_instance.request_id
             else:
                 # تسک مربوط به نوع درخواست
                 task_instance = m.RequestTask_ChangeType.objects.get(pk=task_id)
+                id = task_instance.changetype_id
         except Exception:
             return {'success': False, 'message': 'شناسه تسک نامعتبر است.'}
+        
+
+        
+        # اطلاعات رکورد  فعلی را جهت ثبت در سوابق استخراج می کنیم
+        result = self.get_record_json(request_changetype=request_change_type, id=id)
+        if not result.get('success', False):
+            return result
+        
+        if 'record_data' not in result:
+            return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+        old_data = result['record_data']        
         
         # کنترل می کنیم که کد ملی معتبر باشد
         try:
@@ -1847,15 +2157,7 @@ class FormManager:
                         user_team_code_id=user_team_code,
                         user_role_code=user_role_code,
                     )
-                    return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.',
-                            'request_task':task_id,
-                            'nationalcode':user_national_code,
-                            'role_id':user_role_id,
-                            'team_code':user_team_code,
-                            'role_code':user_role_code,  
-                            'fullname':user_instance.fullname,
-                            'username':user_instance.username                      
-                            }
+
                 else:
                     m.TaskUser.objects.create(
                         task_id=task_instance,
@@ -1864,9 +2166,47 @@ class FormManager:
                         user_team_code_id=user_team_code,
                         user_role_code=user_role_code,
                     )
-                    return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.'}
+
+                # اطلاعات رکورد  جدید را جهت ثبت در سوابق استخراج می کنیم
+                result = self.get_record_json(request_changetype=request_change_type, id=id)
+                if not result.get('success', False):
+                    return result
+                
+                if 'record_data' not in result:
+                    return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+                new_data = result['record_data']
+                
+                # # تبدیل به JSON با حفظ حروف فارسی
+                # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+                # old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+                # حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
+                try:
+                    m.DataHistory.objects.create(
+                        record_type=request_change_type,
+                        old_data= old_data or {},
+                        new_data= new_data or {},
+                        record_id=id,
+                        creator_user_id=self.current_user_national_code,
+                        last_modifier_user_id=self.current_user_national_code
+                    )                    
+                except Exception as e:
+                    return {'success': False, 'message': f'خطا در ثبت سوابق: {str(e)}'}
+                    
+                    
+                return {'success': True, 'message': 'کاربر با موفقیت به تسک اضافه شد.',
+                        'request_task':task_id,
+                        'nationalcode':user_national_code,
+                        'role_id':user_role_id,
+                        'team_code':user_team_code,
+                        'role_code':user_role_code,  
+                        'fullname':user_instance.fullname,
+                        'username':user_instance.username                      
+                        }
             except Exception as e:
                 return {'success': False, 'message': f'خطا در افزودن کاربر: {str(e)}'}
+
+
             
         # در صورتی که حذف کاربر باشد، بر مبنای اینکه تسک مربوط به درخواست تغییر است یا نوع تغییر زکوزد مربوطه حذ می شود.
         if operation_type in ['delete', 'd']:
@@ -1883,6 +2223,34 @@ class FormManager:
                         user_nationalcode=user_instance,
                         user_role_code = user_role_code
                     ).delete()
+                    
+              # اطلاعات رکورد  جدید را جهت ثبت در سوابق استخراج می کنیم
+                result = self.get_record_json(request_changetype=request_change_type, id=id)
+                if not result.get('success', False):
+                    return result
+                
+                if 'record_data' not in result:
+                    return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
+
+                new_data = result['record_data']
+                
+                # # تبدیل به JSON با حفظ حروف فارسی
+                # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+                # old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+                # حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
+                try:
+                    m.DataHistory.objects.create(
+                        record_type=request_change_type,
+                        old_data= old_data or {},
+                        new_data= new_data or {},
+                        record_id=id,
+                        creator_user_id=self.current_user_national_code,
+                        last_modifier_user_id=self.current_user_national_code
+                    )                    
+                except Exception as e:
+                    return {'success': False, 'message': f'خطا در ثبت سوابق: {str(e)}'}
+                    
+                                        
                 return {'success': True, 'message': 'کاربر با موفقیت از تسک حذف شد.'}
             except Exception as e:
                 return {'success': False, 'message': f'خطا در حذف کاربر: {str(e)}'}        
@@ -1998,7 +2366,7 @@ class FormManager:
             return {"success":False, "error": f"خطا در دریافت داده‌های قبلی: {str(e)}"}
         
         
-        return {'success':True, 'message':'با موفقیت واکشی شد','record_data':record_data}
+        return {'success':True, 'message':'با موفقیت واکشی شد','record_data':json.loads(json.dumps(record_data, ensure_ascii=False))}
  
  
     def update_extra_information(self,form_data:dict, code:str,field_value:bool, request_changetype:str, id:int)->dict:
@@ -2444,9 +2812,9 @@ class FormManager:
 
         new_data = result['record_data']
         
-        # تبدیل به JSON با حفظ حروف فارسی
-        new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
-        old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
+        # # تبدیل به JSON با حفظ حروف فارسی
+        # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
+        # old_data = json.loads(json.dumps(old_data, ensure_ascii=False))
         # 8- حالا اطلاعات سوابق تغییرات را در جدول مربوطه درج می کنیم
         try:
             m.DataHistory.objects.create(
@@ -2808,8 +3176,84 @@ class Task:
         except Exception as e:
             return {"success": False, "message": f"خطا در ذخیره گزارش تسک: {str(e)}"}
 
+class ChangeType:
+    id:int=-1
+    change_type_instance:m.ChangeType=None
+    error_message:str = ''
+    objform_manager:FormManager = None
+    current_user_natioal_code:str= ''
+    
+    def __int__(self,current_user_natioal_code:str, id=None):
+        
+        if id:
+            self.change_type_instance = m.ChangeType.objects.filter(id=id).first()
+            if self.change_type_instance is None:
+                self.error_message = 'شناسه نوع تغییر نامعتبر است'
+                
+        self.objform_manager = FormManager(current_user_national_code=current_user_natioal_code, request_id=-1)
+        self.current_user_natioal_code = current_user_natioal_code
+    
+    def validate(self):
+        return {'success':True, 'message':''}
+    
+    
+    def create_record(self):
+        return {'success':True, 'message':''}
+    
+    def load_data(self):
+        
+        form_data = {"message": "", "success": True}
 
+        # باید کنترل کنیم که کاربر مجاز به ویرایش 
+        # if form_status["mode"] == "INVALID":
+        #     form_data["message"] = "شما مجاز به مشاهده این فرم نیستید"
+        #     return form_data
 
+        # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
+        if form_status["mode"] in ["READONLY", "UPDATE"]:
+
+            # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
+            result = self.request_obj.get_request_data()
+
+            # اگر به هر دلیل امکان بارگذاری اطلاعات درخواست وجود نداشته باشد پیام خطا بازگشت داده می شود
+            if not result.get("success", False):
+                return result
+
+            form_data.update(result)
+
+        # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
+        result = self.get_form_data()
+        # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
+        if not result.get("success", False):
+            return result
+
+        form_data.update(result)
+
+        # اطلاعات کاربران را دریافت می کنیم
+        result = self.get_all_user_data()
+        # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
+        if not result.get("success", False):
+            return result
+
+        form_data.update(result)
+
+        # سایر اطلاعات مربوط به فرم را دریافت می کنیم
+        request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
+
+        form_data.update(
+            {
+                "request_number": request_id,
+                "request_date": request_date,
+            }
+        )
+
+        return form_data
+        
+        
+    def update_record(self):
+        return {'success':True, 'message':''}
+    
+    
 class Request:
     obj_form_manager: FormManager = None
     obj_cartable: Cartable = None
@@ -2983,6 +3427,59 @@ class Request:
                 self.need_committee = None
                 self.error_type = "UnknownError"
                 self.error_message = f"خطای غیرمنتظره: {str(e)}"
+
+
+    def load_record_data(self, user_nationalcode: str):
+        form_data = {"message": "", "success": True}
+
+        # یک نمونه از شی مدیریت فرم را ایجاد می کنیم
+        obj_form_manager = self.obj_form_manager if obj_form_manager else FormManager(self.current_user_national_code, -1)
+        # مشخص می کنیم که وضعیت فعلی فرم چیست؟
+        form_status = self.check_form_status(
+            user_nationalcode=user_nationalcode,
+            request_id=self.request_id)
+        form_data["mode"] = form_status["mode"]
+        form_data["form"] = form_status["form"]
+
+        # اگر کاربر مربوطه مجاز به مشاهده اطلاعات نباشد
+        if form_status["mode"] == "INVALID":
+            form_data["message"] = "شما مجاز به مشاهده این فرم نیستید"
+            return form_data
+
+        # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
+        if form_status["mode"] in ["READONLY", "UPDATE"]:
+
+            # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
+            result = self.get_request_data()
+
+            # اگر به هر دلیل امکان بارگذاری اطلاعات درخواست وجود نداشته باشد پیام خطا بازگشت داده می شود
+            if not result.get("success", False):
+                return result
+
+        # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
+        result = obj_form_manager.get_form_data()
+        # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
+        if not result.get("success", False):
+            return result
+
+        # اطلاعات کاربران را دریافت می کنیم
+        result = obj_form_manager.get_all_user_data()
+        # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
+        if not result.get("success", False):
+            return result
+
+        # سایر اطلاعات مربوط به فرم را دریافت می کنیم
+        request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
+
+        form_data.update(
+            {
+                "request_number": self.request_id,
+                "request_date": request_date,
+            }
+        )
+
+        return form_data
+
 
     def get_record_data(self, form_data:json):
         """

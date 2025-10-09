@@ -694,7 +694,9 @@ border-color: inherit;
 }
 
 /****************General Table End***************/
-
+#notify-group-table tbody td{
+  text-align: center;
+}
 /***************Switch Start**************/
 
 @supports (-webkit-appearance: none) or (-moz-appearance: none) {
