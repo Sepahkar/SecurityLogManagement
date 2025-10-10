@@ -304,7 +304,6 @@ input[type="text"], textarea
   height: 40px;
   border-radius: 10px;
   border: gray 1px groove;
-  font-style: italic;
   padding: 5px;
 }
 @keyframes blink {
@@ -385,6 +384,26 @@ input[type="text"], textarea
     border-radius: 5px;
     font-size: 10pt;
 }
+.user-info .user-title
+{
+  text-align: center;
+  font-weight: bolder;
+  font-family:  Defined-Traffic;
+}
+.user-info .user-information
+{
+  text-align: center;
+}
+.info input
+{
+  margin: 5pt 0pt 5pt 0pt;
+  width: 100%;
+}
+.info textarea
+{
+  min-height: 350px;
+
+}
 .need-test
 {
   display: flex ;
@@ -402,6 +421,8 @@ input[type="text"], textarea
   margin-left:10px;
 }
 /************** requestor info end***************/
+
+
 
 /***************************radio list start ************************************/
 
@@ -986,3 +1007,50 @@ button, input {
   margin-bottom: 20px;
 }
 /*************other step information end******************/
+
+/*************change type start******************/
+.change-type .need-committee-title
+{
+  color: gray;
+}
+.change-type .need-committee-title.active
+{
+  color: rgb(17, 17, 17);
+}
+.change-type .need-committee-row
+{
+  display: flex; flex-direction: row; align-items: center;
+  cursor: pointer!important;
+}
+.change-type .need-committee-row #need_committee_checkbox_label
+{
+  display: flex; align-items: center;
+}
+.change-type .need-committee-row i
+{
+  font-size: 15px;
+  color: #ccc;
+  vertical-align: middle;
+  margin-left: 8px;  
+  cursor: pointer!important;
+}
+.change-type .need-committee-row i.active
+{
+  color:#4CAF50
+}
+.change-type .need-committee-row .need-committee-title
+{
+  white-space: nowrap; margin-left: 10px;
+  font-size: 11pt;
+  font-weight: lighter;
+  cursor: pointer!important;
+
+}
+.change-type .need-committee-row
+{
+}
+.change-type .need-committee-row
+{
+}
+
+/*************change type end******************/

@@ -1,7 +1,7 @@
 from asyncio import current_task
 import json
 from random import choice
-
+from collections import defaultdict
 from django.core.signals import request_started
 from django.db.transaction import commit
 # from requests import request
@@ -1474,7 +1474,64 @@ class FormManager:
 
             # لیست گروه های اطلاع رسانی را اضافه می کنیم
             data["notify_group_list"] = m.NotifyGroup.objects.all()
+            
+            
+            user_team_roles = m.UserTeamRole.objects.select_related('national_code', 'role_id', 'team_code')
+            data["user_team_roles"] = user_team_roles
+            
+            # لیست همه کاربرانی که فعال هستند را استخراج می کنیم
+            utr_list = m.UserTeamRole.objects.select_related('national_code', 'role_id', 'team_code')
+                
+            # users_dict = defaultdict(list)
+            # for utr in utr_list:
+            #     user = utr.national_code
+            #     users_dict[user.national_code].append({
+            #         'role_id': utr.role_id.role_id if utr.role_id else None,
+            #         'role_title': utr.role_id.role_title if utr.role_id else '',
+            #         'team_code': utr.team_code.team_code if utr.team_code else '',
+            #         'team_name': utr.team_code.team_name if utr.team_code else '',
+            #     })
+            
+            # # حالا all_users را آماده می‌کنیم:
+            # all_users = []
+            # for nc, roles in users_dict.items():
+            #     u = m.User.objects.get(national_code=nc)
+            #     all_users.append({
+            #         'national_code': u.national_code,
+            #         'fullname': u.fullname,
+            #         'username': u.username,
+            #         'roles': roles,
+            #     })
+                
+            # data['all_users'] = all_users
 
+
+            # واکشی همه روابط بین کاربر، سمت و تیم
+            utr_list = m.UserTeamRole.objects.select_related('national_code', 'role_id', 'team_code').all()
+            all_user_roles = []
+            for utr in utr_list:
+                user = utr.national_code
+                if not user:
+                    continue
+                full_display = f"{user.first_name} {user.last_name}"
+                if utr.role_id and utr.team_code:
+                    full_display += f" ({utr.role_id.role_title} تیم {utr.team_code.team_name})"
+                elif utr.role_id:
+                    full_display += f" ({utr.role_id.role_title})"
+                elif utr.team_code:
+                    full_display += f" (تیم {utr.team_code.team_name})"
+
+                all_user_roles.append({
+                    "national_code": user.national_code,
+                    "full_display": full_display,
+                    "fullname":user.fullname,
+                    "username": user.username,
+                    "role_id": utr.role_id.role_id if utr.role_id else '',
+                    "team_code": utr.team_code.team_code if utr.team_code else '',
+                    "team_name": utr.team_code.team_name if utr.team_code else '',
+                })            
+            data["all_user_roles"] = all_user_roles
+            
         except Exception as e:
             return {"success": False, "message": str(e)}
 
@@ -1514,11 +1571,11 @@ class FormManager:
             national_code (str): کد ملی کاربری که می خواهیم اطلاعات وی را به دست بیاوریم
         """
         data = {"success":True}        
-        user = m.User.objects.filter(national_code=self.current_user_national_code).first()
+        user = m.User.objects.filter(national_code=national_code).first()
         if not user:
             return {"success":False, "message":":کاربر مورد نظر یافت نشد"}  
         data["user"] = user
-        data["team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_national_code)        
+        data["team_roles"] = m.UserTeamRole.objects.filter(national_code=national_code)        
         
         return data
 
@@ -1542,7 +1599,7 @@ class FormManager:
 
             data["current_user"] = m.User.objects.filter(national_code=self.current_user_national_code).first()
             data["current_user_team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_national_code)
-            data["all_users"] = m.UserTeamRole.objects.all()
+
 
 
         except Exception as e:
@@ -3193,19 +3250,20 @@ class Task:
             return {"success": False, "message": f"خطا در ذخیره گزارش تسک: {str(e)}"}
 
 class ChangeType:
-    id:int=-1
+    change_type_id:int=-1
     change_type_instance:m.ChangeType=None
     error_message:str = ''
     objform_manager:FormManager = None
     current_user_natioal_code:str= ''
     
-    def __init__(self,current_user_natioal_code:str, id=None):
+    def __init__(self,current_user_natioal_code:str, change_type_id=None):
         
-        if id:
-            self.change_type_instance = m.ChangeType.objects.filter(id=id).first()
+        if change_type_id and change_type_id > 0:
+            self.change_type_instance = m.ChangeType.objects.filter(id=change_type_id).first()
             if self.change_type_instance is None:
                 self.error_message = 'شناسه نوع تغییر نامعتبر است'
-                
+            else:
+                self.change_type_id = change_type_id
         self.objform_manager = FormManager(current_user_national_code=current_user_natioal_code, request_id=-1)
         self.current_user_natioal_code = current_user_natioal_code
     
@@ -3215,28 +3273,59 @@ class ChangeType:
     
     def create_record(self):
         return {'success':True, 'message':''}
+
+
+    def get_change_type_data(self):
+        """
+        این تابع تمامی داده های یک نوع درخواست را بازگشت می دهد
+        از این داده ها برای بارگذاری فرم جهت انجام ویرایش استفاده می شود
+        """
+        data = {"success": True, "message": ""}
+
+        try:
+            if self.change_type_instance:
+                # اطلاعات نوع درخواست
+                data["request"] = self.change_type_instance
+
+                # اضافه کردن اطلاعات نوع درخواست به data
+                extra_info = m.RequestExtraInformation_ChangeType.objects.filter(
+                    changetype_id=self.change_type_id
+                )
+                data["data_center_selected"] = list(
+                    extra_info.filter(extra_info__Code__startswith='DataCenter_').values_list('extra_info__Code', flat=True)
+                )
+                data["database_selected"] = list(
+                    extra_info.filter(extra_info__Code__startswith='Database_').values_list('extra_info__Code', flat=True)
+                )
+                data["system_services_selected"] = list(
+                    extra_info.filter(extra_info__Code__startswith='SystemServices_').values_list('extra_info__Code', flat=True)
+                )
+
+                # اطلاعات تیم های مرتبط
+                teams = m.RequestTeam_ChangeType.objects.filter(changetype_id=self.change_type_id).values_list('team_code__team_code',flat=True)
+                data["request_teams"] = teams
+
+                # اطلاعات شرکت های مرتبط
+                corps = m.RequestCorp_ChangeType.objects.filter(changetype_id=self.change_type_id).values_list('corp_code__corp_code',flat=True)
+                data["request_corps"] = corps
+
+                # اطلاعات تسک ها
+                tasks = m.RequestTask_ChangeType.objects.filter(changetype_id=self.change_type_id)
+                data["request_tasks"] = tasks
+                
+            else:
+                return {"success": False, "message": "نوع درخواست مورد نظر وجود ندارد"}
+
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+        return data
+
     
     def load_record_data(self):
         
         objform_manager = self.objform_manager if self.objform_manager else FormManager(current_user_national_code=self.current_user_natioal_code, request_id=-1)
         form_data = {"message": "", "success": True}
-
-        # باید کنترل کنیم که کاربر مجاز به ویرایش 
-        # if form_status["mode"] == "INVALID":
-        #     form_data["message"] = "شما مجاز به مشاهده این فرم نیستید"
-        #     return form_data
-
-        # # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
-        # if form_status["mode"] in ["READONLY", "UPDATE"]:
-
-        #     # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
-        #     result = self.request_obj.get_request_data()
-
-        #     # اگر به هر دلیل امکان بارگذاری اطلاعات درخواست وجود نداشته باشد پیام خطا بازگشت داده می شود
-        #     if not result.get("success", False):
-        #         return result
-
-        #     form_data.update(result)
 
         # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
         result = objform_manager.get_form_data()
@@ -3247,34 +3336,41 @@ class ChangeType:
         form_data.update(result)
 
         # اطلاعات کاربران را دریافت می کنیم
-        result = objform_manager.get_all_user_data()
-        # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
+        # کاربر جاری
+        result = objform_manager.get_user_info(self.current_user_natioal_code)
         if not result.get("success", False):
             return result
-        form_data.update(result)
+        form_data["current_user"] = result["user"]
+        form_data["current_user_role"] = result["team_roles"]
         
         # لازم است اطلاعات مدیر مربوطه و دبیر کمیته (در صورت وجود) به دست بیاوریم
         if self.change_type_instance.related_manager:
             result = objform_manager.get_user_info(self.change_type_instance.related_manager.national_code)
             if not result.get("success", False):
                 return result
-            form_data["related_manager_national_code"] = result["user"]
-            form_data["related_manager_national_code_role"] = result["team_roles"]
+            form_data["related_manager"] = result["user"]
+            form_data["related_manager_role"] = result["team_roles"]
         
         if self.change_type_instance.committee:
             result = objform_manager.get_user_info(self.change_type_instance.committee.administrator_nationalcode.national_code)
             if not result.get("success", False):
                 return result
-            form_data["committee_national_code"] = result["user"]
-            form_data["committee_national_code_role"] = result["team_roles"]
-        
+            form_data["committee_user"] = result["user"]
+            form_data["committee_user_role"] = result["team_roles"]
+
+
+        # حالا اطلاعات جانبی (شرکت ها، تیم ها، تسک ها و ...) مربوطه به نوع درخواست را واکشی می کنیم
+        result = self.get_change_type_data()
+        if not result.get("success", False):
+            return result
+        form_data.update(result)        
 
         # سایر اطلاعات مربوط به فرم را دریافت می کنیم
-        request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
+        request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
 
         form_data.update(
             {
-                "request_id": self.id,
+                "request_id": self.change_type_id,
                 "request_date": request_date,
                 "request":self.change_type_instance,
                 "form_type":"change_type",

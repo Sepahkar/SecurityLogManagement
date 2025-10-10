@@ -2099,3 +2099,244 @@ AttributeError: 'Request' object has no attribute 'check_form_status'
 2025-10-09 18:36:33,889 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-09 18:36:57,077 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
 2025-10-10 11:03:52,228 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 11:05:42,944 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 693, in change_type_edit
+    data=obj_change_type.load_record_data(current_user)
+TypeError: ChangeType.load_record_data() takes 1 positional argument but 2 were given
+2025-10-10 11:06:06,466 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 693, in change_type_edit
+    data=obj_change_type.load_record_data(current_user)
+TypeError: ChangeType.load_record_data() takes 1 positional argument but 2 were given
+2025-10-10 11:14:16,484 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-10 11:14:59,816 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 11:16:51,431 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-10 11:17:13,820 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 11:22:08,235 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 11:22:27,208 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 11:22:44,750 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 11:55:19,379 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 11:55:33,504 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 11:55:45,076 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 695, in change_type_edit
+    return render(request, 'ConfigurationChangeRequest/change-type.html', data)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 65, in render
+    result = block.nodelist.render(context)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\defaulttags.py", line 326, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\defaulttags.py", line 197, in render
+    values = list(values)
+TypeError: 'User' object is not iterable
+2025-10-10 11:55:45,353 - WARNING - Not Found: /favicon.ico
+2025-10-10 11:56:06,287 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 11:56:11,126 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 11:57:36,557 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 11:59:07,394 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 12:01:17,667 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 12:23:33,560 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 12:31:41,271 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-10-10 12:31:49,226 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 12:32:56,595 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 12:33:04,637 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 693, in change_type_edit
+    data=obj_change_type.load_record_data()
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3336, in load_record_data
+    "request_id": self.id,
+                  ^^^^^^^
+AttributeError: 'ChangeType' object has no attribute 'id'
+2025-10-10 12:33:04,827 - WARNING - Not Found: /favicon.ico
+2025-10-10 12:33:19,759 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:06:04,402 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 13:12:20,325 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:12:29,973 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:21:26,176 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 13:27:05,815 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:27:13,392 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:27:22,064 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:27:36,481 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:27:39,859 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:29:07,963 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:29:13,435 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 13:35:24,482 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 13:35:45,352 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 13:40:01,011 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 13:40:41,198 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 13:48:28,736 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 13:48:49,076 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:06:09,902 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:12:03,289 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:19:26,757 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:20:26,560 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:20:43,708 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:20:53,397 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:20:55,947 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:21:34,720 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:21:37,106 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:22:09,853 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:22:18,555 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:24:29,162 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:24:47,930 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:27:15,856 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:27:58,695 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:28:57,597 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:29:03,026 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:29:49,215 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:29:51,408 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:31:01,129 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:31:09,988 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:31:56,506 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:33:21,399 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:33:50,643 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:33:55,205 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:35:19,003 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:35:21,481 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:36:02,812 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:37:04,622 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:38:27,317 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:38:33,508 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:39:53,970 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 16:39:56,266 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 16:42:03,209 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:05:52,596 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:06:31,832 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:26:13,980 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:27:30,920 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:27:34,172 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 17:27:48,299 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:27:51,830 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 17:29:34,513 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:30:43,056 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:34:24,768 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:34:33,059 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 17:36:05,353 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 17:36:07,665 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:40:52,119 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-10-10 17:41:47,794 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:42:42,045 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:42:45,706 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 17:43:08,230 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 17:43:13,272 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:43:37,193 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:48:11,196 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:48:17,911 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 17:52:47,351 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:58:15,584 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 17:58:20,686 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:00:53,100 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:00:57,991 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:05:54,002 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:08:42,131 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:08:45,797 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:08:50,693 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:09:32,594 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:09:35,130 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:16:21,893 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:16:24,247 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:16:33,757 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:17:09,578 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:17:11,970 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:18:24,571 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:19:51,037 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:20:47,981 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:30:27,718 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:32:47,564 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:35:35,506 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:46:28,035 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:47:30,891 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:47:36,765 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:47:38,224 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:48:19,443 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:48:35,398 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 18:49:44,066 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:50:17,522 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:50:29,146 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:50:37,438 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:51:57,473 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:53:45,971 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 18:56:37,393 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 18:57:26,780 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 19:06:29,533 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:06:51,644 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 19:10:20,481 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:10:42,491 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:10:46,564 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:13:00,057 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:13:35,806 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:13:53,170 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:14:38,822 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-10 19:15:11,502 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:16:16,087 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:16:30,251 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 19:16:49,578 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 19:16:51,775 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:17:04,160 - WARNING - Not Found: /ConfigurationChangeRequest/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:26:29,882 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:30:47,549 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:37:29,241 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:38:04,911 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:39:04,676 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 19:43:52,672 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.

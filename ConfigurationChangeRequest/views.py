@@ -690,7 +690,7 @@ def change_type_edit(request, change_type_id):
     current_user = get_current_user(request)
    
     obj_change_type = ChangeType(current_user, change_type_id)
-    data=obj_change_type.load_record_data(current_user)
+    data=obj_change_type.load_record_data()
     
     return render(request, 'ConfigurationChangeRequest/change-type.html', data)
 

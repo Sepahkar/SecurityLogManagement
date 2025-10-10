@@ -18,12 +18,17 @@
     {% block extra_css %}{% endblock %}
 
     <title>
-        درخواست تغییرات
-        {% if mode != 'READONLY' %}
-            - {% if status_title %}{{ status_title }}{% else %}ثبت درخواست{% endif %}
+        {% if form_type == 'change_type'%}
+            نوع تغییر
         {% else %}
-            (فقط خواندنی)
+            درخواست تغییرات
+            {% if mode != 'READONLY' %}
+                - {% if status_title %}{{ status_title }}{% else %}ثبت درخواست{% endif %}
+            {% else %}
+                (فقط خواندنی)
+            {% endif %}
         {% endif %}
+
     </title>
 <!-- Meta tags برای انتقال پیام‌های context به JavaScript -->
 {% if message %}
@@ -50,31 +55,46 @@
 
             {% csrf_token %}
             <input type="hidden" name="request_id" id="request_id" value="{{request.id}}"/>
+            <input type="hidden" name="form_type" value="{{ form_type }}"/>
 
             <div class="col-2">
                 <img src="{% static 'ConfigurationChangeRequest/images/EIT.png' %}" alt="فناوران اطلاعات خبره" title="فناوران اطلاعات خبره" class="logo">
             </div>
             <div class="title-text col-4">
-                <div class="title">درخواست تغییرات</div>
-                <div class="subtitle">
-                    {% if mode != 'READONLY' %}
-                    {% if status_title %}{{ status_title }}{% else %}ثبت درخواست{% endif %}
-                    {% else %}
-                        (فقط خواندنی)
-                    {% endif %}
-                </div>
+                {% if form_type == 'change_type'%}
+                    <div class="title">نوع تغییر</div>
+                {% else %}                
+                    <div class="title">درخواست تغییرات</div>
+                    <div class="subtitle">
+                        {% if mode != 'READONLY' %}
+                        {% if status_title %}{{ status_title }}{% else %}ثبت درخواست{% endif %}
+                        {% else %}
+                            (فقط خواندنی)
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
             <div class='info col-2'>
-                <p><b>شماره درخواست: </b>
+                <p>
+                    {% if form_type == 'change_type'%}
+                        <b>شناسه نوع درخواست: </b>
+                    {% else %}
+                        <b>شماره درخواست: </b>
+                    {% endif %}
                     <span>
-                        {% if request.id and request.id|to_int > 1 %}
+                        {% if request.id %}
                             {{ request.id }}
                         {% else %}
                             -
                         {% endif %}
                     </span>
                 </p>
-                <p><b>تاریخ ثبت درخواست: </b>
+                <p>
+                    {% if form_type == 'change_type'%}
+                        <b>تاریخ ثبت نوع درخواست: </b>
+                    {% else %}
+                        <b>تاریخ ثبت درخواست: </b>
+                    {% endif %}
                     <span>
                         {% if request.create_date %}
                             {{ request.create_date|to_jalali:"%Y/%m/%d" }}
@@ -98,15 +118,20 @@
                 {% comment %} mode = {{ mode }} {% endcomment %}
                 <input type="hidden" name="action" value=""/>
                 {%if not is_task %}
-                    {% if mode == 'UPDATE' %}
-                        <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
-                        <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-original-text="رد">رد</button>
-                        <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-original-text="بازگشت">بازگشت</button>
-                    {% elif mode != 'READONLY' %}
-                        <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="شروع فرآیند">شروع فرآیند</button>
-                        <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-original-text="بازگشت">بازگشت</button>
-                    {% else %}
+                    {% if form_type == 'change_type'%}
+                        <button type="button" name="action" value="save" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="ذخیره">ذخیره</button>
                         <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+                    {% else %}
+                        {% if mode == 'UPDATE' %}
+                            <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
+                            <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-original-text="رد">رد</button>
+                            <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-original-text="بازگشت">بازگشت</button>
+                        {% elif mode != 'READONLY' %}
+                            <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="شروع فرآیند">شروع فرآیند</button>
+                            <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-original-text="بازگشت">بازگشت</button>
+                        {% else %}
+                            <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+                        {% endif %}
                     {% endif %}
                 {% else %}
                     {% if status_code|slice:"-3:" == "RED" or status_code == "DEFINE" %}

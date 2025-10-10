@@ -215,7 +215,7 @@ class Committee(models.Model):
     ولی در صورت نیاز باید سوابق تغییرات دبیرکمیته در یک جدول دیگر ذخیره شود
     """
     title = models.CharField(max_length=50, verbose_name='عنوان کمیته', null=False)
-    administrator_nationalcode = models.ForeignKey(to='User', on_delete=models.SET_NULL, 
+    administrator_nationalcode = models.ForeignKey(to=User, on_delete=models.SET_NULL, 
                                             related_name='administrator', null=True,
                                             db_column='administrator_nationalcode',
                                             verbose_name='کد ملی دبیر کمیته')
@@ -994,13 +994,13 @@ class RequestExtraInformation_ChangeType(models.Model):
     بعدا مدیر مربوطه می تواند این اطلاعات را ویرایش کند
     """
     extra_info = models.ForeignKey(to='ConstValue', on_delete=models.CASCADE, null=False, verbose_name='شناسه اطلاعات تکمیلی')
-    change_type = models.ForeignKey(to='ChangeType', on_delete=models.CASCADE, null=False, verbose_name='شناسه نوع درخواست')
+    changetype = models.ForeignKey(to='ChangeType', on_delete=models.CASCADE, null=False, verbose_name='شناسه نوع درخواست')
     class Meta:
         verbose_name = 'اطلاعات تکمیلی درخواست'
         verbose_name_plural = 'اطلاعات تکمیلی درخواست‌ها'
 
     def __str__(self) -> str:
-        return f'{self.change_type.change_type_title} - {self.extra_info.Caption}'
+        return f'{self.changetype.change_type_title} - {self.extra_info.Caption}'
 
 class RequestCorp(models.Model):
     """

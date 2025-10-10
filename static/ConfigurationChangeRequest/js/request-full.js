@@ -1543,8 +1543,13 @@ function task_user_management(select_obj, operation_type, on_success)
             role_code: role_type_code,
         }
         console.log(data)
+        
+        var form_type = $('input[name="form_type"]').val()
+        if (form_type == 'change_type')
+            url = '/ConfigurationChangeRequest/change-type/task-user/' + request_taskId  +'/';
+        else
+            url = '/ConfigurationChangeRequest/task-user/' + request_taskId  +'/';
 
-        url = '/ConfigurationChangeRequest/task-user/' + request_taskId  +'/';
         console.log('url:'+url)
 
         AJAX_call(url,data,on_success)
@@ -1567,7 +1572,11 @@ function task_management(select_obj, operation_type, on_success)
     if (task_id && request_id)
     {
         const csrftoken = getCookie('csrftoken');
-        url = '/ConfigurationChangeRequest/' + request_id  +'/task/'+operation_type+'/'+task_id+'/';
+        var form_type = $('input[name="form_type"]').val()
+        if (form_type == 'change_type')
+            url = '/ConfigurationChangeRequest/change-type/' + request_id  +'/task/'+operation_type+'/'+task_id+'/';
+        else
+            url = '/ConfigurationChangeRequest/' + request_id  +'/task/'+operation_type+'/'+task_id+'/';
         data = {}
         AJAX_call(url,data,on_success)
     }
@@ -1587,7 +1596,11 @@ function notify_group_management(select_obj, operation_type, on_success)
    if (notify_group_id && request_id)
    {
        const csrftoken = getCookie('csrftoken');
-       url = '/ConfigurationChangeRequest/' + request_id  +'/notify-group/'+operation_type+'/'+notify_group_id+'/';
+       var form_type = $('input[name="form_type"]').val()
+       if (form_type == 'change_type')
+            url = '/ConfigurationChangeRequest/change-type/' + request_id  +'/notify-group/'+operation_type+'/'+notify_group_id+'/';
+       else
+            url = '/ConfigurationChangeRequest/' + request_id  +'/notify-group/'+operation_type+'/'+notify_group_id+'/';
        data = {}
        AJAX_call(url,data,on_success)
    }
@@ -1651,6 +1664,15 @@ function buildUserCellHtml(data, users, role)
 }
 
 $(document).ready(function() {
+
+    ///////////////////////////////شروع کدهای مشترک فرم های درخواست و انواع تغییر////////////////////////////////////
+    ///////////////////////////////شروع کدهای مشترک فرم های درخواست و انواع تغییر////////////////////////////////////
+
+
+    ///////////////////////////////شروع کدهای اختصاصی فرم درخواست////////////////////////////////////
+    ///////////////////////////////خاتمه کدهای اختصاصی فرم درخواست////////////////////////////////////
+    
+
     // مقداردهی سبک و سریع: داده‌ها را همگام می‌کنیم تا ورودی‌های مخفی به‌روز باشند
     try { updateTaskData(); updateNotificationDataInForm(); } catch (e) {}
 
@@ -2330,6 +2352,88 @@ $(document).ready(function() {
     {
         reject()        
     })
+
+
+    ///////////////////////////////شروع کدهای اختصاصی فرم انواع تغییر////////////////////////////////////
+    $('.change-type  #related_manager_select').on('change', function () {
+        const selected = $(this).find(':selected');
+        const username = selected.data('username');
+        const fullname = selected.data('fullname');
+        // تغییر تصویر
+        const imgUrl = '/static/ConfigurationChangeRequest/images/personnel/'+username.split("@")[0]+'.jpg';
+        $('.related-manager .user-avatar .personnel-avatar')
+            .attr('src', imgUrl)
+            .attr('alt', fullname)
+            .attr('title', fullname);
+    });
+
+    // نیاز به بارگذاری select2 و فایل css آن دارید
+    $('#related_manager_select.select2-searchable').select2({
+        placeholder: "جستجو و انتخاب مدیر مربوطه...",
+        width: '100%',
+        dir: "rtl",
+        language: "fa"
+    });    
+   
+    
+
+    $('.change-type .need-committee-box select').on("change", function() 
+    {
+        var $selectedOption = $(this).find('option:selected');
+        if ($selectedOption.length === 0 || $selectedOption.val() == '-1') {
+            // هیچ گزینه‌ای انتخاب نشده است
+            $('.committee-user .user-information .committee-user-title').hide();
+            $('.committee-user .user-avatar .personnel-avatar').hide()
+            return;
+        }
+
+        $('.committee-user .user-information .committee-user-title').show();
+        $('.committee-user .user-avatar .personnel-avatar').show()
+
+        // نام دبیر کمیته را به روز می‌کنیم
+        var userFullname = $selectedOption.data('user-fullname') || '';
+        $('.committee-user .user-information .committee-user-title').text(userFullname);
+
+        // تصویر کاربر کمیته را به روز می‌کنیم
+        var username = $selectedOption.data('user-username') || '';
+        var src = '/static/ConfigurationChangeRequest/images/personnel/' + username.split('@')[0] + '.jpg';
+        $('.committee-user .user-avatar .personnel-avatar').attr({
+            'src': src,
+            'alt': userFullname,
+            'title': userFullname
+        });
+    });
+
+
+    $('.change-type .need-committee-row #need_committee_checkbox').on("click", 
+        function() 
+        {
+            var $checkbox = $("#need_committee_checkbox");
+            var $icon = $("#need_committee_checkbox_label i");
+            var $committeeCombo = $("#committee");
+            var $committeeText = $('.need-committee-title')
+            
+            // اگر نیاز به کمیته داشته باشد و کلیک شود، باید همه چیز مخفی شود
+            if ( $("#need_committee_checkbox").is(":checked")) {
+                $("#need_committee_checkbox_label i").removeClass("far").addClass("fas").css("color", "#4CAF50");
+                $("#committee").show();
+                $('.committee-user .need-committee-title').addClass('active')
+                $('.committee-user .user-avatar').show()
+                $('.committee-user .user-information').show()
+                
+            } 
+            else {
+                $("#need_committee_checkbox_label i").removeClass("fas").addClass("far").css("color", "#ccc");
+                $("#committee").hide();
+                $('.need-committee-title').removeClass('active');
+                $('.committee-user .user-avatar').hide()
+                $('.committee-user .user-information').hide()            
+            }
+        });
+    
+    ///////////////////////////////پایان کدهای اختصاصی فرم انواع تغییر////////////////////////////////////
+
+
 });
 
 

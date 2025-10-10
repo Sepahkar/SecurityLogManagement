@@ -2,113 +2,158 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}درخواست تغییرات - بررسی مدیر مربوطه{% endblock %}
+{% block title %}نوع تغییر{% endblock %}
 
 {% block extra_css %}
 <link href="{% static 'ConfigurationChangeRequest/css/request-full.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block main_content %}
-    <div class="container">
+    <div class="container {% if form_type == 'change_type'%}change-type{% else %}request{%endif%}">
         {% if success %}
             <div class='panel-row'><!--اطلاعات درخواست، ویژگی های تغییر -->
-                <div class='col-6 fieldBox user-list'>
-                    <div class="col-12 requestor user-info"><div class="title">اطلاعات درخواست</div>
-                        
+                <div class='col-6 fieldBox info'>
+                    <div class="col-12 change-type-info">
+                        <div class="title">اطلاعات نوع درخواست</div>
                         <hr/>
-                        <div class="content">
-                            <div class="row">
-                                <div class="current-user col-6">
-                                    <div class="user-avatar col-6">
-                                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{current_user.username|split:'@' }}.jpg" 
-                                        alt="{{current_user.fullname }}" title="{{current_user.fullname }}" class="personnel-avatar">
-                                    </div>
-                                    <div class="user-information col-6">
-                                        {% if current_user_team_roles|length == 1 %}
-                                            <span class='single-role'>{{ current_user_team_roles.0.role_id.role_title }} {{current_user_team_roles.0.team_code.team_name}}</span>
-                                            <input type="hidden" name="requestor_user_team_role" value="{{ current_user_team_roles.0.team_code.team_code }}-{{ current_user_team_roles.0.role_id.role_id }}"/>
-                                        {% elif current_user_team_roles|length > 1 %}
-                                            <select class='role-select' name="requestor_user_team_role"  id="user_team_role" required>
-                                                {% for team_role in current_user_team_roles %}
-                                                    <option value="{{ team_role.team_code.team_code }}-{{ team_role.role_id.role_id }}">{{ team_role.role_id.role_title }} تیم {{team_role.team_code.team_name}}</option>
-                                                {% endfor %}
-                                            </select>
-                                        {% else %}
-                                            <span class='no-role'>کاربر فاقد سمت است</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="related-manager col-6">
-                                    <div class="user-avatar col-6">
-                                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ realated_manager.username|split:'@' }}.jpg" 
-                                        alt="{{ realated_manager.fullname }}" title="{{ realated_manager.fullname }}" class="personnel-avatar">
-                                    </div>
-                                    <div class="user-information col-6">
-                                        {% if related_manager_national_code_role|length == 1 %}
-                                            <span class='single-role'>{{ related_manager_national_code_role.0.role_id.role_title }} {{related_manager_national_code_role.0.team_code.team_name}}</span>
-                                            <input type="hidden" name="realated_manager_user_team_role" value="{{ related_manager_national_code_role.0.team_code.team_code }}-{{ related_manager_national_code_role.0.role_id.role_id }}"/>
-                                        {% elif related_manager_national_code_role|length > 1 %}
-                                            <select class='role-select' name="realated_manager_user_team_role"  id="user_team_role" required>
-                                                {% for team_role in related_manager_national_code_role %}
-                                                    <option value="{{ team_role.team_code.team_code }}-{{ team_role.role_id.role_id }}">{{ team_role.role_id.role_title }} تیم {{team_role.team_code.team_name}}</option>
-                                                {% endfor %}
-                                            </select>
-                                        {% else %}
-                                            <span class='no-role'>کاربر فاقد سمت است</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                        <div class="row change-type">
+                            <div class="col-4 change-type-title-label">
+                                <span class="label-title">عنوان نوع تغییر:</span>
                             </div>
-                            <div class="col-12">
-                                <div>
-                                    <div class="row">
-                                        <div class="col-4">
-                                            <span class="label-title">عنوان تغییر:</span>
-                                        </div>
-                                        <div class="col-8">
-                                            {{ request.change_title }}
-                                            <!--
-                                            چون باید اطلاعات برگشت داده شود، در یک
-                                            input hidden
-                                            هم ذخیره می کنیم
-                                            -->
-                                            <input type="hidden" name="change_title" value="{{ request.change_title }}"/>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-4">
-                                            <span class="label-title">نوع تغییر:</span>
-                                        </div>
-                                        <div class="col-8">
-                                            {{ request.change_type.change_type_title }}
-                                            <!--
-                                            چون باید اطلاعات برگشت داده شود، در یک
-                                            input hidden
-                                            هم ذخیره می کنیم
-                                            -->
-                                            <input type="hidden" name="change_type" value="{{ request.change_type.id }}"/>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-4">
-                                            <span class="label-title">توضیحات:</span>
-                                        </div>
-                                        <div class="col-8">
-                                            {{ request.change_description }}
-                                            <!--
-                                            چون باید اطلاعات برگشت داده شود، در یک
-                                            input hidden
-                                            هم ذخیره می کنیم
-                                            -->
-                                            <input type="hidden" name="change_description" value="{{ request.change_description }}"/>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="col-8 change-type-title-value">
+                                <input type="text" class="form-control" name="change_type_title" value="{{ request.change_type_title }}"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4 change-type-code-label">
+                                <span class="label-title">کد نوع تغییر:</span>
+                            </div>
+                            <div class="col-8 change-type-code-value">
+                                <input type="text" class="form-control" name="change_type_code" value="{{ request.code }}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 request-info">
+                        <hr/>
+                        <div class="title">اطلاعات درخواست</div>
+                        <hr/>
+                        <div class="row change-title">
+                            <div class="col-4">
+                                <span class="label-title change-title-label">عنوان تغییر:</span>
+                            </div>
+                            <div class="col-8 change-title-value">
+                                <input type="text" name="change_title" value="{{ request.change_title }}"/>
+                            </div>
+                        </div>
+                        <div class="row change-description">
+                            <div class="col-4 change-description-label">
+                                <span class="label-title">توضیحات:</span>
+                            </div>
+                            <div class="col-8 change-description-value">
+                                <textarea class="form-control" name="change_description" rows="10">{{ request.change_description|default:'' }}</textarea>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class='col-6 fieldBox'>
+                    <div class="col-12 user-info">
+                        <div class="title">اطلاعات کاربران</div>
+                        <hr/>
+                        <div class="content">
+                            <div class="row">
+                                <div class="current-user col-4">
+                                    <div class="user-title">
+                                        کاربر جاری
+                                        <hr/>
+                                    </div>
+                                    <div class="user-avatar ">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{current_user.username|split:'@' }}.jpg" 
+                                        alt="{{current_user.fullname }}" title="{{current_user.fullname }}" class="personnel-avatar"
+                                        onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';">
+                                    </div>
+                                    <div class="user-information ">
+                                        <span>{{ current_user.fullname }}</span>
+                                        {% if current_user_role|length == 1 %}
+                                            <span class='single-role'>{{ current_user_role.0.role_id.role_title }} {{current_user_role.0.team_code.team_name}}</span>
+                                            <input type="hidden" name="current_user_team_role" value="{{ current_user_role.0.team_code.team_code }}-{{ current_user_role.0.role_id.role_id }}"/>
+                                        {% elif current_user_role|length > 1 %}
+                                            <select class='role-select' name="current_user_team_role"  id="user_team_role" required>
+                                                {% for team_role in current_user_role %}
+                                                    <option value="{{ team_role.team_code.team_code }}-{{ team_role.role_id.role_id }}">{{ team_role.role_id.role_title }} تیم {{team_role.team_code.team_name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <span class='no-role'>کاربر فاقد سمت است</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="related-manager col-4">
+                                    <div class="user-title">
+                                        مدیر مربوطه
+                                        <hr/>
+                                    </div>
+                                    <div class="user-avatar">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ related_manager.username|split:'@' }}.jpg" 
+                                        alt="{{ related_manager.fullname }}" title="{{ related_manager.fullname }}" class="personnel-avatar"
+                                        onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';">
+                                    </div>
+                                    <div class="user-information">
+                                        <select id="related_manager_select" name="related_manager" class="form-control select2-searchable">
+                                            {% for item in all_user_roles %}
+                                                <option 
+                                                    value="{{ item.team_code }}-{{ item.role_id }}-{{ item.national_code }}"
+                                                    data-username="{{ item.username }}"
+                                                    data-fullname="{{ item.fullname }}"
+                                                    {% if item.national_code == related_manager.national_code %} selected {% endif %}>
+                                                    {{ item.full_display }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="committee-user col-4">
+                                    <div class="col-12">
+                                        <div class="user-title need-committee-row">
+                                            <label for="need_committee_checkbox" id="need_committee_checkbox_label" >
+                                                <input type="checkbox" id="need_committee_checkbox" name="need_committee" value="1" style="display:none" 
+                                                {% if request.need_committee == True or request.need_committee %}checked="checked"{% endif %}>
+                                                <i class="fa-check-circle {% if request.need_committee == True or request.need_committee %}fas active{% else %}far{% endif %}"></i>
+                                                <span class="need-committee-title {% if request.need_committee %}active{% endif %}" >
+                                                    نیاز به کمیته
+                                                </span>
+                                            </label>
+                                            <hr/>
+                                        </div>                                        
+
+                                        <div class="row  need-committee-box">
+                                            <select class="select-box" name="committee" id="committee" {% if not request.need_committee %}style="display:none"{% endif %}>
+                                                <option value="-1">یک کمیته را انتخاب کنید</option>
+                                                {% for c in committee %}
+                                                    <option value="{{c.id}}" 
+                                                    {% if request.committee and request.committee.id == c.id %}selected="selected"{% endif %}
+                                                    data-user-fullname="{{ c.administrator_nationalcode.fullname }}" 
+                                                    data-user-username="{{ c.administrator_nationalcode.username }}">
+                                                        {{ c.title }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="user-avatar" {% if not request.need_committee %}style="display:none"{% endif %}>
+                                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.committee.administrator_nationalcode.username|split:'@' }}.jpg" 
+                                        alt="{{ request.committee.administrator_nationalcode.fullname }}" title="{{ request.committee.administrator_nationalcode.fullname }}" class="personnel-avatar"
+                                        onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';">
+                                    </div>
+                                    <div class="user-information" {% if not request.need_committee %}style="display:none"{% endif %}>
+                                        <span class="committee-user-title">
+                                            {{ request.committee.administrator_nationalcode.fullname }}
+                                        </span>
+                                    </div>
+                                </div>                                
+                            </div>
+                        </div>
+                    </div>
+                    <hr/>
                     <div class="title">ویژگی های تغییر</div>
                     <hr/>
                     <div class="content">
@@ -200,7 +245,7 @@
                 </div>
             </div><!--اطلاعات درخواست، ویژگی های تغییر -->
             <div class='panel-row'><!--محل تغییر، دامنه تغییرات -->
-                <div class='col-6 fieldBox change-info'>
+                <div class='col-6 fieldBox change-location'>
                     <div class="title">محل تغییر</div>
                     <hr/>
                     <div class="content">
@@ -283,25 +328,10 @@
                         </div>
                     </div>
                 </div>
-                <div class='col-6 fieldBox'>
+                <div class='col-6 fieldBox change-domain'>
                     <div class="title">دامنه تغییرات</div>
                     <hr/>
                     <div class="content ">
-                        <div class="content-row col-12 ">
-                            <div class="col-3 radio-label">نیاز به کمیته :</div>
-                            <div class="col-9 need-committee-box">
-                                <input class="radio-input" type="radio" name="need_committee" id="need_committee_no" value="0" {% if request.need_committee == False or not request.need_committee %}checked="checked"{% endif %}>
-                                <label class="radio-label" for="need_committee_no">ندارد</label>
-                                <input class="radio-input" type="radio" name="need_committee" id="need_committee_yes" value="1" {% if request.need_committee == True or request.need_committee %}checked="checked"{% endif %}>
-                                <label class="radio-label" for="need_committee_yes">دارد</label>
-                                <select class="select-box" name="committee" id="committee" {% if not request.need_committee %}style="display:none"{% endif %}>
-                                    <option value="-1">یک کمیته را انتخاب کنید</option>
-                                    {% for c in committee %}
-                                        <option value="{{c.id}}" {% if request.committee and request.committee.id == c.id %}selected="selected"{% endif %}>{{ c.title }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
                         <div class="change-team-corp">
                             <div class="content-row col-12">
                                 <div class="col-3 radio-label">دامنه تغییر:</div>
@@ -478,12 +508,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for request_task in request.requesttask_set.all %}
+                            {% for request_task in request.requesttask_changetype_set.all %}
                             <tr data-task-id="{{ request_task.task.id }}">
                                 <td>{{ request_task.task.title }}</td>
                                 <td>
                                     <div class="users-container" data-request-task-id="{{ request_task.id }}" data-role="E">
-                                        {% for task_user in request_task.requesttaskuser_set.all %}
+                                        {% for task_user in request_task.task.taskuser_set.all %}
                                             {% if task_user.user_role_code == 'E' %}
                                                 <div class="user-badge" data-user-id="{{ task_user.user_nationalcode.national_code }}">
                                                     <img class="person-small-avatar" src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{task_user.user_nationalcode.username|split:'@'}}.jpg"
@@ -515,7 +545,7 @@
                                 </td>
                                 <td>
                                     <div class="users-container" data-request-task-id="{{ request_task.id }}" data-role="T" >
-                                        {% for task_user in request_task.requesttaskuser_set.all %}
+                                        {% for task_user in request_task.task.taskuser_set.all %}
                                             {% if task_user.user_role_code == 'T' %}
                                                 <div class="user-badge" data-user-id="{{ task_user.user_nationalcode.national_code }}">
                                                     <img class="person-small-avatar" src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{task_user.user_nationalcode.username|split:'@'}}.jpg"
@@ -563,7 +593,7 @@
                     </table>
                     <div class="add-task-section">
                         <button type="button" class="btn btn-success add-task-btn" id="add-task-btn">
-                            <i class="fas fa-plus"></i> اضافه کردن تسک جدید
+                            <i class="fas fa-plus"></i> اضافه کردن تسک 
                         </button>
                         <select name="task-list" id="task-list" style="display:none">
                             <option value=-1>یک گزینه را انتخاب کنید</option>
@@ -604,7 +634,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for request_notify_group in request.requestnotifygroup_set.all %}
+                            {% for request_notify_group in request.requestnotifygroup_changetype_set.all %}
                             <tr data-notify-group-id={{request_notify_group.id}}>
                                 <td>
                                     {{ request_notify_group.notify_group.title }}
