@@ -1517,7 +1517,7 @@ function task_user_management(select_obj, operation_type, on_success)
     var user_national_code = select_obj.val();
     // در صورتی که خالی باشد در مقدار صفت کد ملی باید به دنبال آن بگردیم
     if (!user_national_code)
-        user_national_code = select_obj.data('user-natioalcode')
+        user_national_code = select_obj.data('user-nationalcode')
 
 
     if (user_national_code) 

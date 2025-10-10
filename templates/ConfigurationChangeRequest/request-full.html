@@ -450,7 +450,7 @@
                         </thead>
                         <tbody>
                             {% for request_task in request.requesttask_set.all %}
-                            <tr data-task-id="{{ request_task.task.id }}">
+                            <tr data-task-id="{{ request_task.task.id }}" data-request-id="{{ request.id }}">
                                 <td>{{ request_task.task.title }}</td>
                                 <td>
                                     <div class="users-container" data-request-task-id="{{ request_task.id }}" data-role="E">
@@ -460,7 +460,7 @@
                                                     <img class="person-small-avatar" src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{task_user.user_nationalcode.username|split:'@'}}.jpg"
                                                     alt="{{ task_user.user_nationalcode.fullname }}" title="{{ task_user.user_nationalcode.fullname }}"
                                                     onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" />
-                                                    <i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر" data-task-id={{ task_user.request_task.id }} data-user-natioalcode="{{ task_user.user_nationalcode.national_code }}"
+                                                    <i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر" data-task-id={{ task_user.request_task.id }} data-user-nationalcode="{{ task_user.user_nationalcode.national_code }}"
                                                     data-role-id = {{ task_user.user_role_id.role_id }}
                                                     data-team-code = "{{ task_user.user_team_code.team_code }}"></i>
                                                 </div>
@@ -492,7 +492,7 @@
                                                     <img class="person-small-avatar" src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{task_user.user_nationalcode.username|split:'@'}}.jpg"
                                                     alt="{{ task_user.user_nationalcode.fullname }}" title="{{ task_user.user_nationalcode.fullname }}"
                                                     onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';" />
-                                                    <i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر" data-task-id={{ task_user.request_task.id }} data-user-natioalcode="{{ task_user.user_nationalcode.national_code }}"
+                                                    <i class="fas fa-times remove-user-btn" data-delete="false" title="حذف کاربر" data-task-id="{{ task_user.request_task.id }}" data-user-nationalcode="{{ task_user.user_nationalcode.national_code }}"
                                                     data-role-id = {{ task_user.user_role_id.role_id }}
                                                     data-team-code = "{{ task_user.user_team_code.team_code }}"
                                                     ></i>
@@ -519,7 +519,7 @@
                                 </td>
                                 <td>
                                     <div class="task-actions">
-                                        <button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="{{ request_task.task.id }}" data-request-id="{{ request_task.request.id }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger deactivate-task-btn" data-task-id="{{ request_task.task.id }}" data-request-id="{{ request.id }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>

@@ -14,7 +14,7 @@ urlpatterns = [
     path('task-user/<int:request_task_id>/', views.request_task_user_management, name='request_task_user_management'),
 
     # اضافه/حذف کردن تسک به/از درخواست
-    path('<int:request_id>/task/<str:operation_type>/<int:task_id>/', views.request_task_management, name='request_task_management'),
+    path('<int:request_id>/task/<str:operation_type>/<int:request_task_id>/', views.request_task_management, name='request_task_management'),
 
     # اضافه/حذف کردن گروه اطلاع رسانی به/از نوع درخواست
     path('<int:request_id>/notify-group/<str:operation_type>/<int:notify_group_id>/', views.request_notify_group_management, name='request_notify_management'),
@@ -30,7 +30,7 @@ urlpatterns = [
     path('change-type/', views.change_type_create, name='change_type'),
     
     # اضافه/حذف کردن مجری به/از یک نوع درخواست
-    path('change-type/task-user/<int:task_id>/', views.change_type_user_management, name='change_type_user_managment'),
+    path('change-type/task-user/<int:change_type_task_id>/', views.change_type_user_management, name='change_type_user_managment'),
 
     # اضافه/حذف کردن تسک به/از نوع درخواست
     path('change-type/<int:change_type_id>/task/<str:operation_type>/<int:task_id>/', views.change_type_task_management, name='change_type_task_management'),

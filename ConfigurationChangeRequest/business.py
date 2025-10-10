@@ -1917,7 +1917,7 @@ class FormManager:
             exists = m.RequestTask.objects.filter(task_id=task_id, request_id=request_id).exists()
         else:
             # تسک مربوط به نوع درخواست
-            exists = m.RequestTask_ChangeType.objects.filter(taks_id=task_id, changetype=request_id).exists()
+            exists = m.RequestTask_ChangeType.objects.filter(task_id=task_id, changetype_id=request_id).exists()
 
        
         # اگر تسکی با این مشخصات تعریف شده است و هدف اضافه کردن است، خطا داریم
@@ -1998,6 +1998,12 @@ class FormManager:
                     else:
                         order_number = 1
                                             
+                    request_task = m.RequestTask_ChangeType.objects.create(
+                        task_id=task_id,
+                        changetype_id=request_id,
+                        order_number=order_number
+                    )
+                                                                
                     executors_qs = m.TaskUser.objects.filter(
                         user_role_code="E",
                         task_id=task_id,
@@ -2013,7 +2019,7 @@ class FormManager:
                 for executor in executors_qs:
                     executors.append({
                         'id': executor.id,
-                        'request_task_id': executor.request_task_id,
+                        'request_task_id': executor.request_task_id if  request_change_type == 'R' else executor.task_id,
                         'user_nationalcode': executor.user_nationalcode_id,
                         'user_role_id': executor.user_role_id_id,
                         'user_team_code': executor.user_team_code_id,
@@ -2026,7 +2032,7 @@ class FormManager:
                 for tester in testers_qs:
                     testers.append({
                         'id': tester.id,
-                        'request_task_id': tester.request_task_id,
+                        'request_task_id': tester.request_task_id if request_change_type == 'R' else tester.task_id,
                         'user_nationalcode': tester.user_nationalcode_id,
                         'user_role_id': tester.user_role_id_id,
                         'user_team_code': tester.user_team_code_id,
@@ -2059,7 +2065,7 @@ class FormManager:
                 if 'record_data' not in result:
                     return {'success':False, 'message': 'امکان واکشی اطلاعات جدید رکورد وجود ندارد'}
 
-                old_data = result['record_data']
+                new_data = result['record_data']
 
                 # # تبدیل به JSON با حفظ حروف فارسی
                 # new_data = json.loads(json.dumps(new_data, ensure_ascii=False))
@@ -2096,7 +2102,7 @@ class FormManager:
                 if request_change_type == 'R':
                     m.RequestTask.objects.filter(task_id=task_id, request_id=request_id).delete()
                 else:
-                    m.RequestTask_ChangeType.objects.filter(task_id=task_id, changetype=request_id).delete()
+                    m.RequestTask_ChangeType.objects.filter(task_id=task_id, changetype_id=request_id).delete()
 
             except Exception as e:
                 return {'success': False, 'message': f'خطا در حذف تسک: {str(e)}'}        
@@ -2208,7 +2214,7 @@ class FormManager:
         if request_change_type == 'R':
             exists = m.RequestTaskUser.objects.filter(request_task=task_instance, user_nationalcode=user_instance, user_role_code=user_role_code).exists()
         else:
-            exists = m.TaskUser.objects.filter(request_task=task_instance, user_nationalcode=user_instance, user_role_code=user_role_code).exists()
+            exists = m.TaskUser.objects.filter(task_id=task_instance.task_id, user_nationalcode=user_instance, user_role_code=user_role_code).exists()
         
         # اگر کاربری با این مشخصات تعریف شده است و هدف اضافه کردن است، خطا داریم
         if operation_type in valid_operation_type_add and exists:
@@ -2233,7 +2239,7 @@ class FormManager:
 
                 else:
                     m.TaskUser.objects.create(
-                        task_id=task_instance,
+                        task_id=task_instance.task_id,
                         user_nationalcode=user_instance,
                         user_role_id_id=user_role_id,
                         user_team_code_id=user_team_code,
@@ -2292,7 +2298,7 @@ class FormManager:
                    ).delete()
                 else:
                     m.TaskUser.objects.filter(
-                        task_id=task_instance,
+                        task_id=task_instance.task_id,
                         user_nationalcode=user_instance,
                         user_role_code = user_role_code
                     ).delete()
@@ -2336,7 +2342,7 @@ class FormManager:
         Args:
             request_changetype (str): یک کارکتر که مشخص می کند باید اطلاعات رکورد درخواست به روزرسانی شود یا اطلاعات رکورد نوع درخواست
             R: Request
-            C: ChangeType
+            T: ChangeType
             form_data (dict): داده های فرم است که باید به روزرسانی شود
             id (int): شناسه رکورد مورد نظر است که باید به روزرسانی شود
 
@@ -2349,8 +2355,8 @@ class FormManager:
         # می تواند یکی از این دو مقدار را داشته باشد:
         # R: برای درخواست
         # C: برای نوع تغییرات
-        if request_changetype not in ['R', 'C']:
-            return {"success": False, "message": "نوع رکورد ارسالی نامعتبر است. مقدار باید یکی از 'R' یا 'C' باشد."}
+        if request_changetype not in ['R', 'T']:
+            return {"success": False, "message": "نوع رکورد ارسالی نامعتبر است. مقدار باید یکی از 'R' یا 'T' باشد."}
 
 
         # 2- مقدار شناسه ارسالی id را کنترل می کنیم

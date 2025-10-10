@@ -571,7 +571,7 @@ def request_task_user_management(request, request_task_id:int)-> dict:
 
     Args:
         request (_type_): درخواست http
-        request_id (int): شناسه درخواست مورد نظر
+        request_task_id (int): شناسه تسک در درخواست مورد نظر
                     
     Return value:
         یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
@@ -614,7 +614,7 @@ def change_type_notify_group_management(request, change_type_id:int, operation_t
     
     current_user_national_code = get_current_user(request)
     obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
-    result = obj_form_manager.notify_group_managment(change_type_id, notify_group_id, operation_type, 'C')
+    result = obj_form_manager.notify_group_managment(change_type_id, notify_group_id, operation_type, 'T')
     return JsonResponse(result)
 
 
@@ -639,17 +639,17 @@ def change_type_task_management(request, change_type_id:int, operation_type:str,
     
     current_user_national_code = get_current_user(request)
     obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
-    result = obj_form_manager.task_management(change_type_id, task_id, operation_type, 'C')
+    result = obj_form_manager.task_management(change_type_id, task_id, operation_type, 'T')
     return JsonResponse(result)
 
 
-def change_type_user_management(request, change_type_id:int)-> dict:
+def change_type_user_management(request, change_type_task_id:int)-> dict:
     """
     این تابع افراد ذیل یک تسک را مدیریت می کند.
 
     Args:
         request (_type_): درخواست http
-        change_type_id (int): شناسه مورد درخواست
+        change_type_task_id (int): شناسه تسک در مورد درخواستی که قرار است کاربر به آن اضافه یا کم شود
                     
     Return value:
         یک  جسیون مشابه به مورد زیر شامل این اطلاعات:
@@ -668,11 +668,9 @@ def change_type_user_management(request, change_type_id:int)-> dict:
     user_team_code = request.POST.get('team_code', '')
     user_role_code = request.POST.get('role_code', 'E')
     
-    # ########################################داده تستی باید اصلاح شود
-    task_id = 1
     
     obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
-    result = obj_form_manager.task_user_management(task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'C')
+    result = obj_form_manager.task_user_management(change_type_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'T')
     return JsonResponse(result)
 
 
