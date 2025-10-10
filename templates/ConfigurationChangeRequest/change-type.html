@@ -18,17 +18,46 @@
                         <hr/>
                         <div class="content">
                             <div class="row">
-                                <div class="user-avatar col-6">
-                                    <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.requestor_nationalcode.username|split:'@' }}.jpg" 
-                                    alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}" class="personnel-avatar">
+                                <div class="current-user col-6">
+                                    <div class="user-avatar col-6">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{current_user.username|split:'@' }}.jpg" 
+                                        alt="{{current_user.fullname }}" title="{{current_user.fullname }}" class="personnel-avatar">
+                                    </div>
+                                    <div class="user-information col-6">
+                                        {% if current_user_team_roles|length == 1 %}
+                                            <span class='single-role'>{{ current_user_team_roles.0.role_id.role_title }} {{current_user_team_roles.0.team_code.team_name}}</span>
+                                            <input type="hidden" name="requestor_user_team_role" value="{{ current_user_team_roles.0.team_code.team_code }}-{{ current_user_team_roles.0.role_id.role_id }}"/>
+                                        {% elif current_user_team_roles|length > 1 %}
+                                            <select class='role-select' name="requestor_user_team_role"  id="user_team_role" required>
+                                                {% for team_role in current_user_team_roles %}
+                                                    <option value="{{ team_role.team_code.team_code }}-{{ team_role.role_id.role_id }}">{{ team_role.role_id.role_title }} تیم {{team_role.team_code.team_name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <span class='no-role'>کاربر فاقد سمت است</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <div class="user-information col-6">
-                                    <input type="hidden" name="requestor_user_nationalcode" value="{{request.requestor_nationalcode.national_code}}"/>
-                                    <span>{{request.requestor_nationalcode.fullname}}</span>
-                                    <span>{{request.requestor_role_id.role_title}}</span> تیم
-                                    {{request.requestor_team_code.team_name}}</span>
+                                <div class="related-manager col-6">
+                                    <div class="user-avatar col-6">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ realated_manager.username|split:'@' }}.jpg" 
+                                        alt="{{ realated_manager.fullname }}" title="{{ realated_manager.fullname }}" class="personnel-avatar">
+                                    </div>
+                                    <div class="user-information col-6">
+                                        {% if related_manager_national_code_role|length == 1 %}
+                                            <span class='single-role'>{{ related_manager_national_code_role.0.role_id.role_title }} {{related_manager_national_code_role.0.team_code.team_name}}</span>
+                                            <input type="hidden" name="realated_manager_user_team_role" value="{{ related_manager_national_code_role.0.team_code.team_code }}-{{ related_manager_national_code_role.0.role_id.role_id }}"/>
+                                        {% elif related_manager_national_code_role|length > 1 %}
+                                            <select class='role-select' name="realated_manager_user_team_role"  id="user_team_role" required>
+                                                {% for team_role in related_manager_national_code_role %}
+                                                    <option value="{{ team_role.team_code.team_code }}-{{ team_role.role_id.role_id }}">{{ team_role.role_id.role_title }} تیم {{team_role.team_code.team_name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <span class='no-role'>کاربر فاقد سمت است</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-
                             </div>
                             <div class="col-12">
                                 <div>

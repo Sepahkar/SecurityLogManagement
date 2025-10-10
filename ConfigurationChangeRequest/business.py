@@ -1506,6 +1506,22 @@ class FormManager:
         
         return user_info
 
+    def get_user_info(self, national_code:str)->dict:
+        """
+        این تابع اطلاعات یک کاربر و سمت ها و تیم های وی را بازگشت می دهد
+
+        Args:
+            national_code (str): کد ملی کاربری که می خواهیم اطلاعات وی را به دست بیاوریم
+        """
+        data = {"success":True}        
+        user = m.User.objects.filter(national_code=self.current_user_national_code).first()
+        if not user:
+            return {"success":False, "message":":کاربر مورد نظر یافت نشد"}  
+        data["user"] = user
+        data["team_roles"] = m.UserTeamRole.objects.filter(national_code=self.current_user_national_code)        
+        
+        return data
+
     def get_all_user_data(self):
         """
         این تابع اطلاعات کاربر جاری و سایر کاربران مرتبط را بازگشت می دهد
@@ -3183,7 +3199,7 @@ class ChangeType:
     objform_manager:FormManager = None
     current_user_natioal_code:str= ''
     
-    def __int__(self,current_user_natioal_code:str, id=None):
+    def __init__(self,current_user_natioal_code:str, id=None):
         
         if id:
             self.change_type_instance = m.ChangeType.objects.filter(id=id).first()
@@ -3200,8 +3216,9 @@ class ChangeType:
     def create_record(self):
         return {'success':True, 'message':''}
     
-    def load_data(self):
+    def load_record_data(self):
         
+        objform_manager = self.objform_manager if self.objform_manager else FormManager(current_user_national_code=self.current_user_natioal_code, request_id=-1)
         form_data = {"message": "", "success": True}
 
         # باید کنترل کنیم که کاربر مجاز به ویرایش 
@@ -3209,20 +3226,20 @@ class ChangeType:
         #     form_data["message"] = "شما مجاز به مشاهده این فرم نیستید"
         #     return form_data
 
-        # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
-        if form_status["mode"] in ["READONLY", "UPDATE"]:
+        # # اگر در حالت به روزرسانی و یا مشاهده باشیم باید اطلاعات درخواست را دریافت کنیم
+        # if form_status["mode"] in ["READONLY", "UPDATE"]:
 
-            # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
-            result = self.request_obj.get_request_data()
+        #     # اگر شناسه درخواست معتبر باشد، اطلاعات شناسه درخواست هم ارسال می شود
+        #     result = self.request_obj.get_request_data()
 
-            # اگر به هر دلیل امکان بارگذاری اطلاعات درخواست وجود نداشته باشد پیام خطا بازگشت داده می شود
-            if not result.get("success", False):
-                return result
+        #     # اگر به هر دلیل امکان بارگذاری اطلاعات درخواست وجود نداشته باشد پیام خطا بازگشت داده می شود
+        #     if not result.get("success", False):
+        #         return result
 
-            form_data.update(result)
+        #     form_data.update(result)
 
         # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
-        result = self.get_form_data()
+        result = objform_manager.get_form_data()
         # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
         if not result.get("success", False):
             return result
@@ -3230,27 +3247,44 @@ class ChangeType:
         form_data.update(result)
 
         # اطلاعات کاربران را دریافت می کنیم
-        result = self.get_all_user_data()
+        result = objform_manager.get_all_user_data()
         # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
         if not result.get("success", False):
             return result
-
         form_data.update(result)
+        
+        # لازم است اطلاعات مدیر مربوطه و دبیر کمیته (در صورت وجود) به دست بیاوریم
+        if self.change_type_instance.related_manager:
+            result = objform_manager.get_user_info(self.change_type_instance.related_manager.national_code)
+            if not result.get("success", False):
+                return result
+            form_data["related_manager_national_code"] = result["user"]
+            form_data["related_manager_national_code_role"] = result["team_roles"]
+        
+        if self.change_type_instance.committee:
+            result = objform_manager.get_user_info(self.change_type_instance.committee.administrator_nationalcode.national_code)
+            if not result.get("success", False):
+                return result
+            form_data["committee_national_code"] = result["user"]
+            form_data["committee_national_code_role"] = result["team_roles"]
+        
 
         # سایر اطلاعات مربوط به فرم را دریافت می کنیم
         request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
 
         form_data.update(
             {
-                "request_number": request_id,
+                "request_id": self.id,
                 "request_date": request_date,
+                "request":self.change_type_instance,
+                "form_type":"change_type",
             }
         )
 
         return form_data
         
         
-    def update_record(self):
+    def update_record_data(self):
         return {'success':True, 'message':''}
     
     
@@ -3433,9 +3467,9 @@ class Request:
         form_data = {"message": "", "success": True}
 
         # یک نمونه از شی مدیریت فرم را ایجاد می کنیم
-        obj_form_manager = self.obj_form_manager if obj_form_manager else FormManager(self.current_user_national_code, -1)
+        obj_form_manager = self.obj_form_manager if self.obj_form_manager else FormManager(self.current_user_national_code, -1)
         # مشخص می کنیم که وضعیت فعلی فرم چیست؟
-        form_status = self.check_form_status(
+        form_status = obj_form_manager.check_form_status(
             user_nationalcode=user_nationalcode,
             request_id=self.request_id)
         form_data["mode"] = form_status["mode"]
@@ -3456,17 +3490,25 @@ class Request:
             if not result.get("success", False):
                 return result
 
+            form_data.update(result)
+
+
         # داده های مقادیر ثابت (مثل کومبوها و ...) را دریافت می کنیم
         result = obj_form_manager.get_form_data()
         # اگر به هر دلیل امکان بارگذاری اطلاعات فرم وجود نداشته باشد پیام خطا بازگشت داده می شود
         if not result.get("success", False):
             return result
 
+        form_data.update(result)
+
+
         # اطلاعات کاربران را دریافت می کنیم
         result = obj_form_manager.get_all_user_data()
         # اگر به هر دلیل امکان بارگذاری اطلاعات افراد وجود نداشته باشد پیام خطا بازگشت داده می شود
         if not result.get("success", False):
             return result
+
+        form_data.update(result)
 
         # سایر اطلاعات مربوط به فرم را دریافت می کنیم
         request_date = request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")

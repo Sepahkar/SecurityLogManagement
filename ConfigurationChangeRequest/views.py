@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .business import Request, FormManager, Task
+from .business import ChangeType, Request, FormManager, Task
 from django.http import JsonResponse
 import logging
 import json
@@ -374,7 +374,7 @@ def request_view(request, request_id):
         
         
     # بارگذاری داده‌های فرم
-    data = request_obj.load_record_data(request_id, current_user_nationalcode)    
+    data = request_obj.load_record_data(current_user_nationalcode)    
 
     # اگر فرم درخواست ساده باشد
     if form == 'RequestSimple':
@@ -687,7 +687,11 @@ def change_type_create(request):
     pass
 
 def change_type_edit(request, change_type_id):
-    data={'change_type_list':change_type_list}
+    current_user = get_current_user(request)
+   
+    obj_change_type = ChangeType(current_user, change_type_id)
+    data=obj_change_type.load_record_data(current_user)
+    
     return render(request, 'ConfigurationChangeRequest/change-type.html', data)
 
     
@@ -713,7 +717,7 @@ def task_action_view(request, request_id, task_id, action):
     """
     عملیات روی تسک (تایید/رد/بازگشت)
     """
-    current_user_nationalcode = current_user
+    current_user_nationalcode = get_current_user(request=request)
     request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id)
     
     if request.method == 'POST':
