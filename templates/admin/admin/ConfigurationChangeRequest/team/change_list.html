@@ -1,0 +1,148 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Custom styles for Team change list */
+    .results th, .results td {
+        text-align: right;
+        direction: rtl;
+    }
+    
+    .results th {
+        background: #f8f8f8;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+    }
+    
+    .results tr:hover {
+        background: #f5f5f5;
+    }
+    
+    /* Status column styling */
+    .status-active { color: #4CAF50; font-weight: bold; }
+    .status-inactive { color: #F44336; }
+    
+    /* Statistics */
+    .stats-container {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 15px;
+        margin: 10px 0;
+        direction: rtl;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin: 10px 0;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+    }
+    
+    .stat-item .number {
+        font-size: 20px;
+        font-weight: bold;
+        color: #417690;
+    }
+    
+    .stat-item .label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    /* Filter improvements */
+    #changelist-filter h3 {
+        color: #333;
+        font-size: 13px;
+        margin: 10px 0 5px 0;
+    }
+    
+    #changelist-filter ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 15px 0;
+    }
+    
+    #changelist-filter li {
+        margin: 2px 0;
+    }
+    
+    #changelist-filter a {
+        color: #417690;
+        text-decoration: none;
+        padding: 3px 8px;
+        display: block;
+        border-radius: 2px;
+        transition: background 0.3s;
+    }
+    
+    #changelist-filter a:hover, #changelist-filter a.selected {
+        background: #417690;
+        color: white;
+    }
+    
+    /* Search bar */
+    #searchbar {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 10px 0;
+        direction: rtl;
+    }
+    
+    #searchbar input[type=text] {
+        width: 200px;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        margin-left: 10px;
+    }
+    
+    #searchbar button {
+        background: #417690;
+        color: white;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    
+    #searchbar button:hover {
+        background: #205067;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <h3>آمار تیم‌ها</h3>
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="number">{{ total_teams|default:"0" }}</div>
+            <div class="label">کل تیم‌ها</div>
+        </div>
+        <div class="stat-item">
+            <div class="number">{{ active_teams|default:"0" }}</div>
+            <div class="label">تیم‌های فعال</div>
+        </div>
+        <div class="stat-item">
+            <div class="number">{{ inactive_teams|default:"0" }}</div>
+            <div class="label">تیم‌های غیرفعال</div>
+        </div>
+    </div>
+</div>
+
+{{ block.super }}
+{% endblock %}

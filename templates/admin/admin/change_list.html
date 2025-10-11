@@ -1,0 +1,224 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* RTL Support for Change List */
+    .results {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    .results th, .results td {
+        text-align: right;
+        padding: 8px 12px;
+    }
+    
+    .results th {
+        background: #f8f8f8;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+    }
+    
+    .results tr:hover {
+        background: #f5f5f5;
+    }
+    
+    /* Action bar */
+    .actions {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 10px 0;
+        direction: rtl;
+    }
+    
+    .actions select {
+        margin-left: 10px;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+    }
+    
+    .actions button {
+        background: #417690;
+        color: white;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 3px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+    
+    .actions button:hover {
+        background: #205067;
+    }
+    
+    /* Search bar */
+    #searchbar {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 10px 0;
+        direction: rtl;
+    }
+    
+    #searchbar input[type=text] {
+        width: 200px;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        margin-left: 10px;
+    }
+    
+    #searchbar button {
+        background: #417690;
+        color: white;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    
+    #searchbar button:hover {
+        background: #205067;
+    }
+    
+    /* Filter sidebar */
+    #changelist-filter {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 15px;
+        margin: 10px 0;
+        direction: rtl;
+    }
+    
+    #changelist-filter h2 {
+        background: #79aec8;
+        color: white;
+        margin: -15px -15px 15px -15px;
+        padding: 10px 15px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    #changelist-filter h3 {
+        margin: 15px 0 8px 0;
+        font-size: 13px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    #changelist-filter ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 15px 0;
+    }
+    
+    #changelist-filter li {
+        margin: 3px 0;
+    }
+    
+    #changelist-filter a {
+        color: #417690;
+        text-decoration: none;
+        padding: 3px 8px;
+        display: block;
+        border-radius: 2px;
+        transition: background 0.3s;
+    }
+    
+    #changelist-filter a:hover, #changelist-filter a.selected {
+        background: #417690;
+        color: white;
+    }
+    
+    /* Pagination */
+    .paginator {
+        text-align: center;
+        margin: 20px 0;
+        direction: rtl;
+    }
+    
+    .paginator a, .paginator .this-page {
+        display: inline-block;
+        padding: 5px 10px;
+        margin: 0 2px;
+        border: 1px solid #ddd;
+        text-decoration: none;
+        color: #417690;
+        border-radius: 3px;
+    }
+    
+    .paginator a:hover {
+        background: #417690;
+        color: white;
+    }
+    
+    .paginator .this-page {
+        background: #417690;
+        color: white;
+    }
+    
+    /* Date hierarchy */
+    .xfull {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 10px 0;
+        direction: rtl;
+    }
+    
+    .xfull h3 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        color: #333;
+    }
+    
+    .xfull ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .xfull li {
+        margin: 3px 0;
+    }
+    
+    .xfull a {
+        color: #417690;
+        text-decoration: none;
+        padding: 3px 8px;
+        display: block;
+        border-radius: 2px;
+    }
+    
+    .xfull a:hover {
+        background: #f0f0f0;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .results {
+            overflow-x: auto;
+        }
+        
+        .actions {
+            text-align: center;
+        }
+        
+        .actions select, .actions button {
+            margin: 5px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% endblock %}

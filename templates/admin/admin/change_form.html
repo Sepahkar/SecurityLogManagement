@@ -1,0 +1,250 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* RTL Support for Change Form */
+    .form-row {
+        direction: rtl;
+        text-align: right;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #eee;
+        border-radius: 3px;
+        background: #fafafa;
+    }
+    
+    .form-row label {
+        display: inline-block;
+        width: 200px;
+        text-align: right;
+        margin-left: 15px;
+        font-weight: bold;
+        color: #333;
+        vertical-align: top;
+    }
+    
+    .form-row input, .form-row select, .form-row textarea {
+        width: 300px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-size: 14px;
+    }
+    
+    .form-row textarea {
+        height: 100px;
+        resize: vertical;
+    }
+    
+    .form-row .help {
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+        font-style: italic;
+    }
+    
+    .form-row .errorlist {
+        color: #d32f2f;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    
+    /* Fieldset styles */
+    .module {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin: 20px 0;
+        overflow: hidden;
+    }
+    
+    .module h2 {
+        background: #79aec8;
+        color: white;
+        margin: 0;
+        padding: 10px 15px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    
+    .module .form-row {
+        background: white;
+        border: none;
+        margin: 0;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .module .form-row:last-child {
+        border-bottom: none;
+    }
+    
+    /* Submit row */
+    .submit-row {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 15px;
+        margin: 20px 0;
+        text-align: right;
+    }
+    
+    .submit-row input, .submit-row a {
+        background: #417690;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 3px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        margin-left: 10px;
+        font-size: 14px;
+    }
+    
+    .submit-row input:hover, .submit-row a:hover {
+        background: #205067;
+    }
+    
+    .submit-row .deletelink {
+        background: #d32f2f;
+        float: left;
+    }
+    
+    .submit-row .deletelink:hover {
+        background: #b71c1c;
+    }
+    
+    /* Inline forms */
+    .inline-group {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin: 20px 0;
+        overflow: hidden;
+    }
+    
+    .inline-group h2 {
+        background: #79aec8;
+        color: white;
+        margin: 0;
+        padding: 10px 15px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    
+    .inline-group .form-row {
+        background: #fafafa;
+        border: none;
+        margin: 0;
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .inline-group .form-row:last-child {
+        border-bottom: none;
+    }
+    
+    /* Add/Remove buttons for inlines */
+    .add-row a, .delete a {
+        background: #417690;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 3px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 5px;
+        font-size: 12px;
+    }
+    
+    .add-row a:hover {
+        background: #205067;
+    }
+    
+    .delete a {
+        background: #d32f2f;
+    }
+    
+    .delete a:hover {
+        background: #b71c1c;
+    }
+    
+    /* Breadcrumb */
+    .breadcrumbs {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 10px 15px;
+        margin: 0 0 20px 0;
+        direction: rtl;
+    }
+    
+    .breadcrumbs a {
+        color: #417690;
+        text-decoration: none;
+    }
+    
+    .breadcrumbs a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Messages */
+    .messagelist {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+    }
+    
+    .messagelist li {
+        padding: 10px 15px;
+        margin: 5px 0;
+        border-radius: 3px;
+        direction: rtl;
+    }
+    
+    .messagelist .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .messagelist .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .messagelist .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .form-row label {
+            width: 100%;
+            display: block;
+            margin: 5px 0;
+        }
+        
+        .form-row input, .form-row select, .form-row textarea {
+            width: 100%;
+        }
+        
+        .submit-row {
+            text-align: center;
+        }
+        
+        .submit-row input, .submit-row a {
+            margin: 5px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% endblock %}
