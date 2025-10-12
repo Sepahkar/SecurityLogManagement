@@ -246,7 +246,7 @@ class ChangeType(models.Model):
     change_description = models.TextField(max_length=1000, verbose_name='توضیحات تغییر', 
                                         null=True, blank=True, help_text='توضیحات مربوط به تغییر را وارد کنید.')
 
-    related_manager = models.ForeignKey(to=User, on_delete=models.CASCADE, null=False, 
+    related_manager_nationalcode = models.ForeignKey(to=User, on_delete=models.CASCADE, null=False, 
                                         verbose_name = "مدیر مربوطه",
                                         help_text="مدیر مربوطه را انتخاب کنید")
     

@@ -21,7 +21,7 @@
                                 <span class="label-title">عنوان نوع تغییر:</span>
                             </div>
                             <div class="col-8 change-type-title-value">
-                                <input type="text" class="form-control" name="change_type_title" value="{{ request.change_type_title }}"/>
+                                <input type="text" class="form-control required" data-field-name="عنوان نوع تغییر" name="change_type_title" value="{{ request.change_type_title }}"/>
                             </div>
                         </div>
                         <div class="row">
@@ -29,7 +29,7 @@
                                 <span class="label-title">کد نوع تغییر:</span>
                             </div>
                             <div class="col-8 change-type-code-value">
-                                <input type="text" class="form-control" name="change_type_code" value="{{ request.code }}"/>
+                                <input type="text" class="form-control required" data-field-name="کد نوع تغییر" name="change_type_code" value="{{ request.code }}"/>
                             </div>
                         </div>
                     </div>
@@ -42,7 +42,7 @@
                                 <span class="label-title change-title-label">عنوان تغییر:</span>
                             </div>
                             <div class="col-8 change-title-value">
-                                <input type="text" name="change_title" value="{{ request.change_title }}"/>
+                                <input type="text" name="change_title" class="required" data-field-name="عنوان تغییر" value="{{ request.change_title }}"/>
                             </div>
                         </div>
                         <div class="row change-description">
@@ -50,7 +50,7 @@
                                 <span class="label-title">توضیحات:</span>
                             </div>
                             <div class="col-8 change-description-value">
-                                <textarea class="form-control" name="change_description" rows="10">{{ request.change_description|default:'' }}</textarea>
+                                <textarea class="form-control required" data-field-name="توضیحات تغییر" name="change_description" rows="10">{{ request.change_description|default:'' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -98,7 +98,7 @@
                                         onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';">
                                     </div>
                                     <div class="user-information">
-                                        <select id="related_manager_select" name="related_manager" class="form-control select2-searchable">
+                                        <select id="related_manager_select" name="related_manager" class="form-control select2-searchable required">
                                             {% for item in all_user_roles %}
                                                 <option 
                                                     value="{{ item.team_code }}-{{ item.role_id }}-{{ item.national_code }}"

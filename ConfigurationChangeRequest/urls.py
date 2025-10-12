@@ -24,10 +24,13 @@ urlpatterns = [
     path('change-type/list/', views.change_type_list, name='change_type_list'),
     
     #ویرایش  یک نوع درخواست با شناسه ارسال شده
-    path('change-type/<int:change_type_id>/',views.change_type_edit, name='change_type_edit'),
+    path('change-type/<int:change_type_id>/',views.change_type_view, name='change_type_edit'),
         
     # ایجاد یک نوع درخواست
     path('change-type/', views.change_type_create, name='change_type'),
+    
+    # حذف یک نوع درخواست
+    path('change-type/', views.change_type_delete, name='change_type'),    
     
     # اضافه/حذف کردن مجری به/از یک نوع درخواست
     path('change-type/task-user/<int:change_type_task_id>/', views.change_type_user_management, name='change_type_user_managment'),

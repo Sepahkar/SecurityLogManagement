@@ -351,7 +351,7 @@ function handleFormSubmit(e, actionType = null) {
     const message_manager_obj = new message_manager();
     // اعتبارسنجی فرم
     if (!validateForm(true)) {
-        message_manager_obj.showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
+        // message_manager_obj.showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
         isSubmitting = false;
         return;
     }
@@ -360,9 +360,14 @@ function handleFormSubmit(e, actionType = null) {
     // نمایش loading
     form_manager_obj.showLoading(actionType);
 
+    // نوع فرم را به دست می آوریم
+    var form_type = $('input[name="form_type"]').val() || 'request'
 
+    var resolvedAction = actionType || 'start';
+    // اگر فرم نوع تغییر باشد، عملیات ذخیره سازی است
+    if (form_type != 'request')
+        resolvedAction = 'save'
     // تنظیم action
-    const resolvedAction = actionType || 'start';
     // formData.set('action', resolvedAction);
     $('#requestForm').find('input[name="action"]').val(resolvedAction);
 
@@ -371,9 +376,12 @@ function handleFormSubmit(e, actionType = null) {
     // const formData = new FormData(formEl);
     const formData = $('#requestForm').serialize();
 
-
     // تنظیم URL (یا خالی برای URL فعلی یا از متغیر جنگو)
-    const submitUrl = window.submitUrl || ''; // فرض می‌کنیم submitUrl توی HTML تعریف شده
+    var submitUrl = window.submitUrl || ''; // فرض می‌کنیم submitUrl توی HTML تعریف شده
+    // // اگر فرم نوع تغییر باشد، آدرس متفاوت است
+    // if (form_type != 'request')
+    //     submitUrl += 'change-type'
+
 
     AJAX_call(submitUrl,formData,
         function on_success(data)
@@ -381,8 +389,14 @@ function handleFormSubmit(e, actionType = null) {
             message_manager_obj.showSuccessMessage(data.message);
 
             if (data.request_id) {
+                new_address =  window.location.origin + '/ConfigurationChangeRequest/' 
+                if (form_type != 'request')
+                    new_address += 'change-type/'
+                
+                new_address += data.request_id + '/';
+
                 setTimeout(() => {
-                    window.location.href = window.location.origin + '/ConfigurationChangeRequest/' + data.request_id + '/';
+                    window.location.href =new_address;
                 }, 2000);
             }
             isSubmitting = false; // بازگرداندن پرچم به حالت اولیه

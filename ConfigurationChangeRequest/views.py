@@ -113,7 +113,7 @@ logging.basicConfig(
     
 #     return render(request, 'ConfigurationChangeRequest/attachment-form.html', data)
 
-def get_simple_form_data(request):
+def get_simple_form_data(request)->dict:
     """
     این تابع اطلاعات مربوط به فرم ساده را از شی درخواست http می گیرد
 
@@ -122,9 +122,10 @@ def get_simple_form_data(request):
     """
     current_user_nationalcode = get_current_user(request)
     request_id = int(request.POST.get('request_id')) if request.POST.get('request_id') else -1
+    
 
     # یک نمونه از شی فرم ایجاد می کنیم
-    objFormManager = FormManager(current_user_national_code=current_user_nationalcode, request_id=request_id)
+    objFormManager = FormManager(current_user_national_code=current_user_nationalcode, request_id=-1)
 
 
     form_data = {
@@ -139,6 +140,8 @@ def get_simple_form_data(request):
         'requestor_user_nationalcode': request.POST.get('requestor_user_nationalcode'),  # کد ملی ایجاد کننده درخواست
     }
 
+
+
     # سمت و تیم کاربر در قالب یک متغییر بازگشت داده می شود.
     # CAR-73 : یعنی تیم خودرو و سمتی که شناسه آن 73 است
     utr = request.POST.get('requestor_user_team_role','')
@@ -149,14 +152,21 @@ def get_simple_form_data(request):
     
     return form_data
 
-def get_full_form_data(request,objFormManager :FormManager):
+def get_full_form_data(request,objFormManager :FormManager)->dict:
     # دریافت اطلاعات فرم ساده
     form_data = get_simple_form_data(request=request)
     # objFormManager :FormManager= form_data['objFormManager']  # اصلاح: استفاده از [] به جای ()
     #*******************************صفحه اول*****************************
     #################################سطر اول#############################
     #-----------------------------قسمت اول-----------------------------
-
+    form_data['change_type_title'] = request.POST.get('change_type_title','') 
+    form_data['change_type_code'] = request.POST.get('change_type_code','') 
+    related_manager = request.POST.get('related_manager') 
+    related_manager = related_manager.split('-')
+    if len(related_manager) == 3:
+        form_data['related_manager_nationalcode'] = related_manager[2]
+        form_data['related_manager_role_id'] = related_manager[1]
+        form_data['related_manager_team_code'] = related_manager[0]
     #-----------------------------قسمت دوم-----------------------------
     # ویژگی های تغییر
     form_data['classification'] = int(request.POST.get('classification')) if request.POST.get('classification') else None  # طبقه‌بندی
@@ -684,11 +694,62 @@ def change_type_list(request):
 def change_type_create(request):
     pass
 
-def change_type_edit(request, change_type_id):
+
+def change_type_delete(request, change_type_id):
+    ...
+
+def change_type_view(request, change_type_id):
     current_user = get_current_user(request)
-   
+
+    # بارگذاری داده های مربوط به نوع تغییر
     obj_change_type = ChangeType(current_user, change_type_id)
-    data=obj_change_type.load_record_data()
+
+    # اگر چنین درخواستی وجود نداشته باشد، باید پیام خطا به کاربر بدهیم
+    if obj_change_type is None or obj_change_type.change_type_id < 0:
+        return render(request, 'ConfigurationChangeRequest/404.html', data)    
+    
+    # ممکن است در زمان ایجاد درخواست، با خطا مواجه شده باشد
+    if obj_change_type.error_message:
+        return JsonResponse({'success': False, 'message': obj_change_type.error_message})
+    
+    # باید ببینیم آیا کاربر جاری مجاز به مشاهده این فرم هست یا خیر
+    result = obj_change_type.check_permission(current_user=current_user)
+    if result.get('mode', 'INVALID') == 'INVALID':
+        return render(request, 'ConfigurationChangeRequest/403.html', data)    
+
+    if not result.get('success', False):
+        return JsonResponse({'success': False, 'message': result.get('message', 'امکان بررسی مجوز کاربر برای مشاهده این فرم وجود ندارد')})
+    
+    # اگر حالت به روزرسانی باشد
+    # و داده های جدید ارسال شده باشند
+    if request.method == 'POST':
+        obj_form_manager = FormManager(current_user_national_code=current_user,request_id=-1)
+
+        # دریافت اطلاعات فرم
+        form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)      
+        # چون الان در حالت ویرایش هستیم، باید شناسه درخواست را هم اضافه کنیم
+        form_data['request_id'] = change_type_id 
+        
+        # اعتبارسنجی فرم
+        validation_result = obj_form_manager.form_validation(form_data, 'T')
+        if validation_result['success']:
+            # اطلاعات جدید درخواست به روزرسانی می شود
+            result = obj_change_type.update_record_data(form_data, current_user)
+            
+            if result['success']:
+                return JsonResponse({
+                    'success': True, 
+                    'request_id': change_type_id,
+                    'message':result.get('message', 'اطلاعات با موفقیت ذخیره شد')
+                })
+            else:
+                return JsonResponse({'success': False, 'message': result['message']})     
+        else:
+            return JsonResponse({'success': False, 'message': result['message']})         
+        
+        
+    # بارگذاری داده‌های فرم
+    data = obj_change_type.load_record_data()    
     
     return render(request, 'ConfigurationChangeRequest/change-type.html', data)
 
