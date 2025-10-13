@@ -685,18 +685,32 @@ def change_type_user_management(request, change_type_task_id:int)-> dict:
 
 
 def change_type_list(request):
-    current_user_nationalcode =  get_current_user(request)
-    from . import models as m
-    change_type_list = m.ChangeType.objects.all()
+    current_user =  get_current_user(request)
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+    # لیست همه انواع تغییر را بازگشت می دهیم
+    change_type_list = obj_change_type.get_change_type_list()
     data={'change_type_list':change_type_list}
     return render(request, 'ConfigurationChangeRequest/change-type-list.html', data)
 
 def change_type_create(request):
-    pass
+    current_user = get_current_user(request)
+    
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+    # بارگذاری داده‌های فرم
+    data = obj_change_type.load_record_data()        
+    return render(request, 'ConfigurationChangeRequest/change-type.html', data)
 
 
 def change_type_delete(request, change_type_id):
-    ...
+    current_user = get_current_user(request)
+
+    # بارگذاری داده های مربوط به نوع تغییر
+    obj_change_type:ChangeType = ChangeType(current_user, change_type_id)
+    
+    result = obj_change_type.delete_record()
+    return JsonResponse(result)
+    
+
 
 def change_type_view(request, change_type_id):
     current_user = get_current_user(request)

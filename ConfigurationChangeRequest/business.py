@@ -3301,6 +3301,9 @@ class ChangeType:
     def validate(self):
         return {'success':True, 'message':''}
     
+    def get_change_type_list(self):
+        list = m.ChangeType.objects.all()
+        return list
     
     def create_record(self):
         return {'success':True, 'message':''}
@@ -3390,27 +3393,29 @@ class ChangeType:
         form_data["current_user"] = result["user"]
         form_data["current_user_role"] = result["team_roles"]
         
-        # لازم است اطلاعات مدیر مربوطه و دبیر کمیته (در صورت وجود) به دست بیاوریم
-        if self.change_type_instance.related_manager_nationalcode:
-            result = objform_manager.get_user_info(self.change_type_instance.related_manager_nationalcode.national_code)
-            if not result.get("success", False):
-                return result
-            form_data["related_manager"] = result["user"]
-            form_data["related_manager_role"] = result["team_roles"]
-        
-        if self.change_type_instance.committee:
-            result = objform_manager.get_user_info(self.change_type_instance.committee.administrator_nationalcode.national_code)
-            if not result.get("success", False):
-                return result
-            form_data["committee_user"] = result["user"]
-            form_data["committee_user_role"] = result["team_roles"]
+        # در صورتی که شناسه نوع درخواست معتبر باشد
+        if self.change_type_id > 0:
+            # لازم است اطلاعات مدیر مربوطه و دبیر کمیته (در صورت وجود) به دست بیاوریم
+            if self.change_type_instance.related_manager_nationalcode:
+                result = objform_manager.get_user_info(self.change_type_instance.related_manager_nationalcode.national_code)
+                if not result.get("success", False):
+                    return result
+                form_data["related_manager"] = result["user"]
+                form_data["related_manager_role"] = result["team_roles"]
+            
+            if self.change_type_instance.committee:
+                result = objform_manager.get_user_info(self.change_type_instance.committee.administrator_nationalcode.national_code)
+                if not result.get("success", False):
+                    return result
+                form_data["committee_user"] = result["user"]
+                form_data["committee_user_role"] = result["team_roles"]
 
 
-        # حالا اطلاعات جانبی (شرکت ها، تیم ها، تسک ها و ...) مربوطه به نوع درخواست را واکشی می کنیم
-        result = self.get_change_type_data()
-        if not result.get("success", False):
-            return result
-        form_data.update(result)        
+            # حالا اطلاعات جانبی (شرکت ها، تیم ها، تسک ها و ...) مربوطه به نوع درخواست را واکشی می کنیم
+            result = self.get_change_type_data()
+            if not result.get("success", False):
+                return result
+            form_data.update(result)        
 
         # سایر اطلاعات مربوط به فرم را دریافت می کنیم
         request_date = jdatetime.datetime.now().strftime("%Y/%m/%d")
@@ -3440,8 +3445,26 @@ class ChangeType:
         
         return {"success": True, "message": "اطلاعات با موفقیت به روزرسانی شد"}
 
+    def delete_record(self):
+        # ابتدا کنترل می کنیم که آیا این نوع برای درخواست دیگری ثبت شده است یا خیر
+        exists = m.ConfigurationChangeRequest.objects.filter(change_type_id = self.change_type_id)
+        
+        if exists:
+            request_ids = list(exists.values_list('id', flat=True))
+            return {
+                'result': False, 
+                'message': f'چون این نوع درخواست در درخواست های موجود (شناسه‌ها: {request_ids}) استفاده شده است، امکان حذف آن وجود ندارد'
+            }
+        
+        # اگر جایی استفاده نشده باشد، امکان حذف ان وجود دارد
+        try:
+            m.ChangeType.objects.filter(id=self.change_type_id).delete()
+        except Exception as e:
+            return {'result':False, 'message':f'حذف رکورد با خطا مواجه شد:<br/>{str(e)}'}
     
+        return {'result':True, 'message':'حذف رکورد با موفقیت انجام شد'}
     
+
 class Request:
     obj_form_manager: FormManager = None
     obj_cartable: Cartable = None

@@ -61,6 +61,45 @@ class message_manager
             alert(message);
         }
     }
+
+    /*
+    چرا این کد درست کار نمی‌کند؟
+    1. نام تابع فراخوانی شده در اینجا confirmDelete است، اما در فایل message-handler.js تابع به صورت MessageHandler.confirmDelete تعریف شده و همچنین به صورت window.showConfirmDelete نیز به window متصل شده است، و به احتمال زیاد confirmDelete به صورت global تابع نیست، بلکه باید از showConfirmDelete استفاده شود.
+    2. حتی اگر confirmDelete موجود باشد، تابع هیچ عملی روی url و id انجام نمی‌دهد و هیچ فرایند حذف فراخوانی نمی‌شود.
+    3. باید پس از تایید، عملیات حذف (مثلاً فراخوانی AJAX یا هدایت به url) انجام شود.
+    4. بهتر است بررسی به جای typeof confirmDelete، typeof showConfirmDelete انجام شود یا حتی بهترین حالت: همیشه از MessageHandler.confirmDelete استفاده شود که در فایل message-handler.js تعریف شده است.
+
+    راه حل پیشنهادی:
+    فراخوانی صحیح تابع حذف، استفاده درست از پارامترها، و انجام عملیات پس از تایید کاربر.
+    */
+
+    confirmDeleteMessage(itemName, url, id, on_success, on_error) {
+        // فرض: عملیات حذف باید با AJAX انجام شود یا به url هدایت شود
+        if (typeof showConfirmDelete === 'function') {
+            showConfirmDelete(itemName, () => {
+                // مثال: ارسال درخواست AJAX برای حذف
+                // فرض: AJAX_call از همین فایل قابل دسترسی است
+                AJAX_call(
+                    url,
+                    { id: id }, // یا صرفاً null اگر سرور فقط URL نیاز دارد
+                    (response) => { // on_success
+                        if (on_success == 'function')
+                            on_success(data)
+                        // اختیاری: رفرش جدول، حذف سطر یا ... 
+                        // location.reload(); // یا هر کار دیگر
+                    },
+                    (error) => { // on_error
+                        // this.showErrorMessage('خطا در حذف: ' + (error?.message || ''));
+                    }
+                );
+            }, () => {
+                // کاربر لغو کرد
+                this.showWarningMessage('عملیات حذف لغو شد.');
+            });
+        } else {
+            alert('امکان حذف وجود ندارد');
+        }
+    }
 }
     /********************توابع مدیریت نمایش المان های فرم و بارگذاری فرم*********** */
     

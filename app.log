@@ -3061,3 +3061,411 @@ AttributeError: 'ChangeType' object has no attribute 'related_manager'
 2025-10-12 23:58:01,432 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
 2025-10-12 23:58:07,270 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
 2025-10-12 23:58:16,045 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-13 18:37:03,001 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-13 18:55:40,275 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 19:00:22,034 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 19:00:56,367 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 19:01:41,423 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 19:02:27,488 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 19:04:54,792 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 692, in change_type_list
+    return render(request, 'ConfigurationChangeRequest/change-type-list.html', data)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 134, in render
+    compiled_parent = self.get_parent(context)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 131, in get_parent
+    return self.find_template(parent, context)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 109, in find_template
+    template, origin = context.template.engine.find_template(
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        template_name,
+        ^^^^^^^^^^^^^^
+        skip=history,
+        ^^^^^^^^^^^^^
+    )
+    ^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 228, in do_block
+    raise TemplateSyntaxError(
+        "'%s' tag with name '%s' appears more than once" % (bits[0], block_name)
+    )
+django.template.exceptions.TemplateSyntaxError: 'block' tag with name 'header_title' appears more than once
+2025-10-13 19:04:55,057 - WARNING - Not Found: /favicon.ico
+2025-10-13 19:05:17,376 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 692, in change_type_list
+    return render(request, 'ConfigurationChangeRequest/change-type-list.html', data)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\backends\django.py", line 33, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 228, in do_block
+    raise TemplateSyntaxError(
+        "'%s' tag with name '%s' appears more than once" % (bits[0], block_name)
+    )
+django.template.exceptions.TemplateSyntaxError: 'block' tag with name 'title' appears more than once
+2025-10-13 19:05:17,578 - WARNING - Not Found: /favicon.ico
+2025-10-13 19:06:14,596 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 19:07:06,088 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 19:07:16,250 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/d/3
+2025-10-13 19:07:16,435 - WARNING - Not Found: /favicon.ico
+2025-10-13 19:07:36,579 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-13 19:07:40,255 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-13 19:07:46,281 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-13 19:07:51,034 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-13 19:07:55,710 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-13 19:08:02,419 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/d/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 704, in change_type_delete
+    result = obj_change_type.delete_record()
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3445, in delete_record
+    exists = m.ConfigurationChangeRequest.objects.filter(changetype_id = self.change_type_id)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1476, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1494, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1501, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1613, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1645, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<7 lines>...
+        update_join_types=update_join_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1495, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1307, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\query.py", line 1772, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'changetype_id' into field. Choices are: change_description, change_domain, change_domain_id, change_level, change_level_id, change_location_data_center, change_location_database, change_location_other, change_location_other_description, change_location_system_services, change_title, change_type, change_type_id, changing_date, changing_date_actual, changing_duration, changing_duration_actual, changing_time, changing_time_actual, classification, classification_id, committee, committee_id, committee_user_nationalcode, committee_user_nationalcode_id, create_date, creator_user, creator_user_id, critical_service_title, direct_manager_nationalcode, direct_manager_nationalcode_id, doc_id, downtime_duration, downtime_duration_actual, downtime_duration_worstcase, has_role_back_plan, id, last_modifier_user, last_modifier_user_id, modify_date, need_committee, not_stop_any_service, notificationlog, priority, priority_id, reason_business, reason_other, reason_other_description, reason_regulatory, reason_security, reason_technical, related_manager_nationalcode, related_manager_nationalcode_id, requestcorp, requestextrainformation, requestflow, requestnotifygroup, requestor_nationalcode, requestor_nationalcode_id, requestor_role_id, requestor_role_id_id, requestor_team_code, requestor_team_code_id, requesttask, requestteam, risk_level, risk_level_id, role_back_plan_description, status_code, stop_critical_service, stop_sensitive_service, stop_service_title
+2025-10-13 23:05:18,362 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-13 23:05:59,746 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:06:25,335 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:06:27,790 - WARNING - Not Found: /favicon.ico
+2025-10-13 23:08:05,159 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:08:34,716 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:09:01,170 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:09:27,890 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:09:46,921 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:10:30,693 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:10:42,079 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:10:48,418 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:15:32,024 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:33:39,552 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:35:40,831 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:47:00,639 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:51:32,073 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:52:31,350 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:52:32,419 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:52:52,394 - WARNING - Not Found: /change-type/d/undefined/
+2025-10-13 23:53:22,059 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:53:32,489 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:53:40,512 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:54:02,085 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:54:06,803 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:54:21,740 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-13 23:54:21,932 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:54:49,464 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-13 23:57:17,863 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/ConfigurationChangeRequest/change-type/d/6/
+2025-10-13 23:58:00,856 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-14 00:01:38,339 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-14 00:03:45,283 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 692, in change_type_list
+    return render(request, 'ConfigurationChangeRequest/change-type-list.html', data)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\backends\django.py", line 33, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 508, in parse
+    compiled_result = compile_func(self, token)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\defaulttags.py", line 861, in do_for
+    nodelist_loop = parser.parse(
+        (
+    ...<2 lines>...
+        )
+    )
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 481, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 479, in parse
+    filter_expression = self.compile_filter(token.contents)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 597, in compile_filter
+    return FilterExpression(token, self)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 698, in __init__
+    raise TemplateSyntaxError(
+    ...<2 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '-id' from 'item-id'
+2025-10-14 00:03:45,583 - WARNING - Not Found: /favicon.ico
+2025-10-14 00:03:57,826 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-14 00:04:29,654 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.change_type_create didn't return an HttpResponse object. It returned None instead.
+2025-10-14 00:04:29,847 - WARNING - Not Found: /favicon.ico
+2025-10-14 00:04:57,429 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:05:02,207 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:05:12,087 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:05:33,187 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:05:37,015 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:05:40,123 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 697, in change_type_create
+    return render(request, 'ConfigurationChangeRequest/change-type-list.html', data)
+                                                                               ^^^^
+NameError: name 'data' is not defined
+2025-10-14 00:06:01,301 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:06:33,677 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:06:37,819 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:06:41,679 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:06:48,660 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:06:55,726 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:07:17,067 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 690, in change_type_list
+    change_type_list = ChangeType.objects.all()
+                       ^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ChangeType' has no attribute 'objects'
+2025-10-14 00:07:26,923 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 690, in change_type_list
+    change_type_list = ChangeType.objects.all()
+                       ^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ChangeType' has no attribute 'objects'
+2025-10-14 00:07:47,332 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 690, in change_type_list
+    change_type_list = ChangeType.objects.all()
+                       ^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ChangeType' has no attribute 'objects'
+2025-10-14 00:08:38,597 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:08:45,461 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:08:51,391 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:08:59,401 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:09:07,705 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:09:22,802 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-14 00:09:28,850 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-14 00:14:04,071 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 691, in change_type_list
+    change_type_list = ChangeType.get_change_type_list()
+TypeError: ChangeType.get_change_type_list() missing 1 required positional argument: 'self'
+2025-10-14 00:14:04,402 - WARNING - Not Found: /favicon.ico
+2025-10-14 00:14:48,962 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:14:53,714 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:14:57,712 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:15:08,608 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 691, in change_type_list
+    change_type_list = ChangeType.get_change_type_list()
+TypeError: ChangeType.get_change_type_list() missing 1 required positional argument: 'self'
+2025-10-14 00:15:24,014 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-14 00:15:24,635 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 691, in change_type_list
+    change_type_list = obj_change_type.get_change_type_list()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: ChangeType.get_change_type_list() missing 1 required positional argument: 'self'
+2025-10-14 00:15:33,034 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-14 00:16:51,310 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-14 00:17:44,748 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-14 00:18:09,090 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 700, in change_type_create
+    data = obj_change_type.load_record_data()
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3397, in load_record_data
+    if self.change_type_instance.related_manager_nationalcode:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'related_manager_nationalcode'
+2025-10-14 00:18:09,350 - WARNING - Not Found: /favicon.ico
+2025-10-14 00:19:35,340 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-14 00:20:38,300 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/static/ConfigurationChangeRequest/favicon.ico
+2025-10-14 00:21:05,567 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
