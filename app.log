@@ -2777,3 +2777,287 @@ django.core.exceptions.FieldError: Cannot resolve keyword 'tasks_id' into field.
 2025-10-10 22:56:25,827 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-10 23:01:46,373 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-10 23:02:43,543 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-10 23:05:11,912 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 23:07:02,036 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:07:16,398 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:07:21,230 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 23:07:37,796 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:07:43,308 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:07:52,642 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:28:08,394 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:30:06,586 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:39:01,180 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 23:42:15,261 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:43:03,152 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 23:43:56,108 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:46:28,270 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:46:29,687 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 23:48:08,593 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:51:16,014 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:51:21,207 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-10 23:53:36,272 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-10 23:53:38,285 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/change-type
+2025-10-10 23:56:18,860 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-10-11 21:12:26,123 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:12:31,947 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:12:38,733 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:12:44,435 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:12:56,425 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:13:00,075 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:13:07,877 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:13:49,165 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-11 21:14:23,570 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-11 21:14:30,829 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 12:50:08,515 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 695, in change_type_view
+    if obj_change_type.request_id is None or obj_change_type.request_id < 0:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ChangeType' object has no attribute 'request_id'
+2025-10-12 12:51:15,916 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 695, in change_type_view
+    if obj_change_type.request_id is None or obj_change_type.request_id < 0:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ChangeType' object has no attribute 'request_id'
+2025-10-12 12:51:26,978 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 12:51:35,489 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 12:51:46,965 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 12:51:53,267 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 12:52:03,811 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 12:53:14,101 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 721, in change_type_view
+    validation_result = obj_form_manager.form_validation(form_data, 'T')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 791, in form_validation
+    required_fields.append(  ("change_type_title", "ÚäæÇä äæÚ ÊÛ\u06cc\u06ccÑ ÇÌÈÇÑ\u06cc ÇÓÊ"),
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ("change_type_code", "˜Ï äæÚ ÊÛ\u06cc\u06ccÑ ÇÌÈÇÑ\u06cc ÇÓÊ"),)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: list.append() takes exactly one argument (2 given)
+2025-10-12 12:53:42,787 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 721, in change_type_view
+    validation_result = obj_form_manager.form_validation(form_data, 'T')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 791, in form_validation
+    required_fields.append(  ("change_type_title", "ÚäæÇä äæÚ ÊÛ\u06cc\u06ccÑ ÇÌÈÇÑ\u06cc ÇÓÊ"),
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ("change_type_code", "˜Ï äæÚ ÊÛ\u06cc\u06ccÑ ÇÌÈÇÑ\u06cc ÇÓÊ"),)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: list.append() takes exactly one argument (2 given)
+2025-10-12 12:54:16,652 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 721, in change_type_view
+    validation_result = obj_form_manager.form_validation(form_data, 'T')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 791, in form_validation
+    required_fields.append(  ("change_type_title", "ÚäæÇä äæÚ ÊÛ\u06cc\u06ccÑ ÇÌÈÇÑ\u06cc ÇÓÊ"),
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ("change_type_code", "˜Ï äæÚ ÊÛ\u06cc\u06ccÑ ÇÌÈÇÑ\u06cc ÇÓÊ"),)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: list.append() takes exactly one argument (2 given)
+2025-10-12 12:56:25,855 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 12:57:36,321 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 721, in change_type_view
+    validation_result = obj_form_manager.form_validation(form_data, 'T')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 797, in form_validation
+    if form_mode == "INSERT":
+       ^^^^^^^^^
+UnboundLocalError: cannot access local variable 'form_mode' where it is not associated with a value
+2025-10-12 12:58:03,967 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 721, in change_type_view
+    validation_result = obj_form_manager.form_validation(form_data, 'T')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 797, in form_validation
+    if form_mode == "INSERT":
+       ^^^^^^^^^
+UnboundLocalError: cannot access local variable 'form_mode' where it is not associated with a value
+2025-10-12 12:58:21,423 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 12:58:31,744 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 12:58:38,824 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 12:59:50,377 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 721, in change_type_view
+    validation_result = obj_form_manager.form_validation(form_data, 'T')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 829, in form_validation
+    error_message.append("áØÝÇ äæÚ ÊÛ\u06cc\u06ccÑ ÑÇ ÇäÊÎÇÈ ˜ä\u06ccÏ.")
+    ^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'error_message' where it is not associated with a value
+2025-10-12 13:00:31,326 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 721, in change_type_view
+    validation_result = obj_form_manager.form_validation(form_data, 'T')
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 829, in form_validation
+    error_message.append("áØÝÇ äæÚ ÊÛ\u06cc\u06ccÑ ÑÇ ÇäÊÎÇÈ ˜ä\u06ccÏ.")
+    ^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'error_message' where it is not associated with a value
+2025-10-12 13:00:45,147 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 13:00:54,542 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:29:22,930 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 22:30:21,970 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 748, in change_type_view
+    data = obj_change_type.load_record_data(current_user)
+TypeError: ChangeType.load_record_data() takes 1 positional argument but 2 were given
+2025-10-12 22:30:23,057 - WARNING - Not Found: /favicon.ico
+2025-10-12 22:31:19,133 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 22:34:42,975 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 725, in change_type_view
+    form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 167, in get_full_form_data
+    form_data['related_manager'] = related_manager[3]
+                                   ~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+2025-10-12 22:35:08,921 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 725, in change_type_view
+    form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 167, in get_full_form_data
+    form_data['related_manager'] = related_manager[3]
+                                   ~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+2025-10-12 22:35:19,384 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-12 22:37:55,611 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:38:47,598 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:38:59,545 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:39:32,269 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:40:17,920 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:42:06,046 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:48:20,077 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:49:06,929 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 733, in change_type_view
+    result = obj_change_type.update_record_data(form_data, current_user)
+TypeError: ChangeType.update_record_data() takes 2 positional arguments but 3 were given
+2025-10-12 22:49:58,564 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:50:03,627 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:50:39,602 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 733, in change_type_view
+    result = obj_change_type.update_record_data(form_data, current_user)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3423, in update_record_data
+NameError: name 'get_current_user' is not defined. Did you mean: 'current_user'?
+2025-10-12 22:50:52,588 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 733, in change_type_view
+    result = obj_change_type.update_record_data(form_data, current_user)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3423, in update_record_data
+NameError: name 'get_current_user' is not defined. Did you mean: 'current_user'?
+2025-10-12 22:51:42,694 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 733, in change_type_view
+    result = obj_change_type.update_record_data(form_data, current_user)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3425, in update_record_data
+    result = obj_form_manager.update_record(request_changetype='T', form_data=form_data, id=self.request_id, current_user_nationalcode=current_user)
+                                                                                            ^^^^^^^^^^^^^^^
+AttributeError: 'ChangeType' object has no attribute 'request_id'
+2025-10-12 22:52:17,396 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 22:54:26,568 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:00:30,949 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:00:50,885 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:08:39,090 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:27:57,947 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:37:44,328 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:41:11,415 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-10-12 23:42:04,812 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 748, in change_type_view
+    data = obj_change_type.load_record_data()
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3394, in load_record_data
+    if self.change_type_instance.related_manager:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ChangeType' object has no attribute 'related_manager'
+2025-10-12 23:42:36,212 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:42:41,776 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 748, in change_type_view
+    data = obj_change_type.load_record_data()
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3394, in load_record_data
+    if self.change_type_instance.related_manager:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ChangeType' object has no attribute 'related_manager'
+2025-10-12 23:43:00,300 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:48:57,903 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-12 23:49:14,706 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-12 23:49:14,721 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-12 23:51:27,583 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-12 23:53:56,312 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-10-12 23:53:59,137 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/4/static/ConfigurationChangeRequest/favicon.ico
+2025-10-12 23:57:04,629 - WARNING - Not Found: /ConfigurationChangeRequest/list
+2025-10-12 23:57:20,886 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/d/6
+2025-10-12 23:58:01,432 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-12 23:58:07,270 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-10-12 23:58:16,045 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.

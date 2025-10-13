@@ -8,6 +8,7 @@ from django.db.transaction import commit
 from datetime import datetime
 
 from urllib3 import request
+# from ConfigurationChangeRequest.views import get_current_user
 import Utility
 
 # from ConfigurationChangeRequest.views import commitee
@@ -741,7 +742,7 @@ class FormManager:
         except:
             return []
 
-    def form_validation(self, form_data: json) -> json:
+    def form_validation(self, form_data: json, request_changetype:str='R') -> json:
         """
         این تابع بر مبنای داده های ورودی، صحت سنجی اطلاعات فرم را انجام می دهد
 
@@ -755,36 +756,51 @@ class FormManager:
         user_nationalcode = form_data.get("user_nationalcode", -1)
         request_id = form_data.get("request_id", -1)
         request_task_id = form_data.get("request_task_id", -1)
-
-        # وضعیت جاری فرم را به دست می آوریم
-        form_status = self.check_form_status(
-            user_nationalcode=user_nationalcode,
-            request_id=request_id,
-        )
-        form_mode = form_status["mode"]
-        form_name = form_status["form"]
-
         error_message = []
 
-        # اگر کاربر مجاز به دیدن این فرم نباشد
-        if form_mode == "INVALID":
-            return {
-                "success": False,
-                "message": "متاسفانه شما مجاز به باز کردن این فرم نمی باشید",
-            }
+        # در صورتی که فرم درخواست باشد
+        # وضعیت جاری فرم را به دست می آوریم
+        if request_changetype == 'R':
+            form_status = self.check_form_status(
+                user_nationalcode=user_nationalcode,
+                request_id=request_id,
+            )
+            form_mode = form_status["mode"]
+            form_name = form_status["form"]
 
-        # اگر فرم در حالت فقط خواندنی باشد، اعتبارسنجی معنی ندارد
-        if form_mode == "READONLY":
-            return {"success": True, "message": ""}
+            error_message = []
+
+            # اگر کاربر مجاز به دیدن این فرم نباشد
+            if form_mode == "INVALID":
+                return {
+                    "success": False,
+                    "message": "متاسفانه شما مجاز به باز کردن این فرم نمی باشید",
+                }
+
+            # اگر فرم در حالت فقط خواندنی باشد، اعتبارسنجی معنی ندارد
+            if form_mode == "READONLY":
+                return {"success": True, "message": ""}
+        else:
+            form_mode = 'UPDATE'
+            form_name = 'ChangeType'
 
         # فیلدهای اجباری
         required_fields = [
-            ("change_type", "نوع تغییر اجباری است"),
-            ("change_title", "عنوان تغییرات اجباری است"),
-            ("change_description", "توضیحات تغییرات را وارد کنید"),
-            ("user_nationalcode", "کد ملی درخواست دهنده اجباری است"),
+            ("change_type", "انتخاب نوع تغییر الزامی است."),
+            ("change_title", "وارد کردن عنوان تغییرات الزامی است."),
+            ("change_description", "لطفا توضیحات تغییرات را وارد کنید."),
+            ("user_nationalcode", "کد ملی درخواست دهنده الزامی است."),
         ]
+        if request_changetype == 'T':
+            required_fields.extend([
+                ("change_type_title", "عنوان نوع تغییر الزامی است."),
+                ("change_type_code", "کد نوع تغییر الزامی است."),
+            ])
+            # در صورتی که فرم نوع تغییر باشد، باید از لیست فیلدهای اجباری خارج شود
+            required_fields = [f for f in required_fields if f[0] != "change_type"]
 
+
+        
         # تیم و سمت درخواست کننده صرفا در زمان درج کنترل می شود
         if form_mode == "INSERT":
             # تیم و سمت کاربر را به دست می آوریم
@@ -799,7 +815,7 @@ class FormManager:
             if not user_role_id:
                 error_message.append("سمت کاربر به درستی انتخاب نشده است.")
 
-        if form_mode in ("INSERT", "UPDATE"):
+        if form_mode in ("INSERT", "UPDATE") or request_changetype == 'T':
             # حالا کنترل می کنیم که عنوان درخواست به درستی ثبت شده باشد
             request_title = form_data.get("change_title")
             # طول عنوان درخواست باید حداقل 5 کارکتر بدون فاصله باشد
@@ -812,13 +828,14 @@ class FormManager:
                 error_message.append("لطفا عنوان مناسبی برای شرح درخواست وارد نمایید.")
 
             # حالا کنترل می کنیم که نوع درخواست را انتخاب کرده باشد
-            request_type = form_data.get("change_type")
-            valid, request_type = self.__is_valid_integer(request_type)
-            if not valid or request_type <= 0:
-                error_message.append("لطفا نوع تغییر را انتخاب کنید.")
+            if request_changetype == 'R':
+                request_type = form_data.get("change_type")
+                valid, request_type = self.__is_valid_integer(request_type)
+                if not valid or request_type <= 0:
+                    error_message.append("لطفا نوع تغییر را انتخاب کنید.")
 
         # اگر فرم اطلاعات کامل باشد، باید اعتبارسنجی برای تمامی فیلدها صورت بگیرد
-        if form_name == "RequestFull":
+        if form_name == "RequestFull" or request_changetype =='T':
 
             # اگر نیاز به کمیته ندارد، باید شناسه مربوطه حذف شود
             if not form_data.get("need_committee", False):
@@ -1008,7 +1025,7 @@ class FormManager:
                 error_message.append("دامنه تغییر نامعتبر است.")
 
             # نوع تغییر
-            if (
+            if (request_changetype == 'R' and
                 form_data.get("change_type")
                 and not m.ChangeType.objects.filter(
                     id=form_data["change_type"]
@@ -2504,23 +2521,23 @@ class FormManager:
                         if not exists:
                             m.RequestExtraInformation.objects.create(extra_info_id=const_id, request=record_instance)
                     else:
-                        exists = m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id=const_id, change_type=record_instance)
+                        exists = m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id=const_id, changetype_id=record_instance.id)
                         # اگر در رکوردهای موجود نباشد باید درج شود
                         if not exists:
-                            m.RequestExtraInformation_ChangeType.objects.create(extra_info_id=const_id, change_type=record_instance)
+                            m.RequestExtraInformation_ChangeType.objects.create(extra_info_id=const_id, changetype_id=record_instance.id)
                 # اگر در داده های ورودی نباشد
                 else:
                     # اگر در داده های موجود هست، آن را حذف می کنیم
                     if request_changetype == 'R':
                         m.RequestExtraInformation.objects.filter(extra_info_id=const_id, request=record_instance).delete()
                     else:
-                        exists = m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id=const_id, change_type=record_instance).delete()
+                        exists = m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id=const_id, changetype_id=record_instance.id).delete()
         # اگر در داده های ورودی نیست هم باید رکوردها حذف شوند
         else:
             if request_changetype == 'R':
                 m.RequestExtraInformation.objects.filter(extra_info_id__in=const_value_ids, request=record_instance).delete()
             else:
-                m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id__in=const_value_ids, change_type=record_instance).delete()              
+                m.RequestExtraInformation_ChangeType.objects.filter(extra_info_id__in=const_value_ids, changetype_id=record_instance.id).delete()              
         
         
         return {'success':True, 'message':'با موفقیت انجام شد'}
@@ -2545,8 +2562,8 @@ class FormManager:
         # مقدار متغییر request_change_type را بررسی می کنیم که معتبر باشد
         # می تواند یکی از این دو مقدار را داشته باشد:
         # R: برای درخواست
-        # C: برای نوع تغییرات
-        if request_changetype not in ['R', 'C']:
+        # T: برای نوع تغییرات
+        if request_changetype not in ['R', 'T']:
             return {"success": False, "message": "نوع رکورد ارسالی نامعتبر است. مقدار باید یکی از 'R' یا 'C' باشد."}
 
         # 2- مقدار شناسه ارسالی id را کنترل می کنیم
@@ -2622,12 +2639,20 @@ class FormManager:
 
             # کد ملی مدیر مستقیم
             if 'direct_manager_nationalcode' in form_data:
-                record_instance.direct_manager_nationalcode.national_code = form_data['direct_manager_nationalcode']
+                record_instance.direct_manager_nationalcode_id = form_data['direct_manager_nationalcode']
             
             # کد ملی مدیر مربوطه
             if 'related_manager_nationalcode' in form_data:
-                record_instance.related_manager_nationalcode.national_code = form_data['related_manager_nationalcode']
-                                
+                record_instance.related_manager_nationalcode_id = form_data['related_manager_nationalcode']
+                  
+            #  در صورتی که نوع تغییر باشد، این فیلدها هم باید وجود داشته باشند
+            #    عنوان نوع تغییر
+            if 'change_type_title' in form_data:
+               record_instance.change_type_title = form_data['change_type_title']
+            #    کد نوع تغییر
+            if 'change_type_code' in form_data:
+               record_instance.code = form_data['change_type_code']
+           
            
             # نیاز به کمیته
             if 'need_committee' in form_data:
@@ -3280,6 +3305,22 @@ class ChangeType:
     def create_record(self):
         return {'success':True, 'message':''}
 
+    def check_permission(self, current_user:str)->dict:
+        """
+        این تابع بررسی می کند که دسترسی کاربر جاری به فرم به چه صورتی است
+        مقدار مجاز یکی از این موارد است:
+        NORMAL : دسترسی عادی برای ویرایش و ذخیره سازی داده ها
+        READONLY: فقط خواندنی
+        INVALID : کاربر مجاز به دسترسی به این فرم نمی باشد
+
+        Args:
+            current_user (str): کد ملی کاربر جاری
+
+        Returns:
+            dict: یک رشته به شرح زیر بازگشت داده می شود:
+            {'success':True, 'message':'', 'mode':'NORMAL'}
+        """
+        return {'success':True, 'message':'', 'mode':'NORMAL'}
 
     def get_change_type_data(self):
         """
@@ -3350,8 +3391,8 @@ class ChangeType:
         form_data["current_user_role"] = result["team_roles"]
         
         # لازم است اطلاعات مدیر مربوطه و دبیر کمیته (در صورت وجود) به دست بیاوریم
-        if self.change_type_instance.related_manager:
-            result = objform_manager.get_user_info(self.change_type_instance.related_manager.national_code)
+        if self.change_type_instance.related_manager_nationalcode:
+            result = objform_manager.get_user_info(self.change_type_instance.related_manager_nationalcode.national_code)
             if not result.get("success", False):
                 return result
             form_data["related_manager"] = result["user"]
@@ -3386,8 +3427,19 @@ class ChangeType:
         return form_data
         
         
-    def update_record_data(self):
-        return {'success':True, 'message':''}
+    def update_record_data(self, form_data:dict, current_user:str)->dict:
+        
+        obj_form_manager = FormManager(current_user_national_code=current_user, request_id=-1)
+        result = obj_form_manager.update_record(request_changetype='T', form_data=form_data, 
+                                                id=self.change_type_id, current_user_nationalcode=current_user)
+        if not result.get('success',False):
+            return result
+        
+        # باید نسخه جاری را با نسخه ذخیره شده عوض کنیم
+        self.change_type_instance.refresh_from_db() 
+        
+        return {"success": True, "message": "اطلاعات با موفقیت به روزرسانی شد"}
+
     
     
 class Request:
