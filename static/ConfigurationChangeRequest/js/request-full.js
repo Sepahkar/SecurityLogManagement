@@ -1010,6 +1010,18 @@ function form_validation() {
 
     //////////////////////////////////بخش دوم//////////////////////////
     // ویژگی های تغییر
+    // طبقه بندی تغییر باید انتخاب شده باشد
+    if (!$('input[name="classification"]').is(':checked'))
+        errors.push("لطفا طبقه بندی تغییر را مشخص کنید")
+    // گستردگی تغییرات
+    if (!$('input[name="change_level"]').is(':checked'))
+        errors.push("لطفا گستردگی تغییر را مشخص کنید")
+    // اولویت تغییر
+    if (!$('input[name="priority"]').is(':checked'))
+        errors.push("لطفا اولویت تغییر را مشخص کنید")
+    // سطح ریسک تغییر
+    if (!$('input[name="risk_level"]').is(':checked'))
+        errors.push("لطفا سطح ریسک تغییر را مشخص کنید")
 
 
     /***************************************سطر دوم********************************************* */
@@ -1021,7 +1033,7 @@ function form_validation() {
 
     if (!$('input[name="change_location_DataCenter"]').is(':checked') && 
         !$('input[name="change_location_Database"]').is(':checked') && 
-        !$('input[name="change_location_SystemsServices"]').is(':checked') &&
+        !$('input[name="change_location_SystemServices"]').is(':checked') &&
         !$('input[name="change_location_other"]').is(':checked')) {
         errors.push("لطفا یکی از گزینه های محل تغییر را انتخاب کنید");
     }
@@ -1046,6 +1058,7 @@ function form_validation() {
 
     //////////////////////////////////بخش دوم//////////////////////////
     //حوزه و ارتباطات تغییر
+
     //اگر گزینه نیاز به کمیته دارد انتخاب شده باشد باید کمیته هم انتخاب شده باشد
     if ($('input[name="need_committee"]:checked').val() == 1
         && $('select[name="committee"]').val() < 0)
@@ -1053,7 +1066,7 @@ function form_validation() {
 
     //دامنه تغییر
     //باید یکی از گزینه های دامنه تغییر انتخاب شده باشد
-    if (!$('.change-team-corp input[name="domain"]:checked'))
+    if ($('.change-team-corp input[name="domain"]:checked').length == 0)
         errors.push("لطفا یکی از گزینه های 'درون سازمانی' یا 'بین سازمانی' یا 'برون سازمانی' را برای دامنه تغییرات انتخاب کنید")
     //در غیر این صورت باید کنترل کنیم با توجه به حوزه مربوطه، تیم یا شرکت را انتخاب کرده باشد
     else

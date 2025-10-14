@@ -3298,15 +3298,44 @@ class ChangeType:
         self.objform_manager = FormManager(current_user_national_code=current_user_natioal_code, request_id=-1)
         self.current_user_natioal_code = current_user_natioal_code
     
-    def validate(self):
+    def validate(self, form_data):
         return {'success':True, 'message':''}
     
     def get_change_type_list(self):
         list = m.ChangeType.objects.all()
         return list
     
-    def create_record(self):
-        return {'success':True, 'message':''}
+    def create_record(self, form_data:dict, current_user:str)->str:
+        
+        # اعتبارسنجی را انجام می دهیم
+        result = self.validate(form_data)
+        # اگر اعتبارسنجی موفق نباشد
+        if not result.get('success', False):
+            return result
+
+        # چون تنها رکورد اجباری، کد ملی مدیر مربوطه است، باید قبل از درج  آن را به دست بیاوریم
+        related_manager_nationalcode = form_data['related_manager_nationalcode']
+
+        
+        # رکورد را ایجاد می کنیم
+        try:
+            self.change_type_instance = m.ChangeType.objects.create(related_manager_nationalcode_id = related_manager_nationalcode)
+            self.change_type_id = self.change_type_instance.id
+            
+        except Exception as e:
+            return {'success':False, 'message':f'خطا در ایجاد رکورد نوع درخواست: {str(e)}'}
+        
+        # حالا کافی است که رکورد را به روزرسانی کنیم
+        obj_form_manager = FormManager(current_user_national_code=current_user, request_id=-1)
+        result = obj_form_manager.update_record(request_changetype='T', form_data=form_data, 
+                                                id=self.change_type_id, current_user_nationalcode=current_user)
+        if not result.get('success',False):
+            return result
+        
+        # باید نسخه جاری را با نسخه ذخیره شده عوض کنیم
+        self.change_type_instance.refresh_from_db() 
+        
+        return {'success':True, 'message':'عملیات درج با موفقیت انجام شد'}
 
     def check_permission(self, current_user:str)->dict:
         """

@@ -83,8 +83,8 @@ class message_manager
                     url,
                     { id: id }, // یا صرفاً null اگر سرور فقط URL نیاز دارد
                     (response) => { // on_success
-                        if (on_success == 'function')
-                            on_success(data)
+                        if (typeof on_success == 'function')
+                            on_success(response)
                         // اختیاری: رفرش جدول، حذف سطر یا ... 
                         // location.reload(); // یا هر کار دیگر
                     },
@@ -272,7 +272,7 @@ function toggleFieldValidation(selector, isValid, errorMessage, showError) {
             data: res.data,
             headers: { "X-CSRFToken": csrftoken },
             success: function(response) {
-                if (response && response.success) {
+                if (response && (response.success === true || response.success === 'True' || response.result === true)) {
                     if (typeof on_success === "function") {
                         on_success(response);
                     }
@@ -403,9 +403,9 @@ function handleFormSubmit(e, actionType = null) {
     var form_type = $('input[name="form_type"]').val() || 'request'
 
     var resolvedAction = actionType || 'start';
-    // اگر فرم نوع تغییر باشد، عملیات ذخیره سازی است
-    if (form_type != 'request')
-        resolvedAction = 'save'
+    // // اگر فرم نوع تغییر باشد، عملیات ذخیره سازی است
+    // if (form_type != 'request')
+    //     resolvedAction = 'save'
     // تنظیم action
     // formData.set('action', resolvedAction);
     $('#requestForm').find('input[name="action"]').val(resolvedAction);
@@ -428,7 +428,7 @@ function handleFormSubmit(e, actionType = null) {
             message_manager_obj.showSuccessMessage(data.message);
 
             if (data.request_id) {
-                new_address =  window.location.origin + '/ConfigurationChangeRequest/' 
+                var new_address =  window.location.origin + '/ConfigurationChangeRequest/' 
                 if (form_type != 'request')
                     new_address += 'change-type/'
                 
@@ -438,7 +438,9 @@ function handleFormSubmit(e, actionType = null) {
                     window.location.href =new_address;
                 }, 2000);
             }
+
             isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
+            // دکمه را به حالت اولیه باز می گردانیم
 
         },
         function on_error(data)

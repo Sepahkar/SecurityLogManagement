@@ -259,8 +259,9 @@
                                 {% for value in data_center_values %}
                                 <div class='check-list-box {% if value.Code in data_center_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
-                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in data_center_selected %}_Gray{%endif%}.png" 
-                                        title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in data_center_selected or not data_center_selected %}_Gray{%endif%}.png" 
+                                        title="{{ value.Caption }}" alt="{{ value.Caption }}"
+                                        onerror="this.src='ConfigurationChangeRequest/images/icon/DatacenterDefault{% if value.Code not in data_center_selected or not data_center_selected %}_Gray{%endif%}.png'">
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="DataCenter_items_{{value.Code}}"
                                         {% if value.Code in data_center_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -281,8 +282,9 @@
                                 {% for value in database_values %}
                                 <div class='check-list-box {% if value.Code in database_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
-                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in database_selected %}_Gray{%endif%}.png" 
-                                        title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in database_selected or not database_selected%}_Gray{%endif%}.png" 
+                                        title="{{ value.Caption }}" alt="{{ value.Caption }}"
+                                        onerror="this.src='ConfigurationChangeRequest/images/icon/DatabaseDefault{% if value.Code not in database_selected or not database_selected %}_Gray{%endif%}.png'">
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="Database_items_{{value.Code}}"
                                         {% if value.Code in database_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -303,8 +305,9 @@
                                 {% for value in system_services_values %}
                                 <div class='check-list-box {% if value.Code in system_services_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
-                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in system_services_selected %}_Gray{%endif%}.png" 
-                                        title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in system_services_selected or not system_services_selected %}_Gray{%endif%}.png" 
+                                        title="{{ value.Caption }}" alt="{{ value.Caption }}"
+                                        onerror="this.src='ConfigurationChangeRequest/images/icon/SystemServicesDefault{% if value.Code not in system_services_selected or not system_services_selected %}_Gray{%endif%}.png'">
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="SystemServices_items_{{value.Code}}"
                                         {% if value.Code in system_services_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -383,7 +386,7 @@
                                     <input type="checkbox" class="form-check-input" value="{{ corp.corp_code }}" name="{{ corp.corp_code }}"
                                     {% if corp.corp_code in request_corps %}checked="checked"{%endif%}
                                     />
-                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/corp/'|add:corp.corp_code%}{%if corp.corp_code not in request_corps%}_Gray{%endif%}.png" 
+                                    <img src="{% static 'ConfigurationChangeRequest/images/icon/corp/'|add:corp.corp_code%}{%if corp.corp_code not in request_corps or not request_corps%}_Gray{%endif%}.png" 
                                     alt="{{ corp.corp_name }}" data-code="{{ corp.corp_code }}" title="{{ corp.corp_name }}" 
                                     class=
                                     {% if corp.corp_code in request_corps %}"active"{%else%}"inactive"{%endif%}
@@ -492,7 +495,8 @@
                     </div>
                 </div>
             </div><!--حوزه اثرگذاری، الزام به تغییر، بازگشت تغییرات -->
-            <div class='panel-row'><!-- تقسیم وظایف -->
+            {% if mode != 'INSERT'%}
+            <div class='panel-row' ><!-- تقسیم وظایف -->
                 <div class='col-12 fieldBox'>
                     <div class="title">تقسیم وظایف</div>
                     <hr/>
@@ -723,6 +727,7 @@
 
                 </div>    
             </div><!-- اطلاع رسانی -->
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

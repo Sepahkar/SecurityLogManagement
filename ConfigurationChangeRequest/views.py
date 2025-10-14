@@ -696,8 +696,39 @@ def change_type_create(request):
     current_user = get_current_user(request)
     
     obj_change_type:ChangeType = ChangeType(current_user, -1)
+    
+    if request.method == 'POST':
+        obj_form_manager = FormManager(current_user_national_code=current_user,request_id=-1)
+
+        # دریافت اطلاعات فرم
+        form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)      
+
+        # اعتبارسنجی فرم
+        validation_result = obj_form_manager.form_validation(form_data, 'T')
+        if validation_result['success']:
+            # اطلاعات جدید درخواست به روزرسانی می شود
+            result = obj_change_type.create_record(form_data, current_user)
+            
+            if result['success']:
+                data = {
+                    'mode':'UPDATE',
+                    'form_type':'change_type',
+                    'success':True,
+                    'message':'اطلاعات با موفقیت ذخیره شد. <br/>اکنون می توانید تسک ها و گروه های اطلاع رسانی را مشخص کنید',
+                    'request_id':obj_change_type.change_type_id
+                }
+                return JsonResponse(data)     
+            else:
+                return JsonResponse({'success': False, 'message': result['message']})     
+        else:
+            return JsonResponse({'success': False, 'message': validation_result['message']})         
+        
+    
     # بارگذاری داده‌های فرم
-    data = obj_change_type.load_record_data()        
+    data = obj_change_type.load_record_data()
+    # اگر در حالت درج باشیم نباید در ابتدا تقسیم وظایف و اطلاع رسانی را نشان بدهیم
+    # چون فعلا شناسه نوع درخواست وجود ندارد
+    data.update({'mode':'INSERT'})    
     return render(request, 'ConfigurationChangeRequest/change-type.html', data)
 
 

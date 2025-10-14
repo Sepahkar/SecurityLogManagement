@@ -119,9 +119,13 @@
                 <input type="hidden" name="action" value=""/>
                 {%if not is_task %}
                     {% if form_type == 'change_type'%}
-                        <button type="button" name="action" value="save" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="ذخیره">ذخیره</button>
+                        {% if mode == 'INSERT'%}
+                            <button type="button" name="action" value="register" class="btn btn-primary" onclick="handleFormSubmit(event, 'register')" data-original-text="ثبت">ثبت</button>
+                        {% else %}
+                            <button type="button" name="action" value="save" class="btn btn-primary" onclick="handleFormSubmit(event, 'save')" data-original-text="ذخیره">ذخیره</button>
+                        {% endif %}
                         <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
-                    {% else %}
+                        {% else %}
                         {% if mode == 'UPDATE' %}
                             <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
                             <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-original-text="رد">رد</button>
