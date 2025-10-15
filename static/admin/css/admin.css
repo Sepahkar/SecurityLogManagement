@@ -1,0 +1,48 @@
+
+
+/****************************************شروع استایلهای جدول کمیته*****************************/
+.is-active-icon  {
+        transition: transform 0.2s ease;
+        vertical-align: middle;
+    }
+    .is-active-icon:hover {
+        transform: scale(1.2);
+    }
+    
+    /* رنگ‌ها اگر FontAwesome لود نشد، به اجبار تعیین شوند */
+    .fa-check-circle {
+        color: #28a745 !important;  /* سبز */
+    }
+    .fa-times-circle {
+        color: #dc3545 !important;  /* قرمز */
+    }
+    
+    /* --- وسط‌چین کردن محتوا در جدول ادمین --- */
+    .results table th, 
+    .results table td {
+        vertical-align: middle !important;
+    }
+    
+    /* --- وسط‌چین کردن خاص ستون وضعیت --- */
+    .column-is_active_icon {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    .results table td, 
+    .results table th {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+        vertical-align: middle !important;
+    }    
+
+.field-is_active_icon {
+    text-align: center;
+}
+/****************************************پایان استایلهای جدول کمیته*****************************/
+
+.fa-user-cog {
+    color: #007bff !important; /* آبی برای مجری */
+}
+.fa-vial {
+    color: #ffc107 !important; /* زرد برای تستر */
+}

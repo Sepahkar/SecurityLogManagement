@@ -1,0 +1,7 @@
+
+.is-active-icon {
+        transition: transform 0.2s ease;
+    }
+    .is-active-icon:hover {
+        transform: scale(1.2);
+    }

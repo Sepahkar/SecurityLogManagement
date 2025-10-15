@@ -255,17 +255,129 @@ class RequestExtraInformationAdmin(admin.ModelAdmin):
     is_active_display.short_description = 'وضعیت'
 
 
+
+@admin.register(Committee)
+class CommitteeAdmin(admin.ModelAdmin):
+    list_display = ('title', 'administrator_display', 'is_active_icon')
+    list_filter = ('is_active',)
+    search_fields = ('title', 'administrator_nationalcode__first_name', 'administrator_nationalcode__last_name')
+    autocomplete_fields = ['administrator_nationalcode']
+    
+    def is_active_icon(self, obj):
+        icon = 'fa-check-circle text-success' if obj.is_active else 'fa-times-circle text-danger'
+        title = 'فعال' if obj.is_active else 'غیرفعال'
+        return format_html(f'<i class="fa {icon} fa-lg is-active-icon" title="{title}"></i>')
+    is_active_icon.short_description = 'وضعیت فعال'
+    
+    class Media:
+        css = {
+        'all': (
+            'ConfigurationChangeRequest/css/all.min.css',
+            'admin/css/admin.css',
+        )
+        }
+
+    def administrator_display(self, obj):
+        if obj.administrator_nationalcode:
+            username_part = obj.administrator_nationalcode.username.split('@')[0]
+            fullname = obj.administrator_nationalcode.fullname
+            fullname_gender = obj.administrator_nationalcode.fullname_gender
+            return format_html(
+                f"""
+                <div style="display:flex; align-items:center;">
+                    <img src="/static/ConfigurationChangeRequest/images/personnel/{username_part}.jpg" 
+                        onerror="this.src='/static/ConfigurationChangeRequest/images/Avatar.png';" 
+                        alt="{fullname}" title="{fullname}" 
+                        style="width:45px;height:45px;border-radius:50%;margin-left:6px;object-fit:cover;">
+                    <span>{ fullname_gender }</span>
+                </div>
+                """
+            )
+        return "-"
+    administrator_display.short_description = "دبیر کمیته"        
+        
 # سایر مدل‌ها (بدون تغییر ظاهری)
 admin.site.register(Role)
 admin.site.register(UserTeamRole)
 admin.site.register(ConstValue)
+
+
 admin.site.register(Corp)
-admin.site.register(Committee)
+
 admin.site.register(ChangeType)
 admin.site.register(NotifyGroup)
 admin.site.register(NotifyGroupUser)
-admin.site.register(Task)
-admin.site.register(TaskUser)
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'test_required', 'order_number')
+    list_filter = ('test_required',)
+    search_fields = ('title',)
+    
+
+class ExecutorInline(admin.TabularInline):
+    model = TaskUser
+    extra = 0
+    verbose_name = "مجری"
+    verbose_name_plural = "مجریان"
+    fields = ('user_nationalcode', 'user_role_id', 'user_team_code', 'is_active')
+    autocomplete_fields = ['user_nationalcode', 'user_role_id', 'user_team_code']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(user_role_code='E')
+
+
+class TesterInline(admin.TabularInline):
+    model = TaskUser
+    extra = 0
+    verbose_name = "تستر"
+    verbose_name_plural = "تسترها"
+    fields = ('user_nationalcode', 'user_role_id', 'user_team_code', 'is_active')
+    autocomplete_fields = ['user_nationalcode', 'user_role_id', 'user_team_code']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(user_role_code='T')
+
+
+@admin.register(TaskUser)
+class TaskUserAdmin(admin.ModelAdmin):
+    list_display = ('task', 'user_display', 'user_role_icon', 'user_team_code', 'is_active')
+    list_filter = ('user_role_code', 'is_active', 'user_team_code')
+    search_fields = (
+        'user_nationalcode__first_name',
+        'user_nationalcode__last_name',
+        'user_nationalcode__username',
+    )
+    # autocomplete_fields = ['task', 'user_nationalcode', 'user_role_id', 'user_team_code']
+    # inlines = [ExecutorInline, TesterInline]
+        
+    def user_display(self, obj):
+        """نمایش نام کامل کاربر"""
+        return f"{obj.user_nationalcode.first_name} {obj.user_nationalcode.last_name}"
+    user_display.short_description = "کاربر"
+
+    def user_role_icon(self, obj):
+        """نمایش نقش با آیکون رنگی FontAwesome"""
+        if obj.user_role_code == 'E':
+            icon = 'fa-user-cog text-primary'
+            title = 'مجری'
+        else:
+            icon = 'fa-vial text-warning'
+            title = 'تستر'
+        return format_html(f'<i class="fa {icon}" title="{title}"></i> {title}')
+    user_role_icon.short_description = "نقش در تسک"
+
+    class Media:
+        css = {
+            'all': (
+                'ConfigurationChangeRequest/css/all.min.css',  # FontAwesome
+                'admin/css/admin.css',  # استایل سفارشی در صورت نیاز
+            )
+        }
+
+
 admin.site.register(RequestTask)
 admin.site.register(RequestTask_ChangeType)
 admin.site.register(RequestTaskUser)
