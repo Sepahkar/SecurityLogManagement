@@ -299,7 +299,12 @@ class CommitteeAdmin(admin.ModelAdmin):
 # سایر مدل‌ها (بدون تغییر ظاهری)
 admin.site.register(Role)
 admin.site.register(UserTeamRole)
-admin.site.register(ConstValue)
+
+@admin.register(ConstValue)
+class ConstValueAdmin(admin.ModelAdmin):
+    list_display = ('Caption', 'Code', 'Parent', 'IsActive', 'OrderNumber', 'ConstValue')
+    list_filter = ('Parent', 'IsActive')
+    search_fields = ('Caption', 'Code')
 
 
 admin.site.register(Corp)
