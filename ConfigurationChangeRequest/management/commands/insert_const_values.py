@@ -42,6 +42,12 @@ class Command(BaseCommand):
         create_if_not_exists('برق', 'DataCenter_Power', data_center_parent)
         create_if_not_exists('سیستم های خنک کننده', 'DataCenter_CoolingSystems', data_center_parent)
 
+        # پایگاه های داده
+        database_parent = create_if_not_exists('پایگاه های داده', 'Database')
+        create_if_not_exists('دیتابیس 1', 'Database_1', database_parent)
+        create_if_not_exists('دیتابیس 2', 'Database_2', database_parent)
+
+
         # سیستم ها و سرویس ها
         systems_services_parent = create_if_not_exists('سیستم ها و سرویس ها', 'SystemsServices')
         create_if_not_exists('API Manager', 'SystemsServices_APIManager', systems_services_parent)

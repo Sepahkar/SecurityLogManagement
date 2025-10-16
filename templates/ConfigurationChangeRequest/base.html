@@ -132,7 +132,12 @@
                             <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-original-text="بازگشت">بازگشت</button>
                         {% elif mode != 'READONLY' %}
                             <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="شروع فرآیند">شروع فرآیند</button>
-                            <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" data-original-text="بازگشت">بازگشت</button>
+                            {%if request.id %}
+                                <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" 
+                                data-original-text="بازگشت">بازگشت</button>
+                            {% else %}
+                                <button type="button" class="btn btn-secondary mx-2" onclick="forceCloseTab();">بستن پنجره</button>
+                            {% endif %}
                         {% else %}
                             <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
                         {% endif %}
@@ -148,7 +153,7 @@
                         <button type="button" class="btn btn-danger" onclick="handleFormSubmit(event, 'RET')" data-original-text="عدم تایید">عدم تایید</button>
                         {% endif %}
                     {% endif %}
-                    <button type="button" class="btn btn-secondary mx-2" onclick="window.closeModal && window.closeModal();">بستن پنجره</button>
+                    <button type="button" class="btn btn-secondary mx-2" onclick="forceCloseTab();">بستن پنجره</button>
 
                 {% endif %}
             </div>

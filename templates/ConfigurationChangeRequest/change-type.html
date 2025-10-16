@@ -160,8 +160,14 @@
                     <div class="title">ویژگی های تغییر</div>
                     <hr/>
                     <div class="content">
+
                         <div class="content-row col-12">
-                            <div class="col-3 radio-label">طبقه بندی تغییر:</div>
+                            <div class="col-3 radio-label">
+                                <a href="/admin/ConfigurationChangeRequest/constvalue/?q=Classification&o=2.3.5" target="_blank" title="مدیریت طبقه بندی تغییرات">
+                                    <i class="fa-solid fa-gear"></i>
+                                </a> 
+                                طبقه بندی تغییر:
+                            </div>
                             <div class="radio-list col-9">
                                 {% for value in classification_values %}
                                     <div class='radio-box {% if request.classification and request.classification.Code == value.Code %}active{%else%}inactive{%endif%}'>
@@ -182,7 +188,12 @@
                             </div>
                         </div>
                         <div class="content-row col-12">
-                            <div class="col-3 radio-label">گستردگی تغییرات:</div>
+                            <div class="col-3 radio-label">
+                                <a href="/admin/ConfigurationChangeRequest/constvalue/?q=%09ChangeLevel&o=2.3.5" target="_blank" title="گستردگی  تغییرات">
+                                    <i class="fa-solid fa-gear"></i>
+                                </a>                                 
+                                گستردگی تغییرات:
+                            </div>
                             <div class="radio-list col-9">
                                 {% for value in change_level_values %}
                                     <div class='radio-box {% if request.change_level and request.change_level.Code == value.Code %}active{%else%}inactive{%endif%}'>
@@ -203,7 +214,11 @@
                             </div>
                         </div>
                         <div class="content-row col-12">
-                            <div class="col-3 radio-label">اولویت تغییر:</div>
+                            <div class="col-3 radio-label">
+                                <a href="/admin/ConfigurationChangeRequest/constvalue/?q=Priority&o=2.3.5" target="_blank" title="اولویت تغییرات">
+                                    <i class="fa-solid fa-gear"></i>
+                                </a>                                 
+                                اولویت تغییر:</div>
                             <div class="radio-list col-9">
                                 {% for value in priority_values %}
                                     <div class='radio-box {% if request.priority and request.priority.Code == value.Code %}active{%else%}inactive{%endif%}'>
@@ -224,7 +239,12 @@
                             </div>
                         </div>
                         <div class="content-row col-12">
-                            <div class="col-3 radio-label">سطح ریسک تغییر:</div>
+                            <div class="col-3 radio-label">
+                                <a href="/admin/ConfigurationChangeRequest/constvalue/?q=Risk&o=2.3.5" target="_blank" title="ریسک تغییرات">
+                                    <i class="fa-solid fa-gear"></i>
+                                </a>                                 
+                                سطح ریسک تغییر:
+                            </div>
                             <div class="radio-list col-9">
                                 {% for value in risk_level_values %}
                                     <div class='radio-box {% if request.risk_level and request.risk_level.Code == value.Code %}active{%else%}inactive{%endif%}'>
@@ -255,7 +275,10 @@
                         <div class="content-row col-12">
                             <div class="col-3 check-list-main-checkbox">
                                 <input class="form-check-input" name="change_location_DataCenter" type="checkbox" id="DataCenter" value=true
-                                    {% if request.change_location_data_center %}checked="checked"{% endif %}>
+                                {% if request.change_location_data_center %}checked="checked"{% endif %}>
+                                <a href="/admin/ConfigurationChangeRequest/constvalue/?q=DataCenter&o=2.3.5" target="_blank" title="مدیریت اطلاعات مراکز داده">
+                                    <i class="fa-solid fa-gear"></i>
+                                </a>                                    
                                 <label class="form-check-label" for="change_location_DataCenter">مرکز داده</label>
                             </div>
                             <div class="check-list-detail col-9 data-center-list">
@@ -264,7 +287,7 @@
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in data_center_selected or not data_center_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}"
-                                        onerror="this.src='ConfigurationChangeRequest/images/icon/DatacenterDefault{% if value.Code not in data_center_selected or not data_center_selected %}_Gray{%endif%}.png'">
+                                        onerror="this.src='{% static "ConfigurationChangeRequest/images/icon/DataCenter_Default"%}{% if value.Code not in data_center_selected or not data_center_selected %}_Gray{%endif%}.png'">
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="DataCenter_items_{{value.Code}}"
                                         {% if value.Code in data_center_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -273,16 +296,16 @@
                                     </div>
                                 </div>
                                 {% endfor %}
-                                <a href="/admin/ConfigurationChangeRequest/committee/" target="_blank" title="مدیریت اطلاعات کمیته ها">
-                                    <i class="fa-solid fa-gear"></i>
-                                </a>
                             </div>
                         </div>
                         <div class="content-row col-12 database-list">
                             <div class="col-3 check-list-main-checkbox">
                                 <input class="form-check-input" type="checkbox" name="change_location_Database" id="Database" value=true
                                     {% if request.change_location_database %}checked="checked"{% endif %}>
-                                <label class="form-check-label" for="change_location_Database">پایگاه داده</label>
+                                    <a href="/admin/ConfigurationChangeRequest/constvalue/?q=Database&o=2.3.5" target="_blank" title="مدیریت اطلاعات پایگاه های داده">
+                                        <i class="fa-solid fa-gear"></i>
+                                    </a>                                    
+                                     <label class="form-check-label" for="change_location_Database">پایگاه داده</label>
                             </div>
                             <div class="check-list-detail col-9">
                                 {% for value in database_values %}
@@ -290,7 +313,7 @@
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in database_selected or not database_selected%}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}"
-                                        onerror="this.src='ConfigurationChangeRequest/images/icon/DatabaseDefault{% if value.Code not in database_selected or not database_selected %}_Gray{%endif%}.png'">
+                                        onerror="this.src='{% static "ConfigurationChangeRequest/images/icon/Database_Default"%}{% if value.Code not in database_selected or not database_selected %}_Gray{%endif%}.png'">
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="Database_items_{{value.Code}}"
                                         {% if value.Code in database_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -305,6 +328,10 @@
                             <div class="col-3 check-list-main-checkbox">
                                 <input class="form-check-input" type="checkbox" name="change_location_SystemServices" id="SystemsServices" value=true
                                     {% if request.change_location_system_services %}checked="checked"{% endif %}>
+                                    <a href="/admin/ConfigurationChangeRequest/constvalue/?q=SystemServices&o=2.3.5" target="_blank" title="مدیریت اطلاعات سیستم ها و سرویس ها">
+                                        <i class="fa-solid fa-gear"></i>
+                                    </a>                                    
+    
                                 <label class="form-check-label" for="change_location_SystemServices">سیستم ها و سرویس ها</label>
                             </div>
                             <div class="check-list-detail col-9">
@@ -313,7 +340,7 @@
                                     <div>
                                         <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in system_services_selected or not system_services_selected %}_Gray{%endif%}.png" 
                                         title="{{ value.Caption }}" alt="{{ value.Caption }}"
-                                        onerror="this.src='ConfigurationChangeRequest/images/icon/SystemServicesDefault{% if value.Code not in system_services_selected or not system_services_selected %}_Gray{%endif%}.png'">
+                                        onerror="this.src='{% static "ConfigurationChangeRequest/images/icon/SystemServices_Default"%}{% if value.Code not in system_services_selected or not system_services_selected %}_Gray{%endif%}.png'">
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="SystemServices_items_{{value.Code}}"
                                         {% if value.Code in system_services_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -601,19 +628,28 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <div class="add-task-section">
-                        <button type="button" class="btn btn-success add-task-btn" id="add-task-btn">
-                            <i class="fas fa-plus"></i> اضافه کردن تسک 
-                        </button>
-                        <select name="task-list" id="task-list" style="display:none">
-                            <option value=-1>یک گزینه را انتخاب کنید</option>
-                            {% for task in task_list%}
-                            <option value={{task.id}} data-task-id="{{ task.id }}" data-request-id={{ request.id }}>
-                                {{ task.title }}
-                            </option>
-                            {% endfor%}
-                        </select>
-                    </div>
+                    <div class="add-define-section">
+                        <div class="add-section right col-6">
+                            <button type="button" class="btn btn-success add-btn" id="add-task-btn">
+                                <i class="fas fa-plus"></i> اضافه کردن تسک 
+                            </button>
+                            <select name="task-list" id="task-list" style="display:none">
+                                <option value=-1>یک گزینه را انتخاب کنید</option>
+                                {% for task in task_list%}
+                                <option value={{task.id}} data-task-id="{{ task.id }}" data-request-id={{ request.id }}>
+                                    {{ task.title }}
+                                </option>
+                                {% endfor%}
+                            </select>
+                        </div>
+                        <div class="define-section left col-6">
+                            <a href="/admin/ConfigurationChangeRequest/task/" target="_blank" title="مدیریت اطلاعات تسک ها">
+                                <button type="button" class="btn btn-success add-btn" id="add-task-btn">
+                                    <i class="fa-solid fa-gear"></i>تعریف تسک
+                                </button>
+                            </a>                                    
+                        </div>
+                    </div>                    
                 </div>                
             </div><!-- تقسیم وظایف -->
             <div class='panel-row'><!-- اطلاع رسانی -->
@@ -717,20 +753,28 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <div class="add-notify-group-section">
-                        <button type="button" class="btn btn-success add-notify-group-btn" id="add-notify-group-btn">
-                            <i class="fas fa-plus"></i> اضافه کردن گروه اطلاع رسانی 
-                        </button>
-                        <select name="notify-group-list" id="notify-group-list" style="display:none">
-                            <option value=-1>یک گزینه را انتخاب کنید</option>
-                            {% for notify_group in notify_group_list%}
-                            <option value={{notify_group.id}} data-notify-group-id="{{ notify_group.id }}" data-request-id={{ request.id }}>
-                                {{ notify_group.title }}
-                            </option>
-                            {% endfor%}
-                        </select>
+                    <div class="add-define-section">
+                        <div class="add-section right col-6">
+                            <button type="button" class="add-btn btn-success add-notify-group-btn" id="add-notify-group-btn">
+                                <i class="fas fa-plus"></i> اضافه کردن گروه اطلاع رسانی 
+                            </button>
+                            <select name="notify-group-list" id="notify-group-list" style="display:none">
+                                <option value=-1>یک گزینه را انتخاب کنید</option>
+                                {% for notify_group in notify_group_list%}
+                                <option value={{notify_group.id}} data-notify-group-id="{{ notify_group.id }}" data-request-id={{ request.id }}>
+                                    {{ notify_group.title }}
+                                </option>
+                                {% endfor%}
+                            </select>
+                        </div>
+                        <div class="define-section left col-6">
+                            <a href="/admin/ConfigurationChangeRequest/notifygroup/" target="_blank" title="مدیریت  اطلاعات گروه های اطلاع رسانی">
+                                <button type="button" class="add-btn btn-success add-task-btn" id="add-task-btn">
+                                    <i class="fa-solid fa-gear"></i>تعریف گروه های اطلاع رسانی
+                                </button>
+                            </a>                                    
+                        </div>   
                     </div>
-
                 </div>    
             </div><!-- اطلاع رسانی -->
             {% endif %}

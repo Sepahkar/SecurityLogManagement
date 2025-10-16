@@ -109,13 +109,23 @@
     border: none;
     box-shadow: none;
 }
-
-.add-task-section {
-    margin-top: 15px;
-    text-align: center;
+.add-define-section
+{
+  display: flex;
 }
+.add-section{
+    margin-top: 15px;
 
-.add-task-btn {
+}
+.add-section.right{
+  margin-right:15px;
+  text-align: righ;
+}
+.define-section.left{
+  padding-left:15px;
+  text-align: left;
+}
+.add-btn {
     background: #28a745;
     border: none;
     padding: 8px 16px;
@@ -125,12 +135,12 @@
     transition: all 0.3s ease;
 }
 
-.add-task-btn:hover {
+.add-btn:hover {
     background: #218838;
     transform: translateY(-1px);
 }
 
-.add-task-btn i {
+.add-btn i {
     margin-left: 5px;
 }
 

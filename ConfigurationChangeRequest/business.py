@@ -671,8 +671,8 @@ class FormManager:
             for utr in user_team_roles:
                 team_roles.append(
                     {
-                        "role_title": utr.role_title,
-                        "role_id": utr.role_id,
+                        "role_title": utr.role_id.role_title if utr.role_id else "",
+                        "role_id": utr.role_id_id,
                         "team_name": utr.team_code.team_name if utr.team_code else "",
                         "team_code": utr.team_code.team_code if utr.team_code else "",
                         "manager_national_code": (
@@ -691,7 +691,7 @@ class FormManager:
                 "is_active": True,
                 "team_roles": team_roles,
             }
-        except:
+        except Exception as e:
             return {}
 
     def get_all_users_info(self) -> list:
@@ -1450,6 +1450,12 @@ class FormManager:
             )
             data["data_center_values"] = data_center_values
 
+            # فیلتر کردن رکوردهای مربوط به تغییرات دیتابیس ها
+            database_values = m.ConstValue.objects.filter(
+                Code__startswith="Database_", IsActive=True
+            )
+            data["database_values"] = database_values
+
             # فیلتر کردن رکوردهای مربوط به سیستم ها و سرویس ها
             system_services_values = m.ConstValue.objects.filter(
                 Code__startswith="SystemServices_", IsActive=True
@@ -1492,7 +1498,10 @@ class FormManager:
             # لیست گروه های اطلاع رسانی را اضافه می کنیم
             data["notify_group_list"] = m.NotifyGroup.objects.all()
             
+            # اطلاعات کاربر جاری را به دست می آوریم
+            data["current_user"] = self.get_current_user_info(self.current_user_national_code)
             
+            # اطلاعات همه کاربران
             user_team_roles = m.UserTeamRole.objects.select_related('national_code', 'role_id', 'team_code')
             data["user_team_roles"] = user_team_roles
             
@@ -3834,8 +3843,8 @@ class Request:
             return {"success": False, "message": "نوع درخواست معتبر نیست"}
         
         form_data['related_manager_nationalcode'] = (  # کد ملی مدیر مربوطه
-            change_type_obj.related_manager.national_code
-            if change_type_obj.related_manager is not None
+            change_type_obj.related_manager_nationalcode_id
+            if change_type_obj.related_manager_nationalcode is not None
             else m.ConfigurationChangeRequest._meta.get_field(
                 "related_manager_nationalcode"
             ).get_default()#در صورتی که مقداری وجود نداشته باشد، مقدار پیش فرض تعریف شده در مدل را در نظر می گیریم
@@ -4063,6 +4072,7 @@ class Request:
                         "reason_other_description"
                     ).get_default()#در صورتی که مقداری وجود نداشته باشد، مقدار پیش فرض تعریف شده در مدل را در نظر می گیریم
                 )
+
         except Exception as e:
             return {"success": False, "message": f"خطا در دریافت اطلاعات نوع تغییر: {str(e)}"}
 
@@ -4106,7 +4116,7 @@ class Request:
             request_extra_info_changetype_records: QuerySet[
                 m.RequestExtraInformation_ChangeType
             ] = m.RequestExtraInformation_ChangeType.objects.filter(
-                change_type=change_type_obj
+                changetype=change_type_obj
             )
             for record in request_extra_info_changetype_records:
                 m.RequestExtraInformation.objects.create(

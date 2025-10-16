@@ -185,8 +185,10 @@
                                 {% for value in data_center_values %}
                                 <div class='check-list-box {% if value.Code in data_center_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
-                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in data_center_selected %}_Gray{%endif%}.png" 
-                                        title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in data_center_selected or not data_center_selected %}_Gray{%endif%}.png" 
+                                        title="{{ value.Caption }}" alt="{{ value.Caption }}"
+                                        onerror="this.src='{% static "ConfigurationChangeRequest/images/icon/DataCenter_Default"%}{% if value.Code not in data_center_selected or not data_center_selected %}_Gray{%endif%}.png'">
+                                        
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="DataCenter_items_{{value.Code}}"
                                         {% if value.Code in data_center_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -207,8 +209,9 @@
                                 {% for value in database_values %}
                                 <div class='check-list-box {% if value.Code in database_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
-                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in database_selected %}_Gray{%endif%}.png" 
-                                        title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in database_selected  or not database_selected %}_Gray{%endif%}.png" 
+                                        title="{{ value.Caption }}" alt="{{ value.Caption }}"
+                                        onerror="this.src='{% static "ConfigurationChangeRequest/images/icon/Database_Default"%}{% if value.Code not in database_selected or not database_selected %}_Gray{%endif%}.png'">
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="Database_items_{{value.Code}}"
                                         {% if value.Code in database_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -229,8 +232,10 @@
                                 {% for value in system_services_values %}
                                 <div class='check-list-box {% if value.Code in system_services_selected %}active{%else%}inactive{%endif%}'>
                                     <div>
-                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in system_services_selected %}_Gray{%endif%}.png" 
-                                        title="{{ value.Caption }}" alt="{{ value.Caption }}">
+                                        <img src="{% static 'ConfigurationChangeRequest/images/icon/'|add:value.Code%}{% if value.Code not in system_services_selected  or not system_services_selected %}_Gray{%endif%}.png" 
+                                        title="{{ value.Caption }}" alt="{{ value.Caption }}"
+                                        onerror="this.src='{% static "ConfigurationChangeRequest/images/icon/SystemServices_Default"%}{% if value.Code not in system_services_selected or not system_services_selected %}_Gray{%endif%}.png'">
+                                        
                                         <input type="checkbox" class="form-check-input" value="{{ value.Code }}" name="SystemServices_items_{{value.Code}}"
                                         {% if value.Code in system_services_selected %}checked="checked"{% endif %}>
                                     </div>
@@ -532,19 +537,21 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <div class="add-task-section">
-                        <button type="button" class="btn btn-success add-task-btn" id="add-task-btn">
-                            <i class="fas fa-plus"></i> اضافه کردن تسک جدید
-                        </button>
-                        <select name="task-list" id="task-list" style="display:none">
-                            <option value=-1>یک گزینه را انتخاب کنید</option>
-                            {% for task in task_list%}
-                            <option value={{task.id}} data-task-id="{{ task.id }}" data-request-id={{ request.id }}>
-                                {{ task.title }}
-                            </option>
-                            {% endfor%}
-                        </select>
-                    </div>
+                    <div class="add-define-section">
+                        <div class="add-section right col-6">
+                            <button type="button" class="btn btn-success add-btn" id="add-task-btn">
+                                <i class="fas fa-plus"></i> اضافه کردن تسک 
+                            </button>
+                            <select name="task-list" id="task-list" style="display:none">
+                                <option value=-1>یک گزینه را انتخاب کنید</option>
+                                {% for task in task_list%}
+                                <option value={{task.id}} data-task-id="{{ task.id }}" data-request-id={{ request.id }}>
+                                    {{ task.title }}
+                                </option>
+                                {% endfor%}
+                            </select>
+                        </div>
+                    </div>      
                 </div>                
             </div><!-- تقسیم وظایف -->
             <div class='panel-row'><!-- اطلاع رسانی -->
@@ -648,20 +655,21 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <div class="add-notify-group-section">
-                        <button type="button" class="btn btn-success add-notify-group-btn" id="add-notify-group-btn">
-                            <i class="fas fa-plus"></i> اضافه کردن گروه اطلاع رسانی 
-                        </button>
-                        <select name="notify-group-list" id="notify-group-list" style="display:none">
-                            <option value=-1>یک گزینه را انتخاب کنید</option>
-                            {% for notify_group in notify_group_list%}
-                            <option value={{notify_group.id}} data-notify-group-id="{{ notify_group.id }}" data-request-id={{ request.id }}>
-                                {{ notify_group.title }}
-                            </option>
-                            {% endfor%}
-                        </select>
+                    <div class="add-define-section">
+                        <div class="add-section right col-6">
+                            <button type="button" class="add-btn btn-success add-notify-group-btn" id="add-notify-group-btn">
+                                <i class="fas fa-plus"></i> اضافه کردن گروه اطلاع رسانی 
+                            </button>
+                            <select name="notify-group-list" id="notify-group-list" style="display:none">
+                                <option value=-1>یک گزینه را انتخاب کنید</option>
+                                {% for notify_group in notify_group_list%}
+                                <option value={{notify_group.id}} data-notify-group-id="{{ notify_group.id }}" data-request-id={{ request.id }}>
+                                    {{ notify_group.title }}
+                                </option>
+                                {% endfor%}
+                            </select>
+                        </div>
                     </div>
-
                 </div>    
             </div><!-- اطلاع رسانی -->
         {% endif %}

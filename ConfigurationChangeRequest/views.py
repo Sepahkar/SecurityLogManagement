@@ -11,7 +11,7 @@ def get_current_user(request):
     if in_EIT:
         current_user = request.user.national_code
     else:
-        request_id = 4
+        request_id = 103
         from . import models as m
         objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         
@@ -121,7 +121,7 @@ def get_simple_form_data(request)->dict:
         request (_type_): درخواست http
     """
     current_user_nationalcode = get_current_user(request)
-    request_id = int(request.POST.get('request_id')) if request.POST.get('request_id') else -1
+    request_id = int(request.POST.get('request_id',-1)) if request.POST.get('request_id',-1) else -1
     
 
     # یک نمونه از شی فرم ایجاد می کنیم
@@ -289,7 +289,8 @@ def request_create(request):
             return JsonResponse({'success': False, 'message': validation_result['message']})
     
     # بارگذاری داده‌های فرم
-    data = form_manager.get_form_data(-1, current_user_nationalcode)
+    data = form_manager.get_form_data()
+    data['mode'] = 'INSERT'
     if data['success'] == False:
         return JsonResponse({'success': False, 'message': data['message']})
     

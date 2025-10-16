@@ -3,7 +3,10 @@
 const touchedFields = new Set(); // فیلدهایی که کاربر با آن‌ها تعامل داشته است
 let isSubmitting = false; // وضعیت ارسال فرم
 
-
+function forceCloseTab() {
+    window.open('', '_self'); // جایگزین کردن تب فعلی با صفحه خالی
+    window.close();           // سپس بستن
+  }
     /******************************توابع مربوط به نمایش پیامها******************/
 class message_manager
 {
