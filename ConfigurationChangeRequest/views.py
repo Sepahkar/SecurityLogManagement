@@ -4,14 +4,16 @@ from django.http import JsonResponse
 import logging
 import json
 import inspect
+from Config import settings
 
-in_EIT = False
 
 def get_current_user(request):
-    if in_EIT:
+    current_user = '1280419180'
+    
+    if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
-        request_id = 103
+        request_id = 143
         from . import models as m
         objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         
@@ -83,8 +85,8 @@ def get_current_user(request):
         else:     
             current_user = requestor
 
-    if not current_user:
-        current_user = requestor
+    if current_user == '':
+        current_user = '1280419180'
 
     print(current_user)
     return current_user
@@ -95,23 +97,6 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
-
-
-# def attachment_form_view(request):
-#     """
-#     این view فرم پیوست را نمایش می‌دهد
-#     """
-#     # دریافت اطلاعات کاربر جاری
-#     current_user_nationalcode = current_user
-    
-#     # بارگذاری داده‌های فرم
-#     data = b.load_form_data(-1, current_user_nationalcode)
-    
-#     # اضافه کردن اطلاعات خاص فرم پیوست
-#     data['form_type'] = 'attachment'
-#     data['page_title'] = 'فرم پیوست'
-    
-#     return render(request, 'ConfigurationChangeRequest/attachment-form.html', data)
 
 def get_simple_form_data(request)->dict:
     """
@@ -135,6 +120,7 @@ def get_simple_form_data(request)->dict:
         'change_description': request.POST.get('change_description',''),
         'user_team_role': request.POST.get('user_team_role',''),
         'action': request.POST.get('action','CON'),
+        'user_reject_description': request.POST.get('user_reject_description',''),
         'user_nationalcode': current_user_nationalcode,
         'objFormManager': objFormManager,
         'requestor_user_nationalcode': request.POST.get('requestor_user_nationalcode'),  # کد ملی ایجاد کننده درخواست
@@ -162,11 +148,12 @@ def get_full_form_data(request,objFormManager :FormManager)->dict:
     form_data['change_type_title'] = request.POST.get('change_type_title','') 
     form_data['change_type_code'] = request.POST.get('change_type_code','') 
     related_manager = request.POST.get('related_manager') 
-    related_manager = related_manager.split('-')
-    if len(related_manager) == 3:
-        form_data['related_manager_nationalcode'] = related_manager[2]
-        form_data['related_manager_role_id'] = related_manager[1]
-        form_data['related_manager_team_code'] = related_manager[0]
+    if related_manager:
+        related_manager = related_manager.split('-')
+        if len(related_manager) == 3:
+            form_data['related_manager_nationalcode'] = related_manager[2]
+            form_data['related_manager_role_id'] = related_manager[1]
+            form_data['related_manager_team_code'] = related_manager[0]
     #-----------------------------قسمت دوم-----------------------------
     # ویژگی های تغییر
     form_data['classification'] = int(request.POST.get('classification')) if request.POST.get('classification') else None  # طبقه‌بندی
@@ -366,9 +353,7 @@ def request_view(request, request_id):
                 # اگر عملیات به جز ذخیره سازی باشد
                 # فرم باید به مرحله بعد ارسال شود
                 if action and action!='SAV':
-                    result = request_obj.next_step(
-                        action_code= action, user_nationalcode=current_user_nationalcode
-                    )                    
+                    result = request_obj.next_step(action_code= action, user_nationalcode=current_user_nationalcode,form_data=form_data)                    
                     if result['success']:
                         return JsonResponse({
                             'success': True, 

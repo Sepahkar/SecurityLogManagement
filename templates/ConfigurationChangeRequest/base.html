@@ -69,7 +69,8 @@
                         {% if mode != 'READONLY' %}
                         {% if status_title %}{{ status_title }}{% else %}ثبت درخواست{% endif %}
                         {% else %}
-                            (فقط خواندنی)
+                            {{ status_title }}<br/>
+                            (فقط خواندنی) 
                         {% endif %}
                     </div>
                 {% endif %}
@@ -125,7 +126,7 @@
                             <button type="button" name="action" value="save" class="btn btn-primary" onclick="handleFormSubmit(event, 'save')" data-original-text="ذخیره">ذخیره</button>
                         {% endif %}
                         <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
-                        {% else %}
+                    {% else %}
                         {% if mode == 'UPDATE' %}
                             <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
                             <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-original-text="رد">رد</button>
@@ -150,7 +151,7 @@
                     {% elif status_code|slice:"-3:" == 'SEL'%}
                         <button type="button" class="btn  btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
                         {% if status_code == 'TESSEL' %}
-                        <button type="button" class="btn btn-danger" onclick="handleFormSubmit(event, 'RET')" data-original-text="عدم تایید">عدم تایید</button>
+                        <button type="button" class="btn btn-danger" onclick="handleFormSubmit(event, 'REJ')" data-original-text="عدم تایید">عدم تایید</button>
                         {% endif %}
                     {% endif %}
                     <button type="button" class="btn btn-secondary mx-2" onclick="forceCloseTab();">بستن پنجره</button>

@@ -98,5 +98,11 @@ class Command(BaseCommand):
         create_if_not_exists('خاتمه موفق', 'TaskStatus_FINISH', status_parent)
         create_if_not_exists('خاتمه ناموفق', 'TaskStatus_FAILED', status_parent)
 
+        # نظر کاربر
+        user_opinion = create_if_not_exists('وضعیت', 'Opinion')
+        create_if_not_exists('تایید', 'Opinion_Confirm', user_opinion)
+        create_if_not_exists('رد', 'Opinion_Reject', user_opinion)
+        create_if_not_exists('بازگشت', 'Opinion_Return', user_opinion)
+        
 
         self.stdout.write(self.style.SUCCESS('Default const values inserted successfully.'))

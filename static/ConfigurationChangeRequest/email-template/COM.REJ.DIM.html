@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+                                                <html lang="fa" dir="rtl">
+                                                <head>
+                                                <meta charset="UTF-8">
+                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                <title>COM.REJ.DIM</title>
+                                                </head>
+                                                <body>
+                                                <style>
+                        .email-body
+                        {
+                                font-family: tahoma;
+                                font: size 12pt;
+                                color: black;
+                                direction: rtl;
+                        }
+                        .text
+                        {
+                                color:blue;
+                                font-style: italic;
+                        }
+                        .title
+                        {
+                                font-weight: bold;
+                        }
+                </style>
+                <div class="email-body">
+                        <span class="title">{{ receiver_fullname }}</span>
+                        <p>
+                                با عرض سلام و خسته نباشید؛
+                        </p>
+                        <p>
+                                به استحضار می رساند که فرم درخواست تغییرات با عنوان <span class="text">«{{request_title}}»</span> از نوع <span class="text">«{{change_type}}»</span>  توسط {{sender}} به دلیل {{reject_reason}} باطل گردیده است.
+                        </p>
+                </div>
+                                                </body>
+                                                </html>

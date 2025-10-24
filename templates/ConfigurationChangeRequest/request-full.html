@@ -263,21 +263,23 @@
                     <div class="title">دامنه تغییرات</div>
                     <hr/>
                     <div class="content ">
-                        <div class="content-row col-12 ">
-                            <div class="col-3 radio-label">نیاز به کمیته :</div>
-                            <div class="col-9 need-committee-box">
-                                <input class="radio-input" type="radio" name="need_committee" id="need_committee_no" value="0" {% if request.need_committee == False or not request.need_committee %}checked="checked"{% endif %}>
-                                <label class="radio-label" for="need_committee_no">ندارد</label>
-                                <input class="radio-input" type="radio" name="need_committee" id="need_committee_yes" value="1" {% if request.need_committee == True or request.need_committee %}checked="checked"{% endif %}>
-                                <label class="radio-label" for="need_committee_yes">دارد</label>
-                                <select class="select-box" name="committee" id="committee" {% if not request.need_committee %}style="display:none"{% endif %}>
-                                    <option value="-1">یک کمیته را انتخاب کنید</option>
-                                    {% for c in committee %}
-                                        <option value="{{c.id}}" {% if request.committee and request.committee.id == c.id %}selected="selected"{% endif %}>{{ c.title }}</option>
-                                    {% endfor %}
-                                </select>
+                        {% if request.status_code != 'COMITE' and request.status_code != 'FINISH' %}
+                            <div class="content-row col-12 ">
+                                <div class="col-3 radio-label">نیاز به کمیته :</div>
+                                <div class="col-9 need-committee-box">
+                                    <input class="radio-input" type="radio" name="need_committee" id="need_committee_no" value="0" {% if request.need_committee == False or not request.need_committee %}checked="checked"{% endif %}>
+                                    <label class="radio-label" for="need_committee_no">ندارد</label>
+                                    <input class="radio-input" type="radio" name="need_committee" id="need_committee_yes" value="1" {% if request.need_committee == True or request.need_committee %}checked="checked"{% endif %}>
+                                    <label class="radio-label" for="need_committee_yes">دارد</label>
+                                    <select class="select-box" name="committee" id="committee" {% if not request.need_committee %}style="display:none"{% endif %}>
+                                        <option value="-1">یک کمیته را انتخاب کنید</option>
+                                        {% for c in committee %}
+                                            <option value="{{c.id}}" {% if request.committee and request.committee.id == c.id %}selected="selected"{% endif %}>{{ c.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
+                        {%endif%}
                         <div class="change-team-corp">
                             <div class="content-row col-12">
                                 <div class="col-3 radio-label">دامنه تغییر:</div>

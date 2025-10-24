@@ -406,11 +406,63 @@ function handleFormSubmit(e, actionType = null) {
     var form_type = $('input[name="form_type"]').val() || 'request'
 
     var resolvedAction = actionType || 'start';
-    // // اگر فرم نوع تغییر باشد، عملیات ذخیره سازی است
-    // if (form_type != 'request')
-    //     resolvedAction = 'save'
-    // تنظیم action
-    // formData.set('action', resolvedAction);
+
+    // اگر اکشن رد است، مودال دلیل رد را نمایش بده
+    if (resolvedAction === 'REJ') {
+        isSubmitting = false; // از ارسال جلوگیری شود تا کاربر دلیل وارد کند
+
+        showPrompt(
+            'لطفاً دلیل رد مدرک را وارد کنید:',
+            'دلیل رد مدرک',
+            'دلیل را بنویسید...',
+            function(reject_reason) {
+                if (!reject_reason || !reject_reason.trim()) {
+                    showError('وارد کردن دلیل رد الزامی است.');
+                    return;
+                }
+
+                isSubmitting = true;
+                $('#requestForm').find('input[name="action"]').val(resolvedAction);
+
+                // داده‌های فرم و افزودن دلیل رد
+                const formEl = $('#requestForm')[0];
+                let formData = $('#requestForm').serializeArray();
+                formData.push({name: 'user_reject_description', value: reject_reason});
+
+                // تبدیل آرایه به QueryString
+                let queryStr = $.param(formData);
+
+                var submitUrl = window.submitUrl || ''; 
+                AJAX_call(submitUrl, queryStr,
+                    function on_success(data) {
+                        message_manager_obj.showSuccessMessage(data.message);
+
+                        if (data.request_id) {
+                            var new_address = window.location.origin + '/ConfigurationChangeRequest/';
+                            if (form_type != 'request')
+                                new_address += 'change-type/';
+                            new_address += data.request_id + '/';
+                            setTimeout(() => {
+                                window.location.href = new_address;
+                            }, 2000);
+                        }
+                        isSubmitting = false;
+                    },
+                    function on_error(data) {
+                        isSubmitting = false;
+                    }
+                );
+            },
+            function onCancel() {
+                // ریست دستی state
+                isSubmitting = false;
+                form_manager_obj.hideLoading();
+            }
+        );
+        return; // مانع اجرای ادامه تابع شو تا مودال مدیریت کند
+    }
+
+    
     $('#requestForm').find('input[name="action"]').val(resolvedAction);
 
     // داده‌های فرم

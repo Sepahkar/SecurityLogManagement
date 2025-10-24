@@ -69,19 +69,31 @@ class User(models.Model):
     @property
     def fullname_title(self):
         title = 'جناب آقای'
-        if not self.title:
+        if not self.gender:
             title = 'سرکار خانم'
             
         return f"{title} {self.first_name} {self.last_name}"
+    
     @property
     def get_team(self):
         """
         نخستین تیم کاربر را با توجه به UserTeamRole بازگشت می‌دهد.
         اگر کاربر هیچ تیمی نداشته باشد، None باز می‌گرداند.
         """
-        utr = UserTeamRole.objects.filter(national_code=self.national_code, team_code__is_active=True).order_by('id').first()
+        utr = UserTeamRole.objects.filter(national_code=self.national_code).order_by('id').first()
         if utr and utr.team_code:
             return utr.team_code.team_name
+        return None
+
+    @property
+    def get_team_code(self):
+        """
+        نخستین تیم کاربر را با توجه به UserTeamRole بازگشت می‌دهد.
+        اگر کاربر هیچ تیمی نداشته باشد، None باز می‌گرداند.
+        """
+        utr = UserTeamRole.objects.filter(national_code=self.national_code).order_by('id').first()
+        if utr and utr.team_code:
+            return utr.team_code.team_code
         return None
 
     @property
@@ -90,11 +102,21 @@ class User(models.Model):
         نخستین تیم کاربر را با توجه به UserTeamRole بازگشت می‌دهد.
         اگر کاربر هیچ تیمی نداشته باشد، None باز می‌گرداند.
         """
-        utr = UserTeamRole.objects.filter(national_code=self.national_code, team_code__is_active=True).order_by('id').first()
+        utr = UserTeamRole.objects.filter(national_code=self.national_code).order_by('id').first()
         if utr and utr.role_id:
             return utr.role_id.role_title
         return None
 
+    @property
+    def get_role_id(self):
+        """
+        نخستین تیم کاربر را با توجه به UserTeamRole بازگشت می‌دهد.
+        اگر کاربر هیچ تیمی نداشته باشد، None باز می‌گرداند.
+        """
+        utr = UserTeamRole.objects.filter(national_code=self.national_code).order_by('id').first()
+        if utr and utr.role_id:
+            return utr.role_id.role_id
+        return None
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.national_code})"
@@ -867,6 +889,7 @@ class RequestFlow(models.Model):
     """
     request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
                                 on_delete=models.CASCADE)
+    reqeust_task = models.ForeignKey(to=RequestTask, verbose_name="شناسه تسک درخواست", on_delete=models.SET_NULL, null=True)
     user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
                                           db_column='user_nationalcode', on_delete=models.CASCADE)
     user_role_id = models.ForeignKey(to=Role, db_column='user_role_id' ,verbose_name='سمت کاربر', 
@@ -877,22 +900,31 @@ class RequestFlow(models.Model):
                                         null=True, blank=True, 
                                         help_text='تیم مربوط به کاربر را انتخاب کنید.',
                                         db_column='user_team_code')
-    user_role_code = models.ForeignKey(to=ConstValue, on_delete=models.CASCADE, 
-                                       related_name='user_role_code',
-                                       verbose_name='کد سمت کاربر', 
-                                        help_text='کد سمت کاربر',
-                                        db_column='user_role_code') 
     user_opinion = models.ForeignKey(to=ConstValue, verbose_name='نظر کاربر', 
                                      related_name='user_opinion',
                                      on_delete=models.CASCADE)
-    receiver_date = models.DateTimeField(auto_now_add=True, verbose_name='زمان دریافت')
+    STATUS_CHOICES = [
+        ('DRAFTD', 'پیش نویس'),
+        ('DIRMAN', 'اظهار نظر مدیر مستقیم'),
+        ('RELMAN', 'اظهار نظر مدیر مربوطه'),
+        ('COMITE', 'اظهار نظر کمیته'),
+        ('DOTASK', 'انجام تسک ها'),
+        ('FINISH', 'خاتمه یافته'),
+        ('FAILED', 'خاتمه ناموفقیت آمیز'),
+        ('ERRORF', 'خاتمه با خطا'),
+        
+    ]
+
+    status_code = models.CharField(
+        max_length=6, choices=STATUS_CHOICES,
+        verbose_name='کد وضعیت',
+        default='DRAFTD',
+        help_text='لطفاً کد وضعیت را وارد کنید.'
+    )
+    
     send_date = models.DateTimeField(null=True, verbose_name='زمان دریافت')
     fields_value = models.JSONField(null=True, verbose_name='مقادیر فیلدها', 
                                     help_text='مقادیر فیلدهای فرم در زمان خروج از کارتابل، به صورت json ذخیره می شود')
-    user_send_date = models.CharField(null=True, max_length=10, verbose_name='تاریخ اعلام نظر کاربر',
-                                                help_text='تاریخ اظهار نظر کاربر به شمسی.')
-    user_send_time = models.CharField(null=True, max_length=5, verbose_name='ساعت اعلام نظر کاربر',
-                                                help_text=' ساعت اظهار نظر کاربر در قالب HH:MM.')
     user_reject_description = models.CharField(max_length=500, verbose_name='توضیحات رد کاربر', 
                                                 null=True, blank=True, 
                                                 help_text='توضیحات مربوط به رد کاربر را وارد کنید.')
@@ -1089,8 +1121,8 @@ class DataHistory(BaseModel):
         ('C', 'نوع تغییر'),
     ]    
     record_type = models.CharField(max_length=1,choices=RECORDTYPE_CHOICES, verbose_name='مربوط به درخواست است یا نوع تغییر؟')
-    old_data = models.JSONField(verbose_name='اطلاعات قدیمی', null=True)
-    new_data = models.JSONField(verbose_name='اطلاعات جدید', null=True)
+    old_data = models.TextField(verbose_name='اطلاعات قدیمی', null=True)
+    new_data = models.TextField(verbose_name='اطلاعات جدید', null=True)
     record_id = models.IntegerField(verbose_name='شناسه رکورد')
     
     class Meta:
@@ -1118,7 +1150,7 @@ class DataHistory(BaseModel):
             obj = ChangeType.objects.filter(id=self.record_id).first()
             return obj.change_type_title if obj else 'شناسه نامعتبر'
         else:
-            return 'نامشخص'        
+            return 'نامشخص' 
     
     
     

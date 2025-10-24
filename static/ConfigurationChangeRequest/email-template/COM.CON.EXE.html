@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+                                                <html lang="fa" dir="rtl">
+                                                <head>
+                                                <meta charset="UTF-8">
+                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                <title>COM.CON.EXE</title>
+                                                </head>
+                                                <body>
+                                                <style>
+                        .email-body
+                        {
+                                font-family: tahoma;
+                                font: size 12pt;
+                                color: black;
+                                direction: rtl;
+                        }
+                        .text
+                        {
+                                color:blue;
+                                font-style: italic;
+                        }
+                        .title
+                        {
+                                font-weight: bold;
+                        }
+                </style>
+                <div class="email-body">
+                        <span class="title">{{ receiver_fullname }}</span>
+                        <p>
+                                با عرض سلام و خسته نباشید؛
+                        </p>
+                        <p>
+                                به استحضار می رساند که فرم انجام تسک <span class="text">«{{task_title}}»</span>
+                                مربوط به درخواست تغییرات با عنوان <span class="text">«{{request_title}}»</span>
+                                 از نوع <span class="text">«{{change_type}}»</span>
+                                 توسط {{sender}} جهت انجام برای شما ارسال گردیده است.
+                                شما می توانید از طریق کارتابل ورودی در <a href='http://eit-app' title='سامانه های اطلاعاتی فناوران'>http://eit-app</a>
+                                 و یا لینک زیر به آن دسترسی پیدا کرده و نسبت به انتخاب تسک، جهت اجرا اقدام نمایید.
+                        </p>
+                        <p>
+                                <a href="{{form_url}}" title="{{request_title}}">{{form_url}}</a>
+                        </p>
+                        <p>
+                                در صورت نیاز به راهنمای تکمیل فرم می توانید روی <a href="{{help_url}}" title="راهنمای کاربری مرحله {{request_status}}">این لینک</a> کلیک کنید.
+                        </p>
+                </div>
+                                                </body>
+                                                </html>

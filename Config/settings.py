@@ -195,13 +195,18 @@ if RUN_IN_PRODUCTION:
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
     ]
     STATIC_ROOT = BASE_DIR / "staticfiles"
-
+    SERVER_IP = os.getenv("SERVER_IP")
+    SERVER_PORT = os.getenv("SERVER_PORT")
+    IS_IN_EIT = os.getenv("IS_IN_EIT", "False").lower() == "true"
     print("environment: ", ENVIRONMENT_MODE)
 
 
 else:
     load_dotenv(".env.dev")
     ENVIRONMENT_MODE = "DEV"
+    SERVER_IP = os.getenv("SERVER_IP")
+    SERVER_PORT = os.getenv("SERVER_PORT")
+    IS_IN_EIT = os.getenv("IS_IN_EIT", "False").lower() == "true"
     DEBUG = True
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
