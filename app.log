@@ -5243,3 +5243,8 @@ django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '
 2025-10-24 19:11:11,423 - WARNING - Not Found: /favicon.ico
 2025-10-24 19:11:58,378 - WARNING - Not Found: /ConfigurationChangeRequest/143/static/ConfigurationChangeRequest/favicon.ico
 2025-10-24 19:18:02,533 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 20:25:10,003 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 20:25:18,976 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 20:25:27,379 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 20:25:33,952 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 20:26:04,512 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.

@@ -21,7 +21,7 @@ import jdatetime
 from . import validator
 from django.core.exceptions import ValidationError
 from datetime import datetime
-# from Utility.APIManager.Portal.register_document import v2 as register_document
+from Utility.APIManager.Portal.register_document import v2 as register_document
 # from Utility.APIManager.Portal.send_document import ver2 as send_document
 # from Utility.APIManager.Portal.update_document_state_code import (
 #     v1 as update_document_state_code,
@@ -46,15 +46,16 @@ class Cartable:
     doc_id: int=-1
     app_code: str=''
     doc_state: str=''
+    app_doc_id: int = -1
 
-    def __init__(self) -> None:
-        self.app_code = settings.APPCODE
+    def __init__(self, app_code:str=settings.APPCODE) -> None:
+        self.app_code = app_code
         self.doc_id = -1
 
     def create_doc(
         self,
         doc_title: str,
-        request_id: int,
+        id: int,
         document_owner_national_code: str,
         priority: str = "NORMAL",
     ):
@@ -63,10 +64,12 @@ class Cartable:
 
         Args:
             doc_title (str): عنوان سند مثلا : درخواست تغییرات سرورهای هورایزن
-            request_id (int): شناسه درخواست تغییرات
+            id (int): شناسه درخواست تغییرات یا تسک
             document_owner_national_code (str): کد ملی فرد درخواست دهنده
             priority (str, optional): اولویت درخواست، به صورت پیش فرض عادی است. Defaults to 'NORMAL'.
         """
+        register_document(app_doc_id = id, priority=priority, doc_state='ثبت مدرک', document_title=doc_title, app_code=self.app_code, owner=document_owner_national_code)
+        
         self.doc_id = 1
 
     def update_priority(self, new_priority):
@@ -3356,7 +3359,7 @@ class Task:
         تسک ابتدا به وضعیت انتخاب مجری منتقل می شود
         """
         # یک داکیومنت برای این تسک ایجاد می کنیم
-        doc = Cartable()
+        doc = Cartable('SLM.CCR.TAS')
         doc.create_doc(doc_title=f'{self.task_title} مربوط به درخواست {self.request_task_instance.request.change_title}',
         request_id= self.request_task_instance.request.id,
         document_owner_national_code= self.request_task_instance.request.related_manager_nationalcode,

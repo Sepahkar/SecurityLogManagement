@@ -1,3 +1,4 @@
+from pyexpat import model
 from tabnanny import verbose
 from tkinter import Variable
 from turtle import mode
@@ -770,7 +771,7 @@ class RequestTask(models.Model):
         ('FAILED', 'انجام ناموفق'),
     ]
     status_code = models.CharField(max_length=6, verbose_name='وضعیت تسک' , choices=STATUS_CHOICES, default='DEFINE')
-    
+    doc_id = models.PositiveIntegerField(verbose_name='شناسه سند', null=True)
     class Meta:
         verbose_name = 'تسک درخواست'
         verbose_name_plural = 'تسک های درخواست ها'
