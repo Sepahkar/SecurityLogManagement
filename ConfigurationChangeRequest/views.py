@@ -13,7 +13,7 @@ def get_current_user(request):
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
-        request_id = 143
+        request_id = 157
         from . import models as m
         objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         
@@ -185,7 +185,8 @@ def get_full_form_data(request,objFormManager :FormManager)->dict:
     #-----------------------------قسمت دوم-----------------------------
     # دامنه تغییرات
     form_data['need_committee'] = request.POST.get('need_committee') == '1'  # نیاز به کمیته (Boolean)
-    form_data['committee'] = int(request.POST.get('committee'))  # کمیته انتخاب شده
+    if request.POST.get('committee'):
+        form_data['committee'] = int(request.POST.get('committee'))  # کمیته انتخاب شده
     form_data['domain'] = request.POST.get('domain')  # دامنه تغییر
 
     # دریافت چک باکس‌های داینامیک برای تیم‌ها

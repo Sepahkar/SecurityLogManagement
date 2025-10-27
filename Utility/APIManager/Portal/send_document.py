@@ -36,5 +36,22 @@ def ver1(doc_id: int, sender: str, inbox_owners: list[str]) -> dict:
 # todo response payload must be implemented
 
 
-def ver2():
-    ...
+def ver2(doc_id: int, sender_nationalcode: str, inbox_owners_nationalcode: list[str], flow_step:str, new_doc_state:str, exit_from_cartable:bool) -> dict:
+    """
+    این تابع یک سند را ارسال می کند
+
+    Args:
+        doc_id (int): شناسه مدرک در پورتال
+        sender (str): فرد ارسال کننده
+        inbox_owners (list[dict]): لیستی از افرادی که باید برای آنها ارسال شود
+                                [{'national_code':'1234567890', 'role_id':25, 'team_code':'CAR'}, ...]
+        flow_step (str): مشخص می شود که این ارسال برای چه مرحله ای است
+        new_doc_state (str):وضعیت فرم را به روزرسانی می کنیم 
+        exit_from_cartable (bool): در صورتی که این مقدار صحیح باشد، رکورد قبلی که مربوط به این فرد بوده است را پیدا می کنیم و از کارتابل وی خارج می کنیم
+
+    Returns:
+        dict: مقدار بازگشتی شبیه به این است
+        {'success':True, 'message':''}
+    """
+    
+    return {'success':True, 'message':''}

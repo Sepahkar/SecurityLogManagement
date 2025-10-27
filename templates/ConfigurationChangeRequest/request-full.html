@@ -263,8 +263,8 @@
                     <div class="title">دامنه تغییرات</div>
                     <hr/>
                     <div class="content ">
-                        {% if request.status_code != 'COMITE' and request.status_code != 'FINISH' %}
-                            <div class="content-row col-12 ">
+                       
+                            <div class="content-row col-12 "  {% if request.status_code == 'COMITE'  %}style="display:none"{% endif %}>
                                 <div class="col-3 radio-label">نیاز به کمیته :</div>
                                 <div class="col-9 need-committee-box">
                                     <input class="radio-input" type="radio" name="need_committee" id="need_committee_no" value="0" {% if request.need_committee == False or not request.need_committee %}checked="checked"{% endif %}>
@@ -279,7 +279,7 @@
                                     </select>
                                 </div>
                             </div>
-                        {%endif%}
+
                         <div class="change-team-corp">
                             <div class="content-row col-12">
                                 <div class="col-3 radio-label">دامنه تغییر:</div>

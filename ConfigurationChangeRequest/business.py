@@ -14,6 +14,7 @@ from datetime import datetime
 from urllib3 import request
 # from ConfigurationChangeRequest.views import get_current_user
 import Utility
+from Utility.APIManager.Portal import terminate_flow
 
 # from ConfigurationChangeRequest.views import commitee
 from . import models as m
@@ -21,8 +22,14 @@ import jdatetime
 from . import validator
 from django.core.exceptions import ValidationError
 from datetime import datetime
-from Utility.APIManager.Portal.register_document import v2 as register_document
-# from Utility.APIManager.Portal.send_document import ver2 as send_document
+from Utility.APIManager.Portal.register_document import ver2 as register_document
+from Utility.APIManager.Portal.send_document import ver2 as send_document
+from Utility.APIManager.Portal.exit_cartable import ver1 as exit_cartable
+from Utility.APIManager.Portal.finish_flow import ver2 as finish_flow
+from Utility.APIManager.Portal.document_flow_url import ver1 as document_flow_url
+from Utility.APIManager.Portal.comment_url import ver1 as comment_url
+
+
 # from Utility.APIManager.Portal.update_document_state_code import (
 #     v1 as update_document_state_code,
 # )
@@ -47,18 +54,21 @@ class Cartable:
     app_code: str=''
     doc_state: str=''
     app_doc_id: int = -1
+    comment_count: int = -1
+    comment_url: str = ''
+    document_flow_url: str = ''
 
-    def __init__(self, app_code:str=settings.APPCODE) -> None:
+
+    def __init__(self,doc_id:int=-1 , app_code:str=settings.APPCODE) -> None:
         self.app_code = app_code
-        self.doc_id = -1
+        self.doc_id = doc_id
+        
+        if self.validate_doc():
+            self.update_url()
+            
+        
 
-    def create_doc(
-        self,
-        doc_title: str,
-        id: int,
-        document_owner_national_code: str,
-        priority: str = "NORMAL",
-    ):
+    def create_doc(self, doc_title: str, id: int, document_owner_national_code: str,receivers:list[dict], priority: str = "NORMAL"):
         """
         این تابع برای ایجاد یک سند استفاده می شود.
 
@@ -66,11 +76,27 @@ class Cartable:
             doc_title (str): عنوان سند مثلا : درخواست تغییرات سرورهای هورایزن
             id (int): شناسه درخواست تغییرات یا تسک
             document_owner_national_code (str): کد ملی فرد درخواست دهنده
-            priority (str, optional): اولویت درخواست، به صورت پیش فرض عادی است. Defaults to 'NORMAL'.
+            
         """
-        register_document(app_doc_id = id, priority=priority, doc_state='ثبت مدرک', document_title=doc_title, app_code=self.app_code, owner=document_owner_national_code)
+        # مستند را ایجاد می کنیم
+        result = register_document(app_doc_id = id, priority=priority, doc_state='ثبت مدرک', document_title=doc_title, app_code=self.app_code, owner_nationalcode=document_owner_national_code)
+        if not result.get('success', False):
+            return result
         
-        self.doc_id = 1
+        self.doc_id = result.get('doc_id',-1)
+        self.app_doc_id = id
+        
+        # برای اولین بار ارسال می کنند
+        result = self.send_cartable(receiver=receivers, sender=document_owner_national_code, flow_step='شروع فرآیند', new_doc_state='ثبت مدرک')
+       
+        if not result.get('success', False):
+            return result
+       
+        # حالا آدرس ها را به روز می کنیم
+        self.update_url()
+
+                
+        return {'success':True, 'message':f'سند به شماره {self.doc_id} ثبت شد.'}
 
     def update_priority(self, new_priority):
         if not self.validate_doc():
@@ -81,13 +107,17 @@ class Cartable:
         # ... (سایر منطق تابع در صورت نیاز)
         return {"success": True, "message": "اولویت با موفقیت به‌روزرسانی شد"}
 
-    def send_cartable(
-        self,
-        receiver: str,
-        sender: str,
-        new_doc_state: str = None,
-        due_date: str = None,
-    ):
+
+    def update_url(self):
+               
+        self.document_flow_url = document_flow_url(self.doc_id)
+        comment = comment_url(self.doc_id)
+        self.comment_url = comment.get('url')
+        self.comment_count = comment.get('comment_count')
+    
+
+    def send_cartable(self, receiver: dict, sender: str, flow_step:str, new_doc_state: str = None):
+        
         # اگر سند وجود نداشته باشد پیام خطا می دهد
         if not self.validate_doc():
             return {
@@ -95,62 +125,31 @@ class Cartable:
                 "message": "قبل از ارسال، سند باید ایجاد شده باشد",
             }
 
-        # ... (سایر منطق تابع در صورت نیاز)
+        # ارسال می کنیم
+        result = send_document(doc_id=self.doc_id, sender_nationalcode=sender,
+                               inbox_owners_nationalcode=[receiver], 
+                               flow_step=flow_step, 
+                               new_doc_state=new_doc_state, 
+                               exit_from_cartable=True)
+        if not result.get('success', False):
+            return result
+        
         return {"success": True, "message": "سند با موفقیت ارسال شد"}
 
-    def send_cartables(
-        self, sender_receivers: [{}], new_doc_state: str = None, due_date: str = None
-    ):
-        # اگر سند وجود نداشته باشد پیام خطا می دهد
-        if not self.validate_doc():
-            return {
-                "success": False,
-                "message": "قبل از ارسال، سند باید ایجاد شده باشد",
-            }
+    def exit_cartable(self, national_code:str):
+        result = exit_cartable(self.doc_id, national_code)
+        if not result.get('success', False):
+            return result
+                
+        return {"success": True, "message": "سند با موفقیت از کارتابل نفر قبلی خارج شد"}        
+    
+    
+    def finish_flow(self, terminate: bool=True)->dict:
+        finish_flow(self.doc_id, terminate)
 
-        results = []
-        for item in sender_receivers:
-            receiver = item.get("receiver")
-            sender = item.get("sender")
-            result = self.send_cartable(receiver, sender, new_doc_state, due_date)
-            results.append(result)
-
-        # اگر حتی یکی از ارسال‌ها موفق نباشد، پیام خطا بازگردانده می‌شود
-        if not all(r.get("success") for r in results):
-            failed_messages = [
-                r.get("message") for r in results if not r.get("success")
-            ]
-            return {
-                "success": False,
-                "message": "برخی از ارسال‌ها با خطا مواجه شدند: "
-                + "; ".join(failed_messages),
-            }
-
-        return {"success": True, "message": "سندها با موفقیت ارسال شدند"}
-
-    def exit_from_cartable(
-        self, national_code:str
-    ):
-        # اگر سند وجود نداشته باشد پیام خطا می دهد
-        if not self.validate_doc():
-            return {
-                "success": False,
-                "message": "قبل از خارج کردن سند از کارتابل باید ایجاد شده باشد",
-            }
-        # ... (سایر منطق تابع در صورت نیاز)
-        return {"success": True, "message": "سند با موفقیت از کارتابل خارج شد"}
-
-    def exit_from_all_cartables(
-        self,
-    ):
-        # اگر سند وجود نداشته باشد پیام خطا می دهد
-        if not self.validate_doc():
-            return {
-                "success": False,
-                "message": "قبل از خارج کردن سند از کارتابل باید ایجاد شده باشد",
-            }
-        # ... (سایر منطق تابع در صورت نیاز)
-        return {"success": True, "message": "سند با موفقیت از همه کارتابل‌ها خارج شد"}
+        return {"success": True, "message": "سند با موفقیت از کارتابل نفر قبلی خارج شد"}        
+        
+    
 
     def validate_doc(self) -> bool:
         """
@@ -160,7 +159,7 @@ class Cartable:
             bool: در صورتی که شناسه سند وجود نداشته باشد یا معتبر نباشد، مقدار False و در غیر این صورت مقدار True بازگشت می دهد
         """
         # اگر هنوز سند ایجاد نشده باشد
-        if not self.doc_id:
+        if not self.doc_id or self.doc_id <0:
             return False
         return True
         # باید با فراخوانی یک API کنترل کنیم که سند وجود دارد
@@ -438,7 +437,7 @@ class FormManager:
 
         elif request_status == "COMITE":
             # اظهار نظر کمیته
-            if user_nationalcode == request_obj.user_committee.national_code:
+            if user_nationalcode == request_obj.user_committee.national_code if request_obj.user_committee is not None else request_obj.request_instance.committee_user_nationalcode:
                 form = "RequestFull"
                 mode = "UPDATE"
             elif user_nationalcode == request_obj.user_related_manager.national_code:
@@ -1529,29 +1528,6 @@ class FormManager:
             # لیست همه کاربرانی که فعال هستند را استخراج می کنیم
             utr_list = m.UserTeamRole.objects.select_related('national_code', 'role_id', 'team_code')
                 
-            # users_dict = defaultdict(list)
-            # for utr in utr_list:
-            #     user = utr.national_code
-            #     users_dict[user.national_code].append({
-            #         'role_id': utr.role_id.role_id if utr.role_id else None,
-            #         'role_title': utr.role_id.role_title if utr.role_id else '',
-            #         'team_code': utr.team_code.team_code if utr.team_code else '',
-            #         'team_name': utr.team_code.team_name if utr.team_code else '',
-            #     })
-            
-            # # حالا all_users را آماده می‌کنیم:
-            # all_users = []
-            # for nc, roles in users_dict.items():
-            #     u = m.User.objects.get(national_code=nc)
-            #     all_users.append({
-            #         'national_code': u.national_code,
-            #         'fullname': u.fullname,
-            #         'username': u.username,
-            #         'roles': roles,
-            #     })
-                
-            # data['all_users'] = all_users
-
 
             # واکشی همه روابط بین کاربر، سمت و تیم
             utr_list = m.UserTeamRole.objects.select_related('national_code', 'role_id', 'team_code').all()
@@ -1578,6 +1554,8 @@ class FormManager:
                     "team_name": utr.team_code.team_name if utr.team_code else '',
                 })            
             data["all_user_roles"] = all_user_roles
+            
+           
             
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -3000,6 +2978,11 @@ class Task:
     task_instance: m.Task = None
     task_order:int = 0
     
+    doc_id:int = -1
+    obj_cartable:Cartable = None
+    obj_notification:"Notification" = None
+    obj_request: "Request" = None
+    
     request_task_id: int = -1
     request_id:int = -1
     status_code: str = ''
@@ -3035,7 +3018,7 @@ class Task:
 
     current_user_nationalcode:str = ''
 
-    def __init__(self, request_task_id, current_user:str):
+    def __init__(self, request_task_id, current_user:str, obj_request: "Request"=None):
         try:
             # دریافت درخواست بر اساس request_id
             self.request_task_instance = m.RequestTask.objects.get(
@@ -3051,6 +3034,10 @@ class Task:
             self.request_task_id = request_task_id
             self.test_required = self.task_instance.test_required
             self.current_user_nationalcode = current_user
+            self.doc_id = self.request_task_instance.doc_id
+            self.obj_request = obj_request
+            self.obj_cartable = Cartable(self.doc_id, 'SLM.CCR.TAS')
+            self.obj_notification = Notification(obj_request=obj_request, obj_task=self)
             # مقداردهی لیست ها
             self.get_users_info()
 
@@ -3238,9 +3225,7 @@ class Task:
 
             data = result['record_data']                
             
-            # if form_data and form_data.get('reject_description', None):
-            #     self.reject_description = form_data.get('reject_description', None)
-            
+           
             # ذخیره اطلاعات گردش مدرک
             try:
 
@@ -3257,6 +3242,9 @@ class Task:
                 )
             except Exception as e:
                 return {"success": False, "message": f"خطا در ذخیره گردش مدرک: {str(e)}"}
+
+            # به کارتابل فرد بعدی ارسال می کنیم
+            self.obj_cartable.send_cartable()
 
             obj_notify = Notification(self,None)
             # # ارسال به کارتابل کاربر بعدی
@@ -3359,12 +3347,20 @@ class Task:
         تسک ابتدا به وضعیت انتخاب مجری منتقل می شود
         """
         # یک داکیومنت برای این تسک ایجاد می کنیم
-        doc = Cartable('SLM.CCR.TAS')
-        doc.create_doc(doc_title=f'{self.task_title} مربوط به درخواست {self.request_task_instance.request.change_title}',
-        request_id= self.request_task_instance.request.id,
-        document_owner_national_code= self.request_task_instance.request.related_manager_nationalcode,
-        priority = "NORMAL")
+        if not self.obj_cartable:
+            self.obj_cartable = Cartable(app_code='SLM.CCR.TAS')
+        
+        # اگر سند وجود نداشته باشد آن را ایجاد می کنیم
+        if not self.obj_cartable.doc_id or self.obj_cartable.doc_id < 0:
+            result = self.obj_cartable.create_doc(doc_title=f'{self.task_title} مربوط به درخواست {self.request_task_instance.request.change_title}',
+                                        id= self.task_id,
+                                        document_owner_national_code= self.request_task_instance.request.related_manager_nationalcode,
+                                        priority = "NORMAL")
+            if not result.get('success', False):
+                return result
             
+        self.doc_id = self.obj_cartable.doc_id
+        
         return self.next_step('CON')
         
 
@@ -3682,7 +3678,7 @@ class Request:
     def __init__(self, current_user_national_code, request_id):
         # یک نمونه از شی FormManager را ایجاد می کنیم
         self.obj_form_manager = FormManager(current_user_national_code, request_id)
-        self.obj_cartable = Cartable()
+
 
         self.error_message = None
 
@@ -3707,6 +3703,7 @@ class Request:
             self.status_code = None
             self.need_committee = None
             self.error_message = None
+            self.obj_cartable = Cartable()
         else:
             # در صورتی که یک درخواست ایجاد شده را مدیریت می کنیم
             try:
@@ -3720,6 +3717,7 @@ class Request:
                 self.status_code = self.request_instance.status_code
                 self.need_committee = self.request_instance.need_committee
 
+                self.obj_cartable = Cartable(self.request_instance.doc_id)
                 # مقداردهی عنوان وضعیت متناسب با کد وضعیت فعلی
                 self._sync_status_title()
 
@@ -3771,13 +3769,15 @@ class Request:
                 # self.tasks
                 # میریزیم
                 for t in tasks:
-                    new_task = Task(request_task_id=t.id,current_user=self.current_user_national_code)
+                    new_task = Task(request_task_id=t.id,current_user=self.current_user_national_code, obj_request=self)
                     # اگر در ایجاد تسک به مشکل برخورده باشیم، خطا را باید به درخواست منتقل کنیم
                     # تا در فراخوانی کننده نمایش داده شود
                     if new_task.error_message != '':
                         self.error_message += '<br/>' + new_task.error_message
                     self.tasks.append(new_task)
                     
+                # شناسه سند را در شی کارتابل به روز می کنیم
+                self.obj_cartable.doc_id = self.request_instance.doc_id
 
                 # تسک جاری را برابر با نخستین تسکی قرار بده که وضعیت آن FINISH یا FAILED نباشد
                 self.current_task = next((t for t in self.tasks if t.status_code not in ("FINISH", "FAILED")), None)
@@ -4471,29 +4471,29 @@ class Request:
         if not self.obj_cartable.doc_id or self.obj_cartable.doc_id < 0:
             # رکورد متناظر درخواست را به دست می اوریم
             request_title = self.request_instance.change_title
-            priority = (
-                self.request_instance.priority
-                if self.request_instance.priority
-                else "NORMAL"
-            )
+            # در صورتی که اولویت را داشته باشیم از خود درخواست می خوانیم
+            priority = self.request_instance.priority if self.request_instance.priority else "NORMAL"
+            # بررسی می کنیم که اگر قبلا سند درج شده باشد شناسه آن را به دست بیاوریم
+            self.obj_cartable.doc_id = self.request_instance.doc_id if self.request_instance.doc_id is not None else -1
 
+            # اگر همچنان شناسه سند -1 باشد باید آن را ایجاد کنیم
+            
             # حالا سند را ایجاد می کنیم
-            self.obj_cartable.create_doc(
-                request_title,
-                self.request_id,
-                self.user_requestor.national_code,
-                priority,
-            )
-
+            # doc_title: str, id: int, document_owner_national_code: str,receivers:list[dict], priority:
+            result = self.obj_cartable.create_doc(doc_title=request_title, id=self.request_id, 
+                                         document_owner_national_code=self.user_requestor.national_code, 
+                                         receivers=[to_user],
+                                         priority=priority )
+            if not result.get('success', False):
+                return result
             # حالا شناسه سند را در رکورد متناظر درخواست به روزرسانی می کنیم
             self.request_instance.doc_id = self.obj_cartable.doc_id
             self.request_instance.save()
-
-        # در صورتی که سند موجود باشد آن را ارسال می کنیم
-        self.obj_cartable.send_cartable(
-            receiver=to_user, sender=from_user, new_doc_state=doc_state
-        )
-
+        else:
+            # در صورتی که سند موجود باشد آن را ارسال می کنیم
+            result = self.obj_cartable.send_cartable(receiver=to_user, sender=from_user,flow_step=self.status_code, new_doc_state=doc_state)
+            if not result.get('success', False):
+                return result
 
     def extract_request_users(self):
         """
@@ -4692,18 +4692,16 @@ class Request:
                 except Exception as e:
                     return {"success": False, "message": f"خطا در ذخیره گردش مدرک: {str(e)}"}
 
-                obj_notify = Notification(self,None)
                 # ارسال به کارتابل کاربر بعدی
                 if next_user:
                     if isinstance(next_user, (list, tuple)):
                         for user in next_user:
-                            self.send_cartable(
-                                self.request_instance.id, user.national_code, self.status_title
-                            )
+                            self.send_cartable(user_nationalcode, user.national_code, self.status_title)
                     else:
-                        self.send_cartable(
-                            self.request_instance.id, next_user.national_code, self.status_title
-                        )
+                        self.send_cartable(user_nationalcode, next_user.national_code, self.status_title)
+
+                # ارسال ایمیل
+                obj_notify = Notification(self,None)
                 obj_notify.notify(user_nationalcode,action_code,'E', 'R')
 
                 # ذخیره اطلاعات اضافی
@@ -4962,6 +4960,14 @@ class Request:
                 # اطلاعات تسک ها
                 tasks = m.RequestTask.objects.filter(request_id=self.request_id)
                 data["request_tasks"] = tasks
+                
+                # بررسی می کنیم که آیا شی کارتابل برای این درخواست ایجاد شده است یا خیر
+                if not self.obj_cartable or self.obj_cartable.doc_id < 0:
+                    self.obj_cartable = Cartable(self.request_instance.doc_id)
+                
+                data['comment_url'] = self.obj_cartable.comment_url
+                data['comment_count'] = self.obj_cartable.comment_count
+                data['document_flow_url'] = self.obj_cartable.document_flow_url
                 
                 data["status_title"] = self.status_title
             else:

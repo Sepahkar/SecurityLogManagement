@@ -22,3 +22,21 @@ def v1(doc_id: int, app_code: str) -> dict:
         "msg": "success",
         "portal_result": portal_result
     }
+
+def ver2(doc_id:int, new_state:str)->dict:
+    """
+    از کارتابل همه خارج می کند
+    وضعیت سند هم برابر با مقدار مربوطه قرار داده می شود
+    
+    Args:
+        doc_id (int): شناسه سند
+        new_state (str): وضعیت نهایی می تواند یکی از مقادیر زیر باشد
+                    FAILED : فعالیت مختومه شده است
+                    FINISH :  فرآیند با موفقیت خاتمه یافته است
+
+    Returns:
+        dict: یک دیکشنری مشابه این است:
+            {'success':True, 'message':'از کارتابل خارج شد'}
+    """
+    
+    return {'success':True, 'message':'از کارتابل خارج شد'}

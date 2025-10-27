@@ -115,7 +115,7 @@
 
         <!--form buttons -->
         <div class="row mt-4 form-button">
-            <div class="col-12">
+            <div class="col-12 button-list">
                 {% comment %} mode = {{ mode }} {% endcomment %}
                 <input type="hidden" name="action" value=""/>
                 {%if not is_task %}
@@ -127,21 +127,42 @@
                         {% endif %}
                         <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
                     {% else %}
-                        {% if mode == 'UPDATE' %}
-                            <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
-                            <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-original-text="رد">رد</button>
-                            <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-original-text="بازگشت">بازگشت</button>
-                        {% elif mode != 'READONLY' %}
-                            <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="شروع فرآیند">شروع فرآیند</button>
-                            {%if request.id %}
-                                <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" 
-                                data-original-text="بازگشت">بازگشت</button>
-                            {% else %}
-                                <button type="button" class="btn btn-secondary mx-2" onclick="forceCloseTab();">بستن پنجره</button>
+                        <div class="col-6 right">
+                            {% if comment_url %}
+                                <span class="comment-btn-wrapper">
+                                    <a href="{{comment_url}}" target="_blank" style="text-decoration:none;">
+                                        <button type="button" class="btn btn-info" name="doc-flow" style="position:relative;">
+                                            یادداشت ها
+                                        </button>
+                                        {% if comment_count > 0 %}
+                                            <span class="comment-badge">{{ comment_count }}</span>
+                                        {% endif %}
+                                    </a>
+                                </span>
                             {% endif %}
-                        {% else %}
-                            <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
-                        {% endif %}
+                            {% if document_flow_url %}
+                                <a href="{{document_flow_url}}" target="_blank">
+                                    <button type="button" class="btn btn-info" name="doc-flow">گردش مدرک</button>
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            {% if mode == 'UPDATE' %}
+                                <button type="button" name="action" value="approve" class="btn btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
+                                <button type="button" name="action" value="reject" class="btn btn-danger ms-2" onclick="handleFormSubmit(event, 'REJ')" data-original-text="رد">رد</button>
+                                <button type="button" name="action" value="return" class="btn btn-secondary ms-2" onclick="handleFormSubmit(event, 'RET')" data-original-text="بازگشت">بازگشت</button>
+                            {% elif mode != 'READONLY' %}
+                                <button type="button" name="action" value="start" class="btn btn-primary" onclick="handleFormSubmit(event, 'start')" data-original-text="شروع فرآیند">شروع فرآیند</button>
+                                {%if request.id %}
+                                    <button type="button" name="action" value="close" class="btn btn-secondary ms-2" onclick="window.close()" 
+                                    data-original-text="بازگشت">بازگشت</button>
+                                {% else %}
+                                    <button type="button" class="btn btn-secondary mx-2" onclick="forceCloseTab();">بستن پنجره</button>
+                                {% endif %}
+                            {% else %}
+                                <button type="button" class="btn btn-secondary" onclick="window.close()">بستن پنجره</button>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 {% else %}
                     {% if status_code|slice:"-3:" == "RED" or status_code == "DEFINE" %}

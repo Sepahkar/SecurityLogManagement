@@ -53,5 +53,7 @@ def v1(app_doc_id: int, priority: str, doc_state: str, document_title: str, app_
 # }
 # pass
 
-def v2():
-    ...
+def ver2(app_doc_id: int, priority: str, doc_state: str, document_title: str, app_code: str, owner_nationalcode: str) -> dict:
+    import random
+    doc_id = random.randint(1, 10000)
+    return {'success':True, 'doc_id': doc_id, 'message':'با موفقیت ثبت شد'}
