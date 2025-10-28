@@ -68,7 +68,7 @@ class Cartable:
             
         
 
-    def create_doc(self, doc_title: str, id: int, document_owner_national_code: str,receivers:list[dict], priority: str = "NORMAL"):
+    def create_doc(self, doc_title: str, id: int, document_owner_national_code: str,current_user_national_code:str, receivers:list[dict], priority: str = "NORMAL"):
         """
         این تابع برای ایجاد یک سند استفاده می شود.
 
@@ -79,7 +79,7 @@ class Cartable:
             
         """
         # مستند را ایجاد می کنیم
-        result = register_document(app_doc_id = id, priority=priority, doc_state='ثبت مدرک', document_title=doc_title, app_code=self.app_code, owner_nationalcode=document_owner_national_code)
+        result = register_document(app_doc_id = id, priority=priority, doc_state='ثبت مدرک', document_title=doc_title, app_code=self.app_code,  owner_nationalcode=document_owner_national_code)
         if not result.get('success', False):
             return result
         
@@ -87,7 +87,7 @@ class Cartable:
         self.app_doc_id = id
         
         # برای اولین بار ارسال می کنند
-        result = self.send_cartable(receiver=receivers, sender=document_owner_national_code, flow_step='شروع فرآیند', new_doc_state='ثبت مدرک')
+        result = self.send_cartable(receiver=receivers, sender=current_user_national_code, flow_step='شروع فرآیند', new_doc_state='ثبت مدرک')
        
         if not result.get('success', False):
             return result
@@ -2982,6 +2982,7 @@ class Task:
     obj_cartable:Cartable = None
     obj_notification:"Notification" = None
     obj_request: "Request" = None
+    obj_form_manager: "FormManager" = None
     
     request_task_id: int = -1
     request_id:int = -1
@@ -3017,6 +3018,8 @@ class Task:
     tester_report: str=''    
 
     current_user_nationalcode:str = ''
+    
+    reject_description:str=''
 
     def __init__(self, request_task_id, current_user:str, obj_request: "Request"=None):
         try:
@@ -3037,6 +3040,7 @@ class Task:
             self.doc_id = self.request_task_instance.doc_id
             self.obj_request = obj_request
             self.obj_cartable = Cartable(self.doc_id, 'SLM.CCR.TAS')
+            self.obj_form_manager = obj_request.obj_form_manager
             self.obj_notification = Notification(obj_request=obj_request, obj_task=self)
             # مقداردهی لیست ها
             self.get_users_info()
@@ -3194,9 +3198,16 @@ class Task:
 
 
             # کد تیم کاربر جاری و سمت وی را به دست می آوریم
-            user_obj:m.User = m.User.objects.filter(national_code = self.current_user_nationalcode).first()
-            team_code = user_obj.get_team_code
-            role_id = user_obj.get_role_id
+            try:
+                user_obj:m.User = m.User.objects.filter(national_code = self.current_user_nationalcode).first()
+                team_code = user_obj.get_team_code
+                role_id = user_obj.get_role_id
+            except Exception as e:
+                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
+                self.request_task_instance.status_code = status_code
+                self.request_task_instance.save()                
+                return {'success':False, 'message':'امکان تشخیص کاربر جاری وجود ندارد'}
+
             
             # کد نوع عملیات را به دست می آوریم
             if action_code == 'CON':
@@ -3210,6 +3221,10 @@ class Task:
             opinion = m.ConstValue.objects.filter(Code=opinion_code).first()
             
             if not opinion:
+                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
+                self.request_task_instance.status_code = status_code
+                self.request_task_instance.save()                
+                
                 return {"success": False, "message": "کد نوع عملیات در مقادیر ثابت تعریف نشده است."}
             
             # تاریخ و زمان جاری را به دست می آوریم
@@ -3221,6 +3236,10 @@ class Task:
                 return result
             
             if 'record_data' not in result:
+                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
+                self.request_task_instance.status_code = status_code
+                self.request_task_instance.save()                
+
                 return {'success':False, 'message': 'امکان واکشی اطلاعات رکورد وجود ندارد'}
 
             data = result['record_data']                
@@ -3241,26 +3260,22 @@ class Task:
                     user_reject_description = self.reject_description
                 )
             except Exception as e:
+                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
+                self.request_task_instance.status_code = status_code
+                self.request_task_instance.save()                
+
                 return {"success": False, "message": f"خطا در ذخیره گردش مدرک: {str(e)}"}
 
             # به کارتابل فرد بعدی ارسال می کنیم
-            self.obj_cartable.send_cartable()
+            # result = self.obj_cartable.send_cartable(receiver=..., sender=, flow_step=, new_doc_state=self.status )
+            if not result.get('success', False):
+                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
+                self.request_task_instance.status_code = status_code
+                self.request_task_instance.save()                
+                
+                return result
 
             obj_notify = Notification(self,None)
-            # # ارسال به کارتابل کاربر بعدی
-            # if next_user:
-            #     if isinstance(next_user, (list, tuple)):
-            #         for user in next_user:
-            #             self.send_cartable(
-            #                 self.request_instance.id, user.national_code, self.status_title
-            #             )
-            #     else:
-            #         self.send_cartable(
-            #             self.request_instance.id, next_user.national_code, self.status_title
-            #         )
-            # obj_notify.notify(user_nationalcode,action_code,'E', 'R')
-
-
             
             # حالا باید کنترل کنیم که آیا این تسک آخرین تسک بوده است یا خیر؟
             # برای این کار ابتدا یک نمونه شی درخواست را ایجاد می کنیم
@@ -3279,6 +3294,7 @@ class Task:
             }
             
         else:
+
             return {
                 "success": False,
                 "message": "تغییر وضعیت برای حالت فعلی این تسک امکان‌پذیر نیست",
@@ -3355,11 +3371,16 @@ class Task:
             result = self.obj_cartable.create_doc(doc_title=f'{self.task_title} مربوط به درخواست {self.request_task_instance.request.change_title}',
                                         id= self.task_id,
                                         document_owner_national_code= self.request_task_instance.request.related_manager_nationalcode,
+                                        current_user_national_code=self.current_user_nationalcode,
+                                        receivers=[e.national_code for e in self.executors],
                                         priority = "NORMAL")
             if not result.get('success', False):
                 return result
-            
+        
+        # شناسه سند را ذخیره می کنیم
         self.doc_id = self.obj_cartable.doc_id
+        self.task_instance.doc_id = self.doc_id
+        self.task_instance.save()
         
         return self.next_step('CON')
         
@@ -3678,7 +3699,7 @@ class Request:
     def __init__(self, current_user_national_code, request_id):
         # یک نمونه از شی FormManager را ایجاد می کنیم
         self.obj_form_manager = FormManager(current_user_national_code, request_id)
-
+        self.current_user_national_code = current_user_national_code
 
         self.error_message = None
 
@@ -4482,6 +4503,7 @@ class Request:
             # doc_title: str, id: int, document_owner_national_code: str,receivers:list[dict], priority:
             result = self.obj_cartable.create_doc(doc_title=request_title, id=self.request_id, 
                                          document_owner_national_code=self.user_requestor.national_code, 
+                                         current_user_national_code=self.current_user_national_code,
                                          receivers=[to_user],
                                          priority=priority )
             if not result.get('success', False):

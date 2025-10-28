@@ -9,6 +9,34 @@ __pycache__/
 
 # C extensions
 *.so
+# کش‌های رایج پایتون و ادیتورها
+*.log
+*.tmp
+*.swp
+*.swo
+.cache/
+*.cache
+__pypackages__/
+*.DS_Store
+
+# VSCode
+.vscode/
+
+# فایل‌های دیتابیس موقت
+*.sqlite3
+*.db
+
+# محیط‌های مجازی
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# فایل‌های کش دیگر
+*.bak
+*.orig
+Thumbs.db
 
 # Distribution / packaging
 .Python

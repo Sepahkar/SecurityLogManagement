@@ -13,7 +13,7 @@ def get_current_user(request):
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
-        request_id = 157
+        request_id = 160
         from . import models as m
         objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         

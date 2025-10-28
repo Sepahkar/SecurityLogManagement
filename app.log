@@ -5248,3 +5248,208 @@ django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '
 2025-10-24 20:25:27,379 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-24 20:25:33,952 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-24 20:26:04,512 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-10-24 23:00:30,912 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 23:00:35,573 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 23:01:06,472 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 334, in request_view
+    form_data = get_full_form_data(request=request, objFormManager=form_manager)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 188, in get_full_form_data
+    form_data['committee'] = int(request.POST.get('committee'))  # ò„\u06cc Â «‰ Œ«» ‘œÂ
+                             ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+2025-10-24 23:03:13,747 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 334, in request_view
+    elif form == "RequestFull":
+                    ^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 188, in get_full_form_data
+    if request.POST.get('committee'):
+                             ^^^^^^^^
+TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+2025-10-24 23:03:14,443 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-24 23:04:44,573 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-24 23:05:05,074 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-24 23:06:51,982 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-24 23:09:52,284 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-24 23:09:53,277 - WARNING - Not Found: /favicon.ico
+2025-10-24 23:10:22,923 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-25 22:37:57,936 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-25 22:37:58,018 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-26 18:49:44,411 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-26 18:49:45,442 - WARNING - Not Found: /favicon.ico
+2025-10-26 18:51:20,846 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-26 18:57:14,245 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 18:57:14,449 - ERROR - Internal Server Error: /ConfigurationChangeRequest/143/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 311, in request_view
+    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 422, in check_form_status
+    if user_nationalcode == request_obj.user_committee.national_code if request_obj.user_committee is not None else request_obj.request_instance.committee_user_nationalcode:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-10-26 19:02:52,400 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 19:03:34,053 - WARNING - Not Found: /ConfigurationChangeRequest/143/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 19:12:26,031 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-26 19:19:24,771 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:22:15,239 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:31:07,185 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:31:15,429 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:31:21,815 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:31:27,370 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:31:34,120 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:31:42,458 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:32:01,052 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:33:33,766 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:36:28,570 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:37:50,465 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 19:41:01,353 - WARNING - Not Found: /ConfigurationChangeRequest/152/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 19:42:29,670 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-26 22:45:44,233 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2025-10-26 22:46:36,018 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2025-10-26 22:46:45,860 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2025-10-26 22:46:55,069 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2025-10-26 22:48:49,702 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2025-10-26 22:55:34,444 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-26 22:57:08,392 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-26 22:57:28,630 - WARNING - Not Found: /ConfigurationChangeRequest/143/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 22:58:06,654 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-26 22:58:10,610 - WARNING - Not Found: /ConfigurationChangeRequest/152/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 23:31:33,572 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 23:31:38,753 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-26 23:31:47,686 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 23:32:35,899 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-26 23:35:05,311 - WARNING - Not Found: /ConfigurationChangeRequest/156/static/ConfigurationChangeRequest/favicon.ico
+2025-10-26 23:35:12,110 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-27 21:11:33,187 - WARNING - Not Found: /
+2025-10-27 21:11:33,503 - WARNING - Not Found: /favicon.ico
+2025-10-27 21:11:41,876 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-27 21:12:02,187 - WARNING - Not Found: /ConfigurationChangeRequest/157/static/ConfigurationChangeRequest/favicon.ico
+2025-10-27 21:12:07,540 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-27 21:25:39,597 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 21:49:01,118 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 21:49:21,335 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-10-27 21:51:39,509 - WARNING - Not Found: /ConfigurationChangeRequest/157/static/ConfigurationChangeRequest/favicon.ico
+2025-10-27 21:53:08,139 - WARNING - Not Found: /ConfigurationChangeRequest/157/static/ConfigurationChangeRequest/favicon.ico
+2025-10-27 21:53:30,020 - WARNING - Not Found: /ConfigurationChangeRequest/157/static/ConfigurationChangeRequest/favicon.ico
+2025-10-27 21:53:57,764 - WARNING - Not Found: /ConfigurationChangeRequest/157/static/ConfigurationChangeRequest/favicon.ico
+2025-10-27 21:54:46,512 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2025-10-27 21:57:21,120 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:10:33,168 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:13:39,488 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:16:09,087 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:25:25,275 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:37:32,822 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:38:03,093 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:45:13,928 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 22:48:39,960 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 23:15:22,052 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-27 23:18:04,140 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-28 16:44:24,552 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-28 16:45:28,752 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-28 16:46:14,770 - WARNING - Not Found: /ConfigurationChangeRequest/158/static/ConfigurationChangeRequest/favicon.ico
+2025-10-28 16:46:59,279 - WARNING - Not Found: /ConfigurationChangeRequest/159/static/ConfigurationChangeRequest/favicon.ico
+2025-10-28 16:47:21,358 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-28 16:51:03,478 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-28 16:51:19,889 - WARNING - Not Found: /ConfigurationChangeRequest/160/static/ConfigurationChangeRequest/favicon.ico
+2025-10-28 16:51:33,431 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
