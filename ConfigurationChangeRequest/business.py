@@ -5,6 +5,7 @@ from datetime import datetime
 import json
 from random import choice
 from collections import defaultdict
+from django import template
 from django.core.signals import request_started
 from django.db.models.functions import Upper
 from django.db.transaction import commit
@@ -68,7 +69,7 @@ class Cartable:
             
         
 
-    def create_doc(self, doc_title: str, id: int, document_owner_national_code: str,current_user_national_code:str, receivers:list[dict], priority: str = "NORMAL"):
+    def create_doc(self, doc_title: str, id: int, document_owner_national_code: str,current_user_national_code:str, receivers:list[str], priority: str = "NORMAL"):
         """
         این تابع برای ایجاد یک سند استفاده می شود.
 
@@ -116,8 +117,20 @@ class Cartable:
         self.comment_count = comment.get('comment_count')
     
 
-    def send_cartable(self, receiver: dict, sender: str, flow_step:str, new_doc_state: str = None):
-        
+    def send_cartable(self, receiver: [str], sender: str, flow_step:str, new_doc_state: str = None)->dict:
+        """
+        ارسال به کارتابل دریافت کنندگان را انجام می دهد
+
+        Args:
+            receiver (dict): لیست کد ملی دریافت کنندگان
+            sender (str): کد ملی فرد ارسال کننده
+            flow_step (str): اینکه تحت عنوان کدام مرحله برای افراد ارسال می شود
+            new_doc_state (str, optional): در صورتی که لازم باشد وضعیت سند مادر تغییر کند، مقدار مربوطه اینجا داده می شود. در صورت عدم نیاز به تغییر، خالی ارسال خواهد شد
+
+        Returns:
+            dict: یک دیکشتری به صورت زیر است:
+                {'success': True, 'message':''}
+        """
         # اگر سند وجود نداشته باشد پیام خطا می دهد
         if not self.validate_doc():
             return {
@@ -125,9 +138,21 @@ class Cartable:
                 "message": "قبل از ارسال، سند باید ایجاد شده باشد",
             }
 
+        # فرمت صحیح برای ارسال برای دریافت کنندگان به صورت زیر است:
+        # [{'national_code':'1234567890', 'role_id':25, 'team_code':'CAR'}, ...]
+
+        receivers = []
+        for user_national_code in receiver:
+            user_obj:m.User = m.User.objects.filter(national_code=user_national_code).first()
+            if user_obj:
+                return {'success':False, 'message':f'کاربری با کد ملی {user_national_code} یافت نشد.'}
+            role_id = user_obj.get_role_id
+            team_code = user_obj.get_team_code
+            receivers.append({'national_code':user_national_code, 'role_id':role_id, 'team_code':team_code})
+
         # ارسال می کنیم
         result = send_document(doc_id=self.doc_id, sender_nationalcode=sender,
-                               inbox_owners_nationalcode=[receiver], 
+                               inbox_owners_nationalcode=receivers, 
                                flow_step=flow_step, 
                                new_doc_state=new_doc_state, 
                                exit_from_cartable=True)
@@ -3141,47 +3166,151 @@ class Task:
         status_code = self.status_code
         new_status = None
         message = ''
+        receivers = [] #لیست دریافت کنندگان سند
+        email_templates = []# لیست دریافت کنندگان ایمیل
+        exit_cartable_national_code= [] # لیست کسانی که مدرک باید از کارتابل آنها خارج شود
+        
         if action_code == "CON":
+            # از مرحله تعریف تسک به اجرا
+            # با تایید مدیر مربوطه/کاربر کمیته تسک ها وارد مرحله اجرا می شوند
+            # یک نمونه از تسک برای تمامی مجریان آن تسک ارسال می شود
             if status_code == "DEFINE":
                 new_status = "EXERED"
                 message= f" تسک برای {self.executors_names} جهت انتخاب جهت اجرا ارسال گردید"
-                
+                # به ازای هر تسک باید به تمامی مجریان آن تسک سند را ارسال کنیم
+                receivers =  [user.national_code for user in self.executors]            
+                # ارسال به مجریان
+                email_templates.append({'code':'REM.CON.EXE','receivers':receivers})
+            
+            # یکی از مجریان تسک را جهت اجرا انتخاب می کند
+            # اطلاع رسانی به خود مجری و مدیر مربوطه انجام می شود
+            # سند از کارتابل سایر مجریان خارج می شود
             elif status_code == "EXERED":
                 new_status = "EXESEL"
                 u = self.selected_executor.fullname_gender if self.selected_executor else '-'
                 message = f'تسک {self.task_title} توسط {u} جهت اجرا انتخاب شد.<br/> وضعیت در انتظار تنظیم گزارش توسط ایشان می باشد'
+                # برای مجری که تسک را انتخاب کرده است، سند را ارسال می نماییم
+                receivers = [self.selected_executor.national_code]
+                # ارسال ایمیل به مجری
+                email_templates.append({'code':'EXE.SEL.EXE','receivers':receivers})
+                # ارسال ایمیل به مدیر مربوطه
+                email_templates.append({'code':'EXE.SEL.REM','receivers':[self.obj_request.user_related_manager.national_code]})
+                # وقتی یک مجری تسکی را انتخاب می کند باید از کارتابل بقیه خارج شود
+                exit_cartable_national_code = [user.national_code for user in self.executors]        
+                
+            # تسک توسط مجری منتخب خاتمه می یابد
+            # اگر تستر داشته باشد برای تسترها ارسال می شود
+            # اطلاع رسانی برای کلیه تسترها و مدیر مربوطه انجام می شود
             elif status_code == "EXESEL":
                 message = f'اجرای تسک {self.task_title} با موفقیت خاتمه یافت '
                 if self.test_required and self.testers:
                     new_status = "TESRED"
                     message = f' و تسک جهت تست برای {self.testers_names} ارسال شد. <br/> وضعیت در انتظار انتخاب این تسک توسط یکی از تسترها می باشد.'
+                    # باید برای همه تسترها سند ارسال شود
+                    receivers =  [user.national_code for user in self.testers]            
+                    # ایمیل برای تسترها ارسال شود
+                    email_templates.append({'code':'EXE.CON.TES', 'receivers':receivers})
+                    # همچنین به مدیر مربوطه هم ایمیل ارسال می شود
+                    email_templates.append({'code':'EXE.CON.REM', 'receivers':[self.obj_request.user_related_manager.national_code]})
+                    
                 else:
+                    # اگر تستری وجود نداشته باشد، تسک خاتمه می یابد
+                    # اطلاع رسانی فقط به مدیر مربوطه انجام می شود
+                    # تسک از کارتابل مجری منتخب خارج می شود
                     new_status = "FINISH"                    
+                    # ایمیل خاتمه تسک برای مدیر مربوطه ارسال می شود
+                    email_templates.append({'code':'EXE.FIN.REM', 'receivers':[self.obj_request.user_related_manager.national_code]})
+                    # تسک از کارتابل مجری منتخب خارج می شود
+                    exit_cartable_national_code = [self.selected_executor.national_code]
+
+            # یکی از تسترها تسک را جهت تست انتخاب می کند
+            # سند برای تستر منتخب ارسال می شود
+            # اطلاع رسانی به او و مدیر مربوطه انجام می شود
+            # سند از کارتابل بقیه تسترها خارج می شود
             elif status_code == "TESRED":
                 new_status = "TESSEL"
                 message = f'تسک {self.task_title} توسط {self.selected_tester.fullname_gender} جهت انجام تست انتخاب شد.<br/> وضعیت در انتظار تنظیم گزارش توسط ایشان می باشد'
+                # سند برای تستر منتخب باید ارسال شود
+                receivers =  [self.selected_tester.national_code]       
+                # ایمیل برای تستر منتخب ارسال شود
+                email_templates.append({'code':'TES.SEL.TES', 'receivers':receivers})
+                # ایمیل به مدیر مربوطه
+                email_templates.append({'code':'TES.SEL.REM', 'receivers':[self.obj_request.user_related_manager.national_code]})
+                # وقتی یک تستر تسکی را انتخاب می کند باید از کارتابل بقیه خارج شود
+                exit_cartable_national_code = [user.national_code for user in self.testers]        
+
+            # با تایید تست، تسک خاتمه می یابد.
+            # فقط اطلاع رسانی به مدیر مربوطه انجام می شود
+            # تسک از کارتابل تستر منتخب خارج می شود
             elif status_code == "TESSEL":
                 new_status = "FINISH"
                 message = f'تست تسک {self.task_title} با موفقیت خاتمه یافت '
+                # ایمیل به مدیر مربوطه
+                email_templates.append({'code':'TES.FIN.REM', 'receivers':[self.obj_request.user_related_manager.national_code]})
+                # تسک از کارتابل تستر منتخب خارج می شود
+                
 
         # اگر عملیات بازگشت مدرک باشد
         elif action_code == "RET":
+            # این حالت منطقا هرگز رخ نمی دهد
+            # مگر اینکه قبل از شروع فرآیند درخواست اصلی باطل شود
+            # در این حالت نیازی به اطلاع رسانی به کسی نیست
             if status_code == "DEFINE":
                 new_status = "FAILED"
                 message = "انجام این تسک منتفی گردید"
+                
+            # اگر تسک در کارتابل مجری منتخب باشد، و او از انجام تسک منصرف شود
+            # در این حالت باید سند برای تمامی مجریان ارسال شود
+            # اطلاع رسانی به همه مجریان و مدیر مربوطه انجام می شود
+            # دلیل اینکه خود این مجری را مستثنی نکردیم، این است که ممکنه پشیمان بشود و دوباره بخواهد تسک را انتخاب کند
             elif status_code == "EXESEL":
                 new_status = "EXERED"
                 message= f"کاربر جاری از انجام تسک منصرف شده و تسک برای {self.executors_names} جهت انتخاب برای اجرا ارسال گردید"
+                # به ازای هر تسک باید به تمامی مجریان آن تسک سند را ارسال کنیم
+                receivers =  [user.national_code for user in self.executors]            
+                # ارسال به مجریان
+                email_templates.append({'code':'EXE.RET.EXE','receivers':receivers})
+                # به مدیر مربوطه نیز اطلاع رسانی می کنیم
+                email_templates.append({'code':'EXE.RET.REM','receivers':[self.obj_request.user_related_manager.national_code]})
+                
+            # اگر در مرحله تستر منتخب باشد و بازگشت بزند یعنی از انجام تست منصرف شده است
+            # در این حالت باید سند دوباره برای همه تسترها ارسال شود
+            # اطلاع رسانی به همه تسترها و مدیر مربوطه انجام می شود
+            # دلیل اینکه خود این تستر را مستثنی نکردیم این است که ممکنه پشیبمان بشود و دوباره بخواهد تسک را جهت تست انتخاب کند
             elif status_code == "TESSEL":
                 new_status = "TESRED"
                 message= f"کاربر جاری از تست تسک منصرف شده و تسک برای {self.testers_names} جهت انتخاب برای تست ارسال گردید"
+                # به ازای هر تسک باید به تمامی مجریان آن تسک سند را ارسال کنیم
+                receivers =  [user.national_code for user in self.testers]            
+                # ارسال به مجریان
+                email_templates.append({'code':'TES.RET.TES','receivers':receivers})
+                # به مدیر مربوطه نیز اطلاع رسانی می کنیم
+                email_templates.append({'code':'TES.RET.REM','receivers':[self.obj_request.user_related_manager.national_code]})
+                                
+        
+        # این حالتی است که بر روی دکمه رد مدرک کلیک شده است
         elif action_code == "REJ":
+            # این حالت منطقا رخ نمی دهد
+            # مگر اینکه قبل از شروع تسک منتفی شود
+            # فعلا امکان منتفی کردن تسک توسط مجری وجود ندارد
+            # یعنی برای مجری دکمه رد مدرک نباید نشان داده شود
             if status_code in ["DEFINE", "EXERED"]:
                 new_status = "FAILED"
                 message = "انجام این تسک منتفی گردید"
+            
+            # در صورتی که تست ناموفق باشد و خطا پیدا شود، تستر تسک را رد می کند
+            # در این حالت تسک برای مجری منتخب ارسال می شود
+            # اطلاع رسانی به مجری منتخب و مدیر مربوطه انجام می شود
             elif status_code == "TESSEL":
                 new_status = "EXESEL"
                 message = f'با توجه به ناموفق آمیز بودن تست، تسک جهت اجرای مجدد به {self.executors_names} ارسال شد.'
+                # برای مجری منتخب ارسال می شود
+                receivers =  [self.selected_tester.national_code]               
+                # اطلاع رسانی به مجری منتخب
+                email_templates.append({'code':'TES.REJ.EXE','receivers':receivers})
+                # به مدیر مربوطه نیز اطلاع رسانی می کنیم
+                email_templates.append({'code':'TES.REJ.REM','receivers':[self.obj_request.user_related_manager.national_code]})
+                                
         else:
             return {"success": False, "message": "نوع عملیات درخواستی معتبر نمی‌باشد"}
 
@@ -3267,6 +3396,7 @@ class Task:
                 return {"success": False, "message": f"خطا در ذخیره گردش مدرک: {str(e)}"}
 
             # به کارتابل فرد بعدی ارسال می کنیم
+
             # result = self.obj_cartable.send_cartable(receiver=..., sender=, flow_step=, new_doc_state=self.status )
             if not result.get('success', False):
                 # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم

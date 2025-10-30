@@ -5453,3 +5453,6 @@ AttributeError: 'NoneType' object has no attribute 'national_code'
 2025-10-28 16:51:03,478 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
 2025-10-28 16:51:19,889 - WARNING - Not Found: /ConfigurationChangeRequest/160/static/ConfigurationChangeRequest/favicon.ico
 2025-10-28 16:51:33,431 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-28 17:59:33,728 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-28 17:59:40,399 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-28 17:59:54,509 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
