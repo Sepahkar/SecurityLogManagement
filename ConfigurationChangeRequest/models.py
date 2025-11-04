@@ -890,7 +890,7 @@ class RequestFlow(models.Model):
     """
     request = models.ForeignKey(to=ConfigurationChangeRequest, verbose_name='شناسه درخواست', 
                                 on_delete=models.CASCADE)
-    reqeust_task = models.ForeignKey(to=RequestTask, verbose_name="شناسه تسک درخواست", on_delete=models.SET_NULL, null=True)
+    request_task = models.ForeignKey(to=RequestTask, verbose_name="شناسه تسک درخواست", on_delete=models.SET_NULL, null=True)
     user_nationalcode = models.ForeignKey(to=User, verbose_name='کاربر مربوطه',
                                           db_column='user_nationalcode', on_delete=models.CASCADE)
     user_role_id = models.ForeignKey(to=Role, db_column='user_role_id' ,verbose_name='سمت کاربر', 

@@ -49,6 +49,8 @@ import os
 APP_CODE = settings.APPCODE
 
     
+    
+    
 
 class Cartable:
     doc_id: int=-1
@@ -88,10 +90,11 @@ class Cartable:
         self.app_doc_id = id
         
         # برای اولین بار ارسال می کنند
-        result = self.send_cartable(receiver=receivers, sender=current_user_national_code, flow_step='شروع فرآیند', new_doc_state='ثبت مدرک')
+        if receivers:
+            result = self.send_cartable(receivers=receivers, sender=current_user_national_code, flow_step='شروع فرآیند', new_doc_state='ثبت مدرک')
        
-        if not result.get('success', False):
-            return result
+            if not result.get('success', False):
+                return result
        
         # حالا آدرس ها را به روز می کنیم
         self.update_url()
@@ -117,7 +120,7 @@ class Cartable:
         self.comment_count = comment.get('comment_count')
     
 
-    def send_cartable(self, receiver: [str], sender: str, flow_step:str, new_doc_state: str = None)->dict:
+    def send_cartable(self, receivers: [str], sender: str, flow_step:str, new_doc_state: str = None)->dict:
         """
         ارسال به کارتابل دریافت کنندگان را انجام می دهد
 
@@ -141,18 +144,20 @@ class Cartable:
         # فرمت صحیح برای ارسال برای دریافت کنندگان به صورت زیر است:
         # [{'national_code':'1234567890', 'role_id':25, 'team_code':'CAR'}, ...]
 
-        receivers = []
-        for user_national_code in receiver:
+        receivers_list = []
+        for user_national_code in receivers:
+            # کاربر مربوطه را پیدا می کنیم
             user_obj:m.User = m.User.objects.filter(national_code=user_national_code).first()
-            if user_obj:
+            if not user_obj:
                 return {'success':False, 'message':f'کاربری با کد ملی {user_national_code} یافت نشد.'}
+
             role_id = user_obj.get_role_id
             team_code = user_obj.get_team_code
-            receivers.append({'national_code':user_national_code, 'role_id':role_id, 'team_code':team_code})
+            receivers_list.append({'national_code':user_national_code, 'role_id':role_id, 'team_code':team_code})
 
         # ارسال می کنیم
         result = send_document(doc_id=self.doc_id, sender_nationalcode=sender,
-                               inbox_owners_nationalcode=receivers, 
+                               inbox_owners_nationalcode=receivers_list, 
                                flow_step=flow_step, 
                                new_doc_state=new_doc_state, 
                                exit_from_cartable=True)
@@ -161,8 +166,8 @@ class Cartable:
         
         return {"success": True, "message": "سند با موفقیت ارسال شد"}
 
-    def exit_cartable(self, national_code:str):
-        result = exit_cartable(self.doc_id, national_code)
+    def exit_cartable(self, national_code:str, sender_national_code:str)->dict:
+        result = exit_cartable(self.doc_id, national_code, sender_national_code)
         if not result.get('success', False):
             return result
                 
@@ -202,14 +207,22 @@ class FormManager:
     request_obj:"Request" = None
     error_message: str = None
     request_id: int = -1
+    change_type_id: int = -1
+    task_id: int = -1
     current_user_national_code:str=''
+    object_type: str = 'R' # نوع می تواند یکی از موارد زیر باشد:
+                            # R : درخواست
+                            # C : نوع درخواست
+                            # T : تسک
+    
 
-    def __init__(self,current_user_national_code:str, request_id: int = -1):
+    def __init__(self,current_user_national_code:str, id: int = -1, object_type:str='R'):
         self.current_user_national_code = current_user_national_code
-        # از ایجاد Request در اینجا خودداری می‌کنیم تا وابستگی دوری ایجاد نشود
         self.request_obj = None
         self.error_message = None
-        self.request_id = request_id if request_id and request_id > 0 else -1
+        self.request_id = id if id and id > 0 and object_type == 'R' else -1
+        self.change_type_id = id if id and id > 0 and object_type == 'C' else -1
+        self.task_id = id if id and id > 0 and object_type == 'T' else -1
 
     def __get_team_role(self, team_role: str, value: str):
         """
@@ -284,8 +297,7 @@ class FormManager:
 
 
     # این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
-    def check_form_status(
-        self, user_nationalcode: str, request_id: int = -1 ) -> dict:
+    def check_form_status(self, user_nationalcode: str, request_id: int = -1 ) -> dict:
         """
         این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
 
@@ -1450,7 +1462,7 @@ class FormManager:
     #     return priority_instance.Caption
 
 
-    def get_form_data(self):
+    def get_form_data(self)->dict:
         """
         این تابع اطلاعات ثابت مربوط به درخواست ها، یعنی مقادیر کومبوها و ... را بازگشت می دهد
         """
@@ -3008,6 +3020,7 @@ class Task:
     obj_notification:"Notification" = None
     obj_request: "Request" = None
     obj_form_manager: "FormManager" = None
+    obj_error_log: "ErrorLog" = None
     
     request_task_id: int = -1
     request_id:int = -1
@@ -3048,6 +3061,11 @@ class Task:
 
     def __init__(self, request_task_id, current_user:str, obj_request: "Request"=None):
         try:
+            self.obj_error_log = ErrorLog(current_user_national_code=current_user,
+                                          request_obj=obj_request,
+                                          task_obj=self,
+                                          change_type_obj=None)
+
             # دریافت درخواست بر اساس request_id
             self.request_task_instance = m.RequestTask.objects.get(
                 id=request_task_id
@@ -3075,6 +3093,9 @@ class Task:
 
         except Exception as e:
             self.error_messager = f'در ایجاد نمونه تسک مربوط به درخواست خطایی رخ داد: <br/>{str(e)}'
+
+    def __repr__(self) -> str:
+        return f'تسک {self.task_title} ({self.task_id}) - {self.status_title}'
 
     def _sync_status_title(self, status_code: str = None):
         code = status_code if status_code is not None else self.status_code
@@ -3267,7 +3288,7 @@ class Task:
                 new_status = "EXERED"
                 message= f"کاربر جاری از انجام تسک منصرف شده و تسک برای {self.executors_names} جهت انتخاب برای اجرا ارسال گردید"
                 # به ازای هر تسک باید به تمامی مجریان آن تسک سند را ارسال کنیم
-                receivers =  [user.national_code for user in self.executors]            
+                receivers = [user.national_code for user in self.executors]            
                 # ارسال به مجریان
                 email_templates.append({'code':'EXE.RET.EXE','receivers':receivers})
                 # به مدیر مربوطه نیز اطلاع رسانی می کنیم
@@ -3321,10 +3342,6 @@ class Task:
             self.status_code = new_status
             # عنوان وضعیت تسک را به روز می کنیم
             self._sync_status_title()
-            # وضعیت جدید را در شی مربوطه به روز می کنیم
-            self.request_task_instance.status_code = new_status
-            self.request_task_instance.save()
-
 
             # کد تیم کاربر جاری و سمت وی را به دست می آوریم
             try:
@@ -3332,9 +3349,6 @@ class Task:
                 team_code = user_obj.get_team_code
                 role_id = user_obj.get_role_id
             except Exception as e:
-                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
-                self.request_task_instance.status_code = status_code
-                self.request_task_instance.save()                
                 return {'success':False, 'message':'امکان تشخیص کاربر جاری وجود ندارد'}
 
             
@@ -3350,10 +3364,6 @@ class Task:
             opinion = m.ConstValue.objects.filter(Code=opinion_code).first()
             
             if not opinion:
-                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
-                self.request_task_instance.status_code = status_code
-                self.request_task_instance.save()                
-                
                 return {"success": False, "message": "کد نوع عملیات در مقادیر ثابت تعریف نشده است."}
             
             # تاریخ و زمان جاری را به دست می آوریم
@@ -3365,10 +3375,6 @@ class Task:
                 return result
             
             if 'record_data' not in result:
-                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
-                self.request_task_instance.status_code = status_code
-                self.request_task_instance.save()                
-
                 return {'success':False, 'message': 'امکان واکشی اطلاعات رکورد وجود ندارد'}
 
             data = result['record_data']                
@@ -3379,6 +3385,7 @@ class Task:
 
                 flow = m.RequestFlow.objects.create(
                     request_id=self.request_id,
+                    request_task_id = self.request_task_id,
                     status_code=new_status,
                     user_nationalcode_id=self.current_user_nationalcode,
                     user_team_code_id=team_code,
@@ -3389,23 +3396,41 @@ class Task:
                     user_reject_description = self.reject_description
                 )
             except Exception as e:
-                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
-                self.request_task_instance.status_code = status_code
-                self.request_task_instance.save()                
-
                 return {"success": False, "message": f"خطا در ذخیره گردش مدرک: {str(e)}"}
 
-            # به کارتابل فرد بعدی ارسال می کنیم
+            # به کارتابل نفرات بعدی ارسال می کنیم
+            for receiver in receivers:
+                result = self.obj_cartable.send_cartable(receivers=[receiver], sender=self.current_user_nationalcode, flow_step=self.status_title, new_doc_state=self.status_title )
+                if not result.get('success', False):
+                    return result
 
-            # result = self.obj_cartable.send_cartable(receiver=..., sender=, flow_step=, new_doc_state=self.status )
-            if not result.get('success', False):
-                # اگر خطایی رخ دهد باید به وضعیت قبلی برگردیم
-                self.request_task_instance.status_code = status_code
-                self.request_task_instance.save()                
+            # حالا باید از کارتابل افرادی هم خارج کنیم
+            for user in exit_cartable_national_code:
+                result = self.obj_cartable.exit_cartable(user)
+
+            # اگر ارسال به کارتابل موفقیت آمیز بوده است، باید اطلاع رسانی را هم انجام دهیم
+            # یک نمونه از کلاس اطلاع 
+            obj_notify = Notification(obj_request=self.obj_request, obj_task=self)
+            for email in email_templates:
+                receivers = email.get('receivers',[])
+                for receiver in receivers:
+                    result = obj_notify.send_email(email_code=email.get('code',''), reciver=receiver)
+                    if not result.get('success', False):
+                        return result
+                    
                 
-                return result
+                
+            # اگر به هر دلیلی اطلاع رسانی ناموفق باشد باید از کارتابل خارج کنیم
+            if not result.get('success', False):
+                for receiver in receivers:
+                    result = self.obj_cartable.exit_cartable(receiver=receiver, sender_national_code=self.current_user_nationalcode)
+                    if not result.get('success', False):
+                        return result                
 
-            obj_notify = Notification(self,None)
+            # وضعیت جدید را در شی مربوطه به روز می کنیم
+            self.request_task_instance.status_code = new_status
+            self.request_task_instance.save()           
+            
             
             # حالا باید کنترل کنیم که آیا این تسک آخرین تسک بوده است یا خیر؟
             # برای این کار ابتدا یک نمونه شی درخواست را ایجاد می کنیم
@@ -3413,11 +3438,15 @@ class Task:
                 request_obj:Request = Request(current_user_national_code=self.current_user_nationalcode,request_id=self.request_id)
                 result = request_obj.next_task(self)
                 if not result.get('success',True):
+                    # وضعیت را به وضعیت قبل بازگشت می دهیم
+                    self.request_task_instance.status_code = new_status
+                    self.request_task_instance.save()           
+                                        
+                    
                     return result
                 elif result.get('message','') != '':
                     message = result.get('message')
                     
-                
             return {
                 "success": True,
                 "message":message,
@@ -3502,15 +3531,15 @@ class Task:
                                         id= self.task_id,
                                         document_owner_national_code= self.request_task_instance.request.related_manager_nationalcode,
                                         current_user_national_code=self.current_user_nationalcode,
-                                        receivers=[e.national_code for e in self.executors],
+                                        receivers=None,
                                         priority = "NORMAL")
             if not result.get('success', False):
                 return result
         
         # شناسه سند را ذخیره می کنیم
         self.doc_id = self.obj_cartable.doc_id
-        self.task_instance.doc_id = self.doc_id
-        self.task_instance.save()
+        self.request_task_instance.doc_id = self.doc_id
+        self.request_task_instance.save()
         
         return self.next_step('CON')
         
@@ -3563,9 +3592,14 @@ class ChangeType:
     change_type_instance:m.ChangeType=None
     error_message:str = ''
     objform_manager:FormManager = None
+    obj_error_log: "ErrorLog" = None
     current_user_natioal_code:str= ''
     
-    def __init__(self,current_user_natioal_code:str, change_type_id=None):
+    def __init__(self,current_user_national_code:str, change_type_id=None):
+        obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
+                                 request_obj=None,
+                                 task_obj=None,
+                                 change_type_obj=self)
         
         if change_type_id and change_type_id > 0:
             self.change_type_instance = m.ChangeType.objects.filter(id=change_type_id).first()
@@ -3573,8 +3607,11 @@ class ChangeType:
                 self.error_message = 'شناسه نوع تغییر نامعتبر است'
             else:
                 self.change_type_id = change_type_id
-        self.objform_manager = FormManager(current_user_national_code=current_user_natioal_code, request_id=-1)
-        self.current_user_natioal_code = current_user_natioal_code
+        self.objform_manager = FormManager(current_user_national_code=current_user_national_code, id=-1, object_type='R')
+        self.current_user_natioal_code = current_user_national_code
+    
+    def __repr__(self) -> str:
+        return f'{self.change_type_instance.change_title}'
     
     def validate(self, form_data):
         return {'success':True, 'message':''}
@@ -3741,7 +3778,7 @@ class ChangeType:
         
     def update_record_data(self, form_data:dict, current_user:str)->dict:
         
-        obj_form_manager = FormManager(current_user_national_code=current_user, request_id=-1)
+        obj_form_manager = FormManager(current_user_national_code=current_user, id=-1)
         result = obj_form_manager.update_record(record_type='C', form_data=form_data, 
                                                 id=self.change_type_id, current_user_nationalcode=current_user)
         if not result.get('success',False):
@@ -3775,6 +3812,7 @@ class ChangeType:
 class Request:
     obj_form_manager: FormManager = None
     obj_cartable: Cartable = None
+    obj_error_log: "ErrorLog" = None
 
     current_user_national_code: str = ''
     error_message: str = ''
@@ -3827,6 +3865,11 @@ class Request:
             self.status_title = code
 
     def __init__(self, current_user_national_code, request_id):
+        self.obj_error_log = ErrorLog(current_user_national_code=current_user_national_code,
+                                        request_obj=self,
+                                        task_obj=None,
+                                        change_type_obj=None)        
+        
         # یک نمونه از شی FormManager را ایجاد می کنیم
         self.obj_form_manager = FormManager(current_user_national_code, request_id)
         self.current_user_national_code = current_user_national_code
@@ -3952,6 +3995,8 @@ class Request:
                 self.error_type = "UnknownError"
                 self.error_message = f"خطای غیرمنتظره: {str(e)}"
 
+    def __repr__(self) -> str:
+        return f'درخواست "{self.request_instance.change_title}" از نوع "{self.request_instance.change_type}" - {self.status_title}'
 
     def load_record_data(self, user_nationalcode: str):
         form_data = {"message": "", "success": True}
@@ -4612,7 +4657,7 @@ class Request:
         
         return {"success": True, "message": "اطلاعات با موفقیت به روزرسانی شد"}
 
-    def send_cartable(self, from_user: str, to_user: str, doc_state: str):
+    def send_cartable(self, from_user: str, to_users: [str], doc_state: str):
         """
         ارسال به کارتابل کاربر
         """
@@ -4630,22 +4675,23 @@ class Request:
             # اگر همچنان شناسه سند -1 باشد باید آن را ایجاد کنیم
             
             # حالا سند را ایجاد می کنیم
-            # doc_title: str, id: int, document_owner_national_code: str,receivers:list[dict], priority:
-            result = self.obj_cartable.create_doc(doc_title=request_title, id=self.request_id, 
-                                         document_owner_national_code=self.user_requestor.national_code, 
-                                         current_user_national_code=self.current_user_national_code,
-                                         receivers=[to_user],
-                                         priority=priority )
-            if not result.get('success', False):
-                return result
+            if not self.obj_cartable.doc_id or self.obj_cartable.doc_id < 0:
+                result = self.obj_cartable.create_doc(doc_title=request_title, id=self.request_id, 
+                                            document_owner_national_code=self.user_requestor.national_code, 
+                                            current_user_national_code=self.current_user_national_code,
+                                            receivers=to_users,
+                                            priority=priority )
+                if not result.get('success', False):
+                    return result
             # حالا شناسه سند را در رکورد متناظر درخواست به روزرسانی می کنیم
             self.request_instance.doc_id = self.obj_cartable.doc_id
             self.request_instance.save()
         else:
             # در صورتی که سند موجود باشد آن را ارسال می کنیم
-            result = self.obj_cartable.send_cartable(receiver=to_user, sender=from_user,flow_step=self.status_code, new_doc_state=doc_state)
+            result = self.obj_cartable.send_cartable(receivers=to_users, sender=from_user,flow_step=self.status_code, new_doc_state=doc_state)
             if not result.get('success', False):
                 return result
+        return {'success':True, 'message':''}
 
     def extract_request_users(self):
         """
@@ -4713,81 +4759,97 @@ class Request:
             new_status = None
             next_user = None
             message = ''
+
+            email_templates = []
+            # در صورتی که تایید باشد
             if action_code == "CON":
-                
+                # در صورتی که در مرحله شروع باشد
                 if current_status == "DRAFTD":
                     new_status = "DIRMAN"
-                    next_user:m.User = (
-                        self.request_instance.direct_manager_nationalcode
-                    )
+                    next_user:m.User = (self.request_instance.direct_manager_nationalcode)
                     message = f'فرم با موفقیت برای {next_user.fullname_gender} جهت بررسی مدیر مستقیم ارسال شد'
+                    # ارسال به مدیر مستقیم
+                    email_templates.append({'code':'REQ.CON.DIM','receivers':self.request_instance.direct_manager_nationalcode.national_code})
+                                    
+                # در صورتی که مدیر مستقیم باشد
                 elif current_status == "DIRMAN":
                     new_status = "RELMAN"
-                    next_user = (
-                        self.request_instance.related_manager_nationalcode
-                    )
+                    next_user = (self.request_instance.related_manager_nationalcode)
                     message = f'فرم با موفقیت برای {next_user.fullname_gender} جهت بررسی مدیر مربوطه ارسال شد'
-
+                    # ارسال به مدیر مربوطه
+                    email_templates.append({'code':'DIM.CON.REM','receivers':self.request_instance.related_manager_nationalcode.national_code})
+                
+                # در صورتی که مدیر مربوطه باشد
                 elif current_status == "RELMAN":
+                    # در صورتی که این درخواست نیاز به کمیته داشته باشد باید برای دبیر کمیته ارسال شود
                     if self.request_instance.need_committee:
                         new_status = "COMITE"
-                        next_user = (
-                            self.request_instance.committee_user_nationalcode
-                        )
+                        next_user = (self.request_instance.committee_user_nationalcode)
                         message = f'فرم با موفقیت برای {next_user.fullname_gender} جهت بررسی دبیر کمیته ارسال شد'
+                        # ارسال به مدیر مربوطه
+                        email_templates.append({'code':'REM.CON.COM','receivers':self.request_instance.committee_user_nationalcode.national_code})
 
                     else:
+                        # در صورتی که نیاز به کمیته نداشته باشد مستقیما به مرحله تسک ها می رود
                         new_status = "DOTASK"
                         # ارسال به کارتابل مجریان
                         result = self.do_task()
                         if not result.get('success',True):
                             return result                        
                         next_user = self.current_task.executors
-
+                # در صورتی که کاربر کمیته باشد
                 elif current_status == "COMITE":
                     new_status = "DOTASK"
                     # ارسال به کارتابل مجریان
                     result= self.do_task()
                     if not result.get('success',True):
                         return result
-                    next_user = self.current_task.executors
-
+                    message = result.get('message', '')
+                # در صورتی که در مرحله انجام تسک باشد، مرحله بعدی خاتمه فرآیند است
                 elif current_status == "DOTASK":
                     new_status = "FINISH"
                     message = 'فرآیند با موفقیت خاتمه یافت'
+            
+            # در صورتی که بازگشت باشد
             elif action_code == "RET":
+                # در صورتی که مدیر مستقیم باشد
                 if current_status == "DIRMAN":
                     new_status = "DRAFTD"
-                    next_user = (
-                        self.request_instance.requestor_nationalcode
-                    )
+                    next_user = (self.request_instance.requestor_nationalcode)
                     message = f'فرم به {next_user.fullname_gender} جهت بررسی بازگشت داده شد'
-                    
+                    email_templates.append({'code':'DIM.RET.REQ','receivers':self.request_instance.requestor_nationalcode.national_code})
+                
+                # در صورتی که مدیر مربوطه باشد
                 elif current_status == "RELMAN":
                     new_status = "DIRMAN"
-                    next_user = (
-                        self.request_instance.direct_manager_nationalcode
-                    )
+                    next_user = (self.request_instance.direct_manager_nationalcode)
                     message = f'فرم به {next_user.fullname_gender} جهت بررسی مدیر مستقیم بازگشت داده شد'
+                    email_templates.append({'code':'REL.RET.DIM','receivers':self.request_instance.direct_manager_nationalcode.national_code})
+                    
+                # در صورتی که کاربر کمیته باشد
                 elif current_status == "COMITE":
                     new_status = "RELMAN"
-                    next_user = (
-                        self.request_instance.related_manager_nationalcode
-                    )
+                    next_user = (self.request_instance.related_manager_nationalcode)
                     message = f'فرم به {next_user.fullname_gender} جهت بررسی مدیر مربوطه بازگشت داده شد'
+                    email_templates.append({'code':'COM.RET.REL','receivers':self.request_instance.related_manager_nationalcode.national_code})
 
             elif action_code == "REJ":
                 if current_status in ["DRAFTD", "DIRMAN", "RELMAN", "COMITE", "DOTASK"]:
                     new_status = "FAILED"
                     message = 'این نسخه از فرآیند باطل گردید'
+                    if current_status == "DIRMAN":
+                        email_templates.append({'code':'DIM.REJ.REQ','receivers':self.request_instance.requestor_nationalcode.national_code})
+                    elif current_status == "RELMAN":
+                        email_templates.append({'code':'REM.REJ.DIM','receivers':self.request_instance.direct_manager_nationalcode.national_code})
+                        email_templates.append({'code':'REM.REJ.REQ','receivers':self.request_instance.requestor_nationalcode.national_code})
+                    elif current_status == "COMITE":
+                        email_templates.append({'code':'COM.REJ.REL','receivers':self.request_instance.related_manager_nationalcode.national_code})
+                        email_templates.append({'code':'COM.REJ.DIM','receivers':self.request_instance.direct_manager_nationalcode.national_code})
+                        email_templates.append({'code':'COM.REJ.REQ','receivers':self.request_instance.requestor_nationalcode.national_code})
             else:
                 return {"success": False, "message": "کد عملیات معتبر نمی‌باشد."}
 
             if new_status:
-                # به‌روزرسانی وضعیت
-                self.request_instance.status_code = new_status
-                self.request_instance.save()
-
                 self.status_code = new_status
                 # عنوان وضعیت بر اساس STATUS_CHOICES مدل
                 self._sync_status_title(new_status)
@@ -4811,6 +4873,7 @@ class Request:
                 if not opinion:
                     return {"success": False, "message": "کد نوع عملیات در مقادیر ثابت تعریف نشده است."}
                 
+
                 # تاریخ و زمان جاری را به دست می آوریم
                 current_date_time = datetime.now()
                 
@@ -4846,31 +4909,25 @@ class Request:
 
                 # ارسال به کارتابل کاربر بعدی
                 if next_user:
-                    if isinstance(next_user, (list, tuple)):
-                        for user in next_user:
-                            self.send_cartable(user_nationalcode, user.national_code, self.status_title)
-                    else:
-                        self.send_cartable(user_nationalcode, next_user.national_code, self.status_title)
+                    result = self.send_cartable(from_user=user_nationalcode,to_users=[next_user.national_code], doc_state=self.status_title)
+                    if not result.get('success', False):
+                        return result
 
                 # ارسال ایمیل
-                obj_notify = Notification(self,None)
-                obj_notify.notify(user_nationalcode,action_code,'E', 'R')
+                obj_notify = Notification(obj_request=self, obj_task=None)
+                for email in email_templates:
+                    result = obj_notify.send_email(email_code=email.get('code',''),reciver=email.get('receivers',''))
+                    if not result.get('success',False):
+                        return {"success": False, "message": f"عدم امکان ارسال ایمیل به {email.get('receivers','')}"}
 
-                # ذخیره اطلاعات اضافی
-                if form_data:
-                    self.save_step_data(
-                        current_status, action_code, form_data, user_nationalcode
-                    )
 
-                return {
-                    "success": True,
-                    "message": message
-                }
+                # به‌روزرسانی وضعیت
+                self.request_instance.status_code = new_status
+                self.request_instance.save()
+
+                return {"success": True, "message": message}
             else:
-                return {
-                    "success": False,
-                    "message": "تغییر وضعیت برای حالت فعلی امکان‌پذیر نیست.",
-                }
+                return {"success": False,"message": "تغییر وضعیت برای حالت فعلی امکان‌پذیر نیست." }
 
         except Exception as e:
             return {"success": False, "message": f"خطا در تغییر وضعیت: {str(e)}"}
@@ -4891,6 +4948,7 @@ class Request:
                     if not result['success']:
                         return result
             
+            result['message'] = 'کلیه تسک ها برای تمامی مجریان مربوطه ارسال گردید'
             return result
 
         except Exception as e:
@@ -5114,8 +5172,25 @@ class Request:
                 data["request_tasks"] = tasks
                 
                 # بررسی می کنیم که آیا شی کارتابل برای این درخواست ایجاد شده است یا خیر
-                if not self.obj_cartable or self.obj_cartable.doc_id < 0:
-                    self.obj_cartable = Cartable(self.request_instance.doc_id)
+                if not self.obj_cartable or not self.obj_cartable.doc_id or self.obj_cartable.doc_id < 0:
+                    # اگر قبلا سند ایجاد شده باشد
+                    if self.request_instance.doc_id:
+                        self.obj_cartable = Cartable(self.request_instance.doc_id)
+                    # اگر سند ایجاد نشده باشد آن را ایجاد می کنیم
+                    else:
+                        self.obj_cartable = Cartable(-1)
+                        result = self.obj_cartable.create_doc(doc_title=self.request_instance.change_title,
+                                                     id=self.request_id,
+                                                     document_owner_national_code = self.request_instance.requestor_nationalcode,
+                                                     current_user_national_code=self.current_user_national_code,
+                                                     receivers=[],
+                                                     priority="NORMAL")
+                        if not result.get('success', False):
+                            return {"success": False, "message": "عدم ایجاد امکان سند"}
+                        
+                        self.request_instance.doc_id = self.obj_cartable.doc_id
+                        self.request_instance.save()
+                        self.request_instance.refresh_from_db()
                 
                 data['comment_url'] = self.obj_cartable.comment_url
                 data['comment_count'] = self.obj_cartable.comment_count
@@ -5226,10 +5301,15 @@ class Notification:
     def __init__(self, obj_request: Request = None, obj_task:Task = None) -> None:
         self.obj_request = obj_request
         self.obj_task = obj_task
+        
         # متغییرهای عمومی را بارگذاری می کنیم
         self.__load_general_variables()
         
-    def notify(self, current_user:str, action:str, notify_type:str='E', request_task:str='R'):
+        # متغییرهای اصلی را بارگذاری می کنیم
+        self.__load_variables_json()
+        
+        
+    def get_notification_code(self, current_user:str, action:str, notify_type:str='E', request_task:str='R'):
         """
         این تابع بر اساس کاربر جاری و عملیاتی که باید انجام دهد، متغییرها را تکمیل می کند
 
@@ -5474,7 +5554,7 @@ class Notification:
             self.json_variable.update({'select_date':self.select_date})
 
 
-    def send_email(self, email_code):
+    def send_email(self, email_code:str, reciver:str):
         """
         ایجاد یک رکورد جدید در جدول NotificationLog به ازای ارسال ایمیل.
         تمام فیلدهای جدول NotificationLog می‌بایست مقداردهی شوند یا None قرار داده شوند.
@@ -5482,18 +5562,29 @@ class Notification:
         """
 
         try:
-            import re
+            # کنترل می کنیم که پارامترهای ورودی درست باشد
+            if not reciver :
+                return {'success':False, 'message': 'آدرس ایمیل فردی که باید برای وی ایمیل ارسال شود مشخص نشده است'}
+            
+            # آدرس ایمیل گیرنده را پیدا می کنیم
+            try:
+                reciver_user = m.User.objects.get(national_code = reciver)
+            except Exception as e:
+                return {'success':False, 'message': f'کاربر با کد ملی {reciver} یافت نشد'}
+            
+            receiver_email = reciver_user.username
 
-            receiver_email = self.json_variable.get('receiver_email')
             # اگر آدرس با @eit ختم می‌شود، تبدیل به @iraneit.com کن
             if receiver_email and receiver_email.endswith('@eit'):
                 receiver_email = receiver_email.replace('@eit', '@iraneit.com')
                 self.json_variable['receiver_email'] = receiver_email
 
             # بررسی معتبر بودن ایمیل با یک regex ساده
+            import re
             email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
             if not receiver_email or not re.match(email_regex, receiver_email):
                 return {'success': False, 'message': f'آدرس ایمیل {receiver_email} نامعتبر است'}
+            
             
             # ابتدا رکورد سوابق را درج می کنیم
             notification_log = m.NotificationLog.objects.create(
@@ -5508,11 +5599,12 @@ class Notification:
             # اگر تست باشد
             if settings.ENVIRONMENT_MODE == 'DEV':
                 receiver_email = 'm.sepahkar@iraneit.com'
+                self.json_variable['receiver_email'] = receiver_email
                 # فایل های نامه را ایجاد می کنیم این قسمت برای محیط تست است
                 self.create_template_html_file(template_code=email_code, 
                                                request_id=self.obj_request.request_id,
                                                variable_value= self.json_variable)
-                
+            
             # اکنون سرویس ارسال ایمیل را فراخوانی می کنیم
             result = send_email_api(template_code= email_code,
                                     variable_value=self.json_variable ,
@@ -5826,4 +5918,39 @@ class Notification:
         
     def dail_call(self, call_code):
         ...    
+    
+    
+
+class ErrorLog:
+    """
+    این کلاس برای ثبت خطاهای رخ داده در سیستم استفاده می شود
+    """
+    request_obj: "Request" = None
+    task_obj: "Task" = None
+    change_type_obj: "ChangeType" = None
+    form_manager_obj: "FormManager" = None
+    current_user_national_code: str = ''
+    app_code: str = APP_CODE
+    
+    def __init__(self, current_user_national_code: str, request_obj: "Request" = None, task_obj: "Task"= None, change_type_obj:"ChangeType"=None ) -> None:
+        self.current_user_national_code = current_user_national_code
+        if request_obj : 
+            self.request_obj = request_obj
+            id = request_obj.request_id
+        
+        if task_obj:
+            self.task_obj = task_obj
+            id = task_obj.request_task_id
+            
+        if change_type_obj:
+            self.change_type_obj = change_type_obj
+            id = change_type_obj.change_type_id
+        
+        self.form_manager_obj = FormManager(self.current_user_national_code, id)
+        
+        
+    def error_log(self, function_name:str, parameter_values:dict,error_desciption:str):
+        pass
+
+    
     

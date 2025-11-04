@@ -5456,3 +5456,342 @@ AttributeError: 'NoneType' object has no attribute 'national_code'
 2025-10-28 17:59:33,728 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-28 17:59:40,399 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-10-28 17:59:54,509 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 15:04:46,065 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:04:54,691 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-31 15:05:05,693 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:05:10,055 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-10-31 15:05:40,193 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:06:00,628 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:06:24,240 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:06:32,499 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:13:12,350 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:13:34,416 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 15:13:57,572 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 15:15:03,747 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 16:31:03,287 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 23:28:46,918 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:30:56,690 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 23:31:01,212 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-10-31 23:31:26,661 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 265, in request_create
+    request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=-1)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3851, in __init__
+    self.obj_error_log = ErrorLog(current_user_national_code=current_user_national_code,
+                         ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                    request_obj=self,
+                                    ^^^^^^^^^^^^^^^^^
+                                    task_obj=None,
+                                    ^^^^^^^^^^^^^^
+                                    change_type_obj=None)
+                                    ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5909, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj)
+                            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 214, in __init__
+    self.request_id = request_id if request_id and request_id > 0 else -1
+                                                   ^^^^^^^^^^^^^^
+TypeError: '>' not supported between instances of 'Request' and 'int'
+2025-10-31 23:32:14,829 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 265, in request_create
+    request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=-1)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3851, in __init__
+    self.obj_error_log = ErrorLog(current_user_national_code=current_user_national_code,
+                         ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                    request_obj=self,
+                                    ^^^^^^^^^^^^^^^^^
+                                    task_obj=None,
+                                    ^^^^^^^^^^^^^^
+                                    change_type_obj=None)
+                                    ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5909, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj)
+                            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 214, in __init__
+    self.request_id = request_id if request_id and request_id > 0 else -1
+                                                   ^^^^^^^^^^^^^^
+TypeError: '>' not supported between instances of 'Request' and 'int'
+2025-10-31 23:32:51,224 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 265, in request_create
+    request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=-1)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3851, in __init__
+    self.obj_error_log = ErrorLog(current_user_national_code=current_user_national_code,
+                         ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                    request_obj=self,
+                                    ^^^^^^^^^^^^^^^^^
+                                    task_obj=None,
+                                    ^^^^^^^^^^^^^^
+                                    change_type_obj=None)
+                                    ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5909, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj)
+                            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 214, in __init__
+    self.request_id = request_id if request_id and request_id > 0 else -1
+                                                   ^^^^^^^^^^^^^^
+TypeError: '>' not supported between instances of 'Request' and 'int'
+2025-10-31 23:34:13,606 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 265, in request_create
+    request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=-1)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3851, in __init__
+    self.obj_error_log = ErrorLog(current_user_national_code=current_user_national_code,
+                         ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                    request_obj=self,
+                                    ^^^^^^^^^^^^^^^^^
+                                    task_obj=None,
+                                    ^^^^^^^^^^^^^^
+                                    change_type_obj=None)
+                                    ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5909, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj)
+                            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 214, in __init__
+    self.request_id = request_id if request_id and request_id > 0 else -1
+                                                   ^^^^^^^^^^^^^^
+TypeError: '>' not supported between instances of 'Request' and 'int'
+2025-10-31 23:34:49,363 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:38:06,050 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:42:44,550 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:43:40,936 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:45:44,001 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:46:31,481 - WARNING - Not Found: /ConfigurationChangeRequest/167/static/ConfigurationChangeRequest/favicon.ico
+2025-10-31 23:50:10,451 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:54:00,396 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-10-31 23:58:44,673 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-01 00:00:24,700 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-01 00:01:48,605 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-01 00:02:29,361 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-01 00:03:23,018 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-01 00:04:45,719 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-01 00:04:51,630 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:42:27,301 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:46:53,307 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:48:26,527 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:48:32,427 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:01,149 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:06,964 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:12,405 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:17,342 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:26,385 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:35,698 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:41,470 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:49:45,879 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:50:25,712 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:53:03,904 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:53:40,088 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:57:46,096 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:58:09,206 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-02 23:58:37,315 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-03 00:00:54,050 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 17:52:06,841 - WARNING - Not Found: /ConfigurationChangeRequest/167/static/ConfigurationChangeRequest/favicon.ico
+2025-11-04 17:56:26,771 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 18:02:53,154 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:03:49,788 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:09:48,273 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:10:23,313 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:29:56,845 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 676, in change_type_list
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+                                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3591, in __init__
+    obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
+                             request_obj=None,
+                             task_obj=None,
+                             change_type_obj=self)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5943, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj.request_id)
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'request_id'
+2025-11-04 20:29:56,895 - WARNING - Not Found: /ConfigurationChangeRequest/ChangeType
+2025-11-04 20:29:56,897 - WARNING - Not Found: /ConfigurationChangeRequest/ChangeType/List
+2025-11-04 20:29:57,842 - WARNING - Not Found: /favicon.ico
+2025-11-04 20:32:40,192 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:33:35,422 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:34:49,240 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:38:36,625 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 676, in change_type_list
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+                                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3591, in __init__
+    obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
+                             request_obj=None,
+                             task_obj=None,
+                             change_type_obj=self)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5943, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj.request_id)
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'request_id'
+2025-11-04 20:39:23,675 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 676, in change_type_list
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+                                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3591, in __init__
+    obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
+                             request_obj=None,
+                             task_obj=None,
+                             change_type_obj=self)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5943, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj.request_id)
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'request_id'
+2025-11-04 20:39:48,199 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 676, in change_type_list
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+                                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3591, in __init__
+    obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
+                             request_obj=None,
+                             task_obj=None,
+                             change_type_obj=self)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5943, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj.request_id)
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'request_id'
+2025-11-04 20:40:10,336 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 676, in change_type_list
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+                                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3591, in __init__
+    obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
+                             request_obj=None,
+                             task_obj=None,
+                             change_type_obj=self)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5943, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj.request_id)
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'request_id'
+2025-11-04 20:41:05,442 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 676, in change_type_list
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+                                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3591, in __init__
+    obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
+                             request_obj=None,
+                             task_obj=None,
+                             change_type_obj=self)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 5943, in __init__
+    self.form_manager_obj = FormManager(self.current_user_national_code, self.request_obj.request_id)
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'request_id'
+2025-11-04 20:47:05,115 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/list/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 676, in change_type_list
+    obj_change_type:ChangeType = ChangeType(current_user, -1)
+                                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3610, in __init__
+    self.objform_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+                           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: FormManager.__init__() got an unexpected keyword argument 'request_id'
+2025-11-04 20:47:23,287 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:47:31,198 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:47:39,198 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/list/static/ConfigurationChangeRequest/favicon.ico
+2025-11-04 20:47:46,008 - WARNING - Not Found: /ConfigurationChangeRequest/change-type/3/static/ConfigurationChangeRequest/favicon.ico
+2025-11-04 20:49:13,902 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 758, in change_type_view
+    obj_form_manager = FormManager(current_user_national_code=current_user,request_id=-1)
+TypeError: FormManager.__init__() got an unexpected keyword argument 'request_id'
+2025-11-04 20:49:36,761 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-04 20:49:56,580 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 761, in change_type_view
+    form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 143, in get_full_form_data
+    form_data = get_simple_form_data(request=request)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 113, in get_simple_form_data
+    objFormManager = FormManager(current_user_national_code=current_user_nationalcode, request_id=-1)
+TypeError: FormManager.__init__() got an unexpected keyword argument 'request_id'
+2025-11-04 20:50:13,929 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-04 20:50:24,327 - ERROR - Internal Server Error: /ConfigurationChangeRequest/change-type/3/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 769, in change_type_view
+    result = obj_change_type.update_record_data(form_data, current_user)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3781, in update_record_data
+    obj_form_manager = FormManager(current_user_national_code=current_user, request_id=-1)
+TypeError: FormManager.__init__() got an unexpected keyword argument 'request_id'
+2025-11-04 20:50:43,793 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 20:52:24,739 - ERROR - Internal Server Error: /ConfigurationChangeRequest/167/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 310, in request_view
+    form_manager = FormManager(current_user_national_code=current_user_nationalcode, request_id=request_id)
+TypeError: FormManager.__init__() got an unexpected keyword argument 'request_id'
+2025-11-04 20:52:45,528 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-04 20:56:45,187 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 21:59:34,205 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 22:03:33,633 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\models.py changed, reloading.
+2025-11-04 22:09:53,239 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 22:12:47,931 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 22:17:09,818 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 22:17:18,391 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 22:34:57,078 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 22:35:20,608 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-04 22:35:25,074 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.

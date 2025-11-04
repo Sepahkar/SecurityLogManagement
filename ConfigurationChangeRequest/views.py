@@ -13,7 +13,7 @@ def get_current_user(request):
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
-        request_id = 160
+        request_id = 167
         from . import models as m
         objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
         
@@ -110,7 +110,7 @@ def get_simple_form_data(request)->dict:
     
 
     # یک نمونه از شی فرم ایجاد می کنیم
-    objFormManager = FormManager(current_user_national_code=current_user_nationalcode, request_id=-1)
+    objFormManager = FormManager(current_user_national_code=current_user_nationalcode, id=-1)
 
 
     form_data = {
@@ -284,7 +284,7 @@ def request_create(request):
     
     return render(request, 'ConfigurationChangeRequest/request-simple.html', data)
 
-def request_view(request, request_id):
+def request_view(request, request_id:int):
     """
     برای مشاهده فرم درخواست از این تابع استفاده می شود
 
@@ -307,7 +307,7 @@ def request_view(request, request_id):
         return JsonResponse({'success': False, 'message': request_obj.error_message})
     
     # اگر درخواست معتبر باشد، باید بررسی کنیم که کدام فرم باید برای این کاربر باز شود
-    form_manager = FormManager(current_user_national_code=current_user_nationalcode, request_id=request_id)   
+    form_manager = FormManager(current_user_national_code=current_user_nationalcode, id=request_id)   
     result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
     
     # وضعیت فرم را به دست می آوریم. وضعیت پیش فرض درج است
@@ -755,7 +755,7 @@ def change_type_view(request, change_type_id):
     # اگر حالت به روزرسانی باشد
     # و داده های جدید ارسال شده باشند
     if request.method == 'POST':
-        obj_form_manager = FormManager(current_user_national_code=current_user,request_id=-1)
+        obj_form_manager = FormManager(current_user_national_code=current_user,id=-1)
 
         # دریافت اطلاعات فرم
         form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)      
