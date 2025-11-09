@@ -296,400 +296,6 @@ class FormManager:
         return data
 
 
-    # این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
-    def check_form_status(self, user_nationalcode: str, request_id: int = -1 ) -> dict:
-        """
-        این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
-
-        Args:
-            user_nationalcode (str): کد ملی کاربر جاری
-            request_id (int): شناسه درخواست
-
-        Returns:
-            _type_: دو مقدار را بازگشت می دهد، اولی کد وضعیت و دومی فرمی که باید باز شود قالب مقدار بازگشتی به این صورت است
-            {'mode':'form_mode','form':'form_name'}
-            mode:
-                INSERT: فرم در حالت درج است
-                READONLY: فرم در حالت فقط خواندنی است و امکان تغییر ندارد
-                UPDATE: فرم در حالت به روزرسانی است
-                INVALID: فرم معتیر نیست یا کاربر جاری اجازه مشاهده این درخواست را ندارد
-            form:
-                RequestSimple: فرم درخواست ساده، این فرم توسط درخواست دهنده و مدیر مستقیم قابل مشاهده است
-                RequestFull: این فرم شامل همه اطلاعات بوده و توسط مدیر مربوطه و کاربر کمیته قابل مشاهده است
-                TaskSelect: در این مرحله تستر و یا مجری تسک را انتخاب می کنند
-                TaskReport: در این مرحله تستر و یا مجری تسک گزارش خود را وارد می کنند
-
-        """
-
-        # اگر شناسه درخواست نامعتبر باشد  در حالت درج باید باز شود
-        if not self.request_id or request_id <= 0:
-            return {"mode": "INSERT", "form": "RequestSimple"}
-
-        # ایجاد یک شی درخواست
-        request_obj:Request = Request(current_user_national_code=self.current_user_national_code, request_id=self.request_id)
-        request_status = request_obj.status_code
-        self.request_obj = request_obj
-        # این متغییرها وضعیت و فرم را مشخص می کنند
-        mode = "Readonly"
-        form = "Invalid"
-
-        # اینجا نوع فرم را بر اساس وضعیت فرم و کاربر جاری به دست می آوریم
-        # موضوع این است که وقتی مثلا درخواست کننده با مدیر مربوطه یکسان باشد، قدری پیچیده می شود
-        # در چنین مواردی اینکه تشخیص بدهیم که آیا باید فرم Simple را نشان بدهیم یا Full را
-        # دشوار است
-        
-        # در چه صورتی فرم ساده باید نمایش داده شود؟
-        # در صورتی که کاربر جاری درخواست دهنده و یا مدیر مستقیم باشد
-        
-        # با توجه به مقدار request_status وضعیت فرم و دسترسی کاربر را تعیین می‌کنیم
-        # برای اینکه اشتباهی رخ ندهد، بهتر است این کار را بکنیم
-        # به ازای هر وضعیت، بررسی زیر را انجام دهیم
-        # 1- کاربر جاری را بررسی کنیم
-        # 2- اگر کاربر باید به این فرم دسترسی به روزرسانی داشته باشد، به وی اجازه به روزرسانی بدهیم
-        # 3- اگر کاربر در مرحله های قبلی بوده است باید به این فرم دسترسی فقط خواندنی داشته باشد
-        # 4- اگر کاربر مربوط به مراحل بعدی است غیر مجاز است
-        # 5- اگر کاربر مربوط به این درخواست نیست غیر مجاز است
-        
-        # انواع وضعیت هایی که درخواست می تواند داشته باشد:
-       
-        # ('DRAFTD', 'پیش نویس'): 
-        # مجاز به ویرایش: درخواست دهنده         فرم : درخواست ساده
-        # فقط خواندنی: مدیر درخواست دهنده      فرم: درخواست ساده
-       
-        # ('DIRMAN', 'اظهار نظر مدیر مستقیم'):
-        # مجاز به ویرایش: مدیر مستقیم       فرم:درخواست ساده
-        # فقط خواندنی: درخواست دهنده        فرم: درخواست ساده
-       
-        # ('RELMAN', 'اظهار نظر مدیر مربوطه')
-        # مجاز به ویرایش: مدیر مربوطه                  فرم: درخواست کامل
-        # فقط خواندنی: دبیر کمیته       فرم: درخواست کامل فقط خواندنی
-        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
-
-        # برای اینکه اشتباهی رخ ندهد، بهتر است این کار را بکنیم
-        # به ازای هر وضعیت، بررسی زیر را انجام دهیم
-        # 1- کاربر جاری را بررسی کنیم
-        # 2- اگر کاربر باید به این فرم دسترسی به روزرسانی داشته باشد، به وی اجازه به روزرسانی بدهیم
-        # 3- اگر کاربر در مرحله های قبلی بوده است باید به این فرم دسترسی فقط خواندنی داشته باشد
-        # 4- اگر کاربر مربوط به مراحل بعدی است غیر مجاز است
-        # 5- اگر کاربر مربوط به این درخواست نیست غیر مجاز است
-        
-        # انواع وضعیت هایی که درخواست می تواند داشته باشد:
-       
-        # ('DRAFTD', 'پیش نویس'): 
-        # مجاز به ویرایش: درخواست دهنده         فرم : درخواست ساده
-        # فقط خواندنی: مدیر درخواست دهنده      فرم: درخواست ساده
-       
-        # ('DIRMAN', 'اظهار نظر مدیر مستقیم'):
-        # مجاز به ویرایش: مدیر مستقیم       فرم:درخواست ساده
-        # فقط خواندنی: درخواست دهنده        فرم: درخواست ساده
-       
-        # ('RELMAN', 'اظهار نظر مدیر مربوطه')
-        # مجاز به ویرایش: مدیر مربوطه                  فرم: درخواست کامل
-        # فقط خواندنی: دبیر کمیته       فرم: درخواست کامل فقط خواندنی
-        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
-        
-        # ('COMITE', 'اظهار نظر کمیته'): 
-        # مجاز به ویرایش: دبیرکمیته                    فرم: درخواست کامل
-        # فقط خواندنی: مدیر درخواست دهنده       فرم: درخواست کامل فقط خواندنی
-        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
-        
-        # ('DOTASK', 'انجام تسک ها'): 
-        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
-        # برای سایر نقش ها لازم است که وضعیت تسک هم کنترل شود
-            # ('EXERED', 'آماده انتخاب مجری')
-            # مجاز به ویرایش : مجریان       فرم: انتخاب تسک
-            # فقط خواندنی: تسترها       فرم: انتخاب تسک
-
-            # ('EXESEL', 'مجری انتخاب شده'),
-            # مجاز به ویرایش : مجری منتخب      فرم: گزارش تسک
-            # فقط خواندنی: مجریان، تسترها       فرم: انتخاب تسک
-
-            # ('TESRED', 'آماده انتخاب تستر'),
-            # مجاز به ویرایش: تسترها        فرم: انتخاب تسک
-            # فقط خواندنی: مجری منتخب          فرم: گزارش تسک
-            # فقط خواندنی: مجریان       فرم: انتخاب تسک
-            
-            # ('TESSEL', 'تستر انتخاب شده'),
-            # مجاز به ویرایش: تستر منتخب       فرم : گزارش تسک
-            # فقط خواندنی: مجری منتخب       فرم: گزارش تسک
-            # فقط خواندنی: مجریان و تسترها      فرم: انتخاب تسک
-            
-            # ('FINISH', 'انجام موفق'),
-            # ('FAILED', 'انجام ناموفق'),    
-            # فقط خواندنی: تستر منتخب، مجری منتخب       فرم : گزارش تسک
-            # فقط خواندنی: مجری منتخب       فرم: گزارش تسک
-           
-            
-        
-        # ('FINISH', 'خاتمه یافته'):
-        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
-        
-        # ('FAILED', 'خاتمه ناموفقیت آمیز'):
-        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
-        
-        
-        
-        #توجه کنید، ممکن بود این کد را به صورت ساده تر و فشرده تر نوشت، ولی به دلیل خوانایی از فاکتور گیری و یا مقادیر پیش فرض چندگانه اجتناب شده است
-        if request_status == "DRAFTD":
-            # پیش نویس
-            if user_nationalcode == request_obj.user_requestor.national_code:
-                form = "RequestSimple"
-                mode = "UPDATE"
-            elif user_nationalcode == request_obj.user_direct_manager.national_code:
-                form = "RequestSimple"
-                mode = "READONLY"
-            else:
-                form = "Invalid"
-                mode = "INVALID"
-
-        elif request_status == "DIRMAN":
-            # اظهار نظر مدیر مستقیم
-            if user_nationalcode == request_obj.user_direct_manager.national_code:
-                form = "RequestSimple"
-                mode = "UPDATE"
-            elif user_nationalcode == request_obj.user_requestor.national_code:
-                form = "RequestSimple"
-                mode = "READONLY"
-            else:
-                form = "Invalid"
-                mode = "INVALID"
-
-        elif request_status == "RELMAN":
-            # اظهار نظر مدیر مربوطه
-            if user_nationalcode == request_obj.user_related_manager.national_code:
-                form = "RequestFull"
-                mode = "UPDATE"
-            elif user_nationalcode == request_obj.user_committee.national_code:
-                form = "RequestFull-Readonly"
-                mode = "READONLY"
-            elif user_nationalcode in (
-                request_obj.user_requestor.national_code,
-                request_obj.user_direct_manager.national_code,
-            ):
-                form = "RequestSimple"
-                mode = "READONLY"
-            else:
-                form = "Invalid"
-                mode = "INVALID"
-
-        elif request_status == "COMITE":
-            # اظهار نظر کمیته
-            if user_nationalcode == request_obj.user_committee.national_code if request_obj.user_committee is not None else request_obj.request_instance.committee_user_nationalcode:
-                form = "RequestFull"
-                mode = "UPDATE"
-            elif user_nationalcode == request_obj.user_related_manager.national_code:
-                form = "RequestFull-Readonly"
-                mode = "READONLY"
-            elif user_nationalcode in (
-                request_obj.user_requestor.national_code,
-                request_obj.user_direct_manager.national_code,
-            ):
-                form = "RequestSimple"
-                mode = "READONLY"
-            else:
-                form = "Invalid"
-                mode = "INVALID"
-
-        elif request_status == "DOTASK":
-            # انجام تسک ها
-            if user_nationalcode in (
-                request_obj.user_requestor.national_code,
-                request_obj.user_direct_manager.national_code,
-                request_obj.user_related_manager.national_code,
-                getattr(request_obj.user_committee, 'national_code', None),
-            ):
-                form = "TaskList"
-                mode = "READONLY"
-            else:
-                # تسک جاری را به دست می آوریم
-                task:Task = request_obj.current_task
-                
-                # حالا کنترل می کنیم که وضعیت تسک چیست؟
-                task_status = task.status_code
-
-                # حالتهایی که ممکن است اتفاق بیافتد:
-                # ('EXERED', 'آماده انتخاب مجری'),
-                # ('EXESEL', 'مجری انتخاب شده'),
-                # ('TESRED', 'آماده انتخاب تستر'),
-                # ('TESSEL', 'تستر انتخاب شده'),
-                # ('FINISH', 'انجام موفق'),
-                # ('FAILED', 'انجام ناموفق'),                
-
-                # نکات مهم:
-                # 1- این کد به دلیل افزایش خوانایی غیرفشرده نوشته شده است
-                # 2- با توجه به اینکه مثلا یک مجری می تواند تستر هم باشد، ترتیب کنترل شرط ها مهم است
-                
-                # تسک هنوز شروع نشده است
-                if task_status == 'DEFINE':
-                    form = "Invalid"
-                    mode = "INVALID"
-                
-                # آماده انتخاب مجری
-                elif task_status == 'EXERED':
-                    # اگر کاربر در لیست مجریان باشد
-                    if any(user_nationalcode == executor.national_code for executor in task.executors):
-                        form = 'TaskSelect'
-                        mode = "UPDATE"
-                    # اگر کاربر در لیست تسترها باشد
-                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    else:
-                        form = "Invalid"
-                        mode = "INVALID"
-                        
-                # مجری انتخاب شده است
-                elif task_status == 'EXESEL':
-                    # اگر کاربر مجری منتخب باشد
-                    if task.selected_executor and user_nationalcode == task.selected_executor.national_code:
-                        form = 'TaskReport'
-                        mode = "UPDATE"
-                    # اگر کاربر مجری منتخب نباشد، ولی در لیست مجریان باشد
-                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    # اگر کاربر در لیست تسترهای منختب باشد
-                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    else:
-                        form = "Invalid"
-                        mode = "INVALID"
-                
-                # آماده انتخاب تستر
-                elif task_status == 'TESRED':
-                    # اگر کاربر در لیست تسترها باشد
-                    if any(user_nationalcode == tester.national_code for tester in task.testers):
-                        form = 'TaskSelect'
-                        mode = "UPDATE"
-                    # اگر کاربر مجری منتخب باشد
-                    elif task.selected_executor and user_nationalcode == task.selected_executor.national_code:
-                        form = 'TaskReport'
-                        mode = "READONLY"
-                    # اگر کاربر در لیست مجریان باشد
-                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    else:
-                        form = "Invalid"
-                        mode = "INVALID"
-                
-                # تستر انتخاب شده است
-                elif task_status == 'TESSEL':
-                    # اگر کاربر تستر منتخب باشد
-                    if task.selected_tester and user_nationalcode == task.selected_tester.national_code:
-                        form = 'TaskReport'
-                        mode = "UPDATE"
-                    # اگر کاربر مجری منتخب باشد
-                    elif task.selected_executor and user_nationalcode == task.selected_executor.national_code:
-                        form = 'TaskReport'
-                        mode = "READONLY"
-                    # اگر کاربر در لیست تسترها باشد
-                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    # اگر کاربر در لیست مجریان باشد
-                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    else:
-                        form = "Invalid"
-                        mode = "INVALID"
-                
-                # تسک موفقیت آمیز خاتمه یافته
-                # انجام تسک ناموفق بوده است
-                elif task_status == 'FINISH' or task_status == 'FAILED':
-                    # اگر کاربر تستر منتخب باشد
-                    if user_nationalcode == task.selected_tester.national_code:
-                        form = 'TaskReport'
-                        mode = "READONLY"
-                    # اگر کاربر مجری منتخب باشد
-                    elif user_nationalcode == task.selected_executor.national_code:
-                        form = 'TaskReport'
-                        mode = "READONLY"
-                    # اگر کاربر در لیست تسترها باشد
-                    elif any(user_nationalcode == tester.national_code for tester in task.testers):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    # اگر کاربر در لیست مجریان باشد
-                    elif any(user_nationalcode == executor.national_code for executor in task.executors):
-                        form = 'TaskSelect'
-                        mode = "READONLY"
-                    else:
-                        form = "Invalid"
-                        mode = "INVALID"
-                else:
-                    form = "Invalid"
-                    mode = "INVALID"                    
-        elif request_status in ("FINISH", "FAILED"):
-            # خاتمه یافته یا خاتمه ناموفقیت آمیز
-            mode = "READONLY"
-            
-            # اگر درخواست دهنده و یا مدیر مستقیم باشند
-            valid_users = [
-                request_obj.user_requestor.national_code,
-                request_obj.user_direct_manager.national_code,
-            ]
-            # باید فرم ساده را ببیند
-            if user_nationalcode in valid_users:
-                form = "RequestSimple"
-            else:
-                # اگر مدیر درخواست دهنده و یا دبیر کمیته باشند
-                valid_users = [request_obj.user_related_manager.national_code,]
-                if request_obj.user_committee and getattr(request_obj.user_committee, "national_code", None):
-                    valid_users.append(request_obj.user_committee.national_code)
-                if user_nationalcode in valid_users:
-                    form = "RequestFull-Readonly"
-
-                # در صورتی که هیچ یک از این موارد نباشند
-                else:
-                    form = "Invalid"
-                    mode = "INVALID"
-
-        else:
-            # وضعیت نامعتبر
-            form = "Invalid"
-            mode = "INVALID"
-
-            
-        return {"mode": mode, "form": form}
-
-    def load_task_data(self, request_obj:"Request", task_obj:"Task", user_nationalcode: str):
-        """
-        بارگذاری داده‌های تسک
-        """
-        form_data = {"success": True, "message": ""}
-
-        # دریافت اطلاعات درخواست
-        form_data["request"] = request_obj.request_instance
-        form_data["request_id"] = request_obj.request_id
-
-        # دریافت اطلاعات تسک
-        form_data["task"] = task_obj.task_instance
-
-        # دریافت اطلاعات کاربران تسک
-        form_data["task_users"] = task_obj.users
-        form_data["task_executors"] = task_obj.executors
-        form_data["task_testers"] = task_obj.testers
-        
-        form_data["task_selected_executor"] = task_obj.selected_executor
-        form_data["task_selected_tester"] = task_obj.selected_tester
-        
-        form_data["status_code"] = task_obj.status_code
-        form_data["status_title"] = task_obj.status_title if task_obj.status_title else 'انتخاب تسک توسط مجریان'
-
-        # دریافت اطلاعات کاربر جاری
-        form_data["current_user"] = user_nationalcode
-        form_data["is_task"] = True
-
-        # حالا باید ببینیم این کاربر مجری و یا تستر است؟
-        tester_executor = 'E' if user_nationalcode in [u.national_code for u in task_obj.executors] else 'T'
-
-        form_data['done_date'] = task_obj.executor_done_date if tester_executor == 'E' else task_obj.tester_done_date
-        form_data['done_time'] = task_obj.executor_done_time if tester_executor == 'E' else task_obj.tester_done_time
-        form_data['report'] = task_obj.executor_report if tester_executor == 'E' else task_obj.tester_report
-        
-        return form_data
 
     def validate_task_report(self, form_data: dict) -> dict:
         """
@@ -818,7 +424,7 @@ class FormManager:
         # در صورتی که فرم درخواست باشد
         # وضعیت جاری فرم را به دست می آوریم
         if record_type == 'R':
-            form_status = self.check_form_status(
+            form_status = self.check_request_form_status(
                 user_nationalcode=user_nationalcode,
                 request_id=request_id,
             )
@@ -1215,7 +821,7 @@ class FormManager:
     #         return {"success": False, "message": "شناسه درخواست نامعتبر است"}
 
     #     # ابتدا باید کنترل کنیم که آیا کاربر جاری مجاز به انجام عملیات بر روی فرم هست یا خیر؟
-    #     form_status = check_form_status(user_nationalcode, request_id)
+    #     form_status = check_request_form_status(user_nationalcode, request_id)
     #     form_data["form_status"] = form_status["status"]
 
     #     # اگر کاربر جزو کاربران مجاز این درخواست نباشد
@@ -3056,6 +2662,10 @@ class Task:
     tester_report: str=''    
 
     current_user_nationalcode:str = ''
+    user_type:str = '' # نوع کاربر یکی از موارد زیر است:
+                        # E: مجریان
+                        # T: تسترها
+                        # O:  سایر کاربران مجاز مانند مدیر مربوطه یا دبیر کمیته
     
     reject_description:str=''
 
@@ -3067,32 +2677,59 @@ class Task:
                                           change_type_obj=None)
 
             # دریافت درخواست بر اساس request_id
-            self.request_task_instance = m.RequestTask.objects.get(
-                id=request_task_id
-            )
-            self.request_id = self.request_task_instance.request.id
-            self.task_order = self.request_task_instance.order_number
-            self.status_code = self.request_task_instance.status_code
-            self._sync_status_title()
-            self.task_instance = self.request_task_instance.task
-            self.task_id = self.task_instance.id
-            self.task_title = self.task_instance.title
-            self.request_task_id = request_task_id
-            self.test_required = self.task_instance.test_required
-            self.current_user_nationalcode = current_user
-            self.doc_id = self.request_task_instance.doc_id
-            self.obj_request = obj_request
-            self.obj_cartable = Cartable(self.doc_id, 'SLM.CCR.TAS')
-            self.obj_form_manager = obj_request.obj_form_manager
-            self.obj_notification = Notification(obj_request=obj_request, obj_task=self)
-            # مقداردهی لیست ها
-            self.get_users_info()
+            self.request_task_instance = m.RequestTask.objects.get(id=request_task_id)
+            
+            # اگر شناسه ارسالی معتبر باشد
+            if self.request_task_instance:
+                # شناسه درخواست
+                self.request_id = self.request_task_instance.request.id
+                # شماره ترتیب تسک
+                # البته الان که همه تسک ها موازی انجام می شوند، دیگر شماره ترتیب اهمیتی ندارد
+                self.task_order = self.request_task_instance.order_number
+                # وضعیت فعلی تسک
+                self.status_code = self.request_task_instance.status_code
+                self._sync_status_title()
+                # به خود تسک هم نیاز داریم، برای اینکه نام تسک و ... را باید از آن بخوانیم
+                self.task_instance = self.request_task_instance.task
+                # این شناسه تسک است که نباید با شناسه تسک درخواست اشتباه گرفته شود
+                self.task_id = self.task_instance.id
+                # عنوان تسک را از جدول تسک به دست می آوریم
+                self.task_title = self.task_instance.title
+                # این شناسه تسک درخواست است که مربوط به این تسک در این درخواست است
+                self.request_task_id = request_task_id
+                # این مشخص می کند که تسک نیاز به تست دارد یا خیر
+                # ممکن است یک تسک نیاز به تست نداشته باشد ولی تستر اضافه کرده باشند یا برعکس
+                # که این مورد باید مدیریت شود
+                # در هر حال اینکه تسک نیاز به تست دارد یا خیر در ماهیت تسک است
+                # یعنی مربوط به خود تسک و در جدول تسک است
+                # در حالی که مدیر مربوطه ممکن است در این درخواست خاص، تسترها را حذف و یا اضافه کند
+                self.test_required = self.task_instance.test_required
+                # کاربر جاری همه جا مهم است
+                self.current_user_nationalcode = current_user
+                # در صورتی که سندی برای این تسک ایجاد شده باشد شناسه آن را می خوانیم
+                # برای ارسال مدرک از این شناسه استفاده می شود
+                self.doc_id = self.request_task_instance.doc_id
+                
+                # در صورتی که شی درخواست به عنوان پارامتر ارسال شده باشد
+                if obj_request:
+                    self.obj_request = obj_request
+                # در غیر این صورت باید یک نمونه خودمان بسازیم
+                else:
+                    self.obj_request = Request(current_user, self.request_id)
+
+                # سایر اشیا را ایجاد می کنیم
+                self.obj_form_manager = FormManager(current_user, request_task_id, 'T')
+                self.obj_cartable = Cartable(self.doc_id, 'SLM.CCR.TAS')
+                self.obj_notification = Notification(obj_request=self.obj_request, obj_task=self)
+                
+                # مقداردهی اطلاعات کاربران
+                self.get_users_info()
 
         except m.RequestTask.DoesNotExist:
-            self.error_messager = 'شناسه تسک درخواست نامعتبر است'
+            self.error_message = 'شناسه تسک درخواست نامعتبر است'
 
         except Exception as e:
-            self.error_messager = f'در ایجاد نمونه تسک مربوط به درخواست خطایی رخ داد: <br/>{str(e)}'
+            self.error_message = f'در ایجاد نمونه تسک مربوط به درخواست خطایی رخ داد: <br/>{str(e)}'
 
     def __repr__(self) -> str:
         return f'تسک {self.task_title} ({self.task_id}) - {self.status_title}'
@@ -3164,6 +2801,55 @@ class Task:
             self.error_message = f'در واکشی اطلاعات افراد مرتبط با تسک مربوط به درخواست خطایی رخ داد: <br/>{str(e)}'
             
 
+    
+    def load_task_data(self):
+        """
+        بارگذاری داده‌های تسک
+        """
+        form_data = {"success": True, "message": ""}
+
+        # دریافت اطلاعات درخواست
+        form_data["request"] = self.obj_request.request_instance
+        form_data["request_id"] = self.request_id
+
+        # دریافت اطلاعات تسک
+        form_data["task"] = self
+
+        # دریافت اطلاعات کاربران تسک
+        form_data["task_users"] = self.users
+        form_data["task_executors"] = self.executors
+        form_data["task_testers"] = self.testers
+        
+        form_data["task_selected_executor"] = self.selected_executor
+        form_data["task_selected_tester"] = self.selected_tester
+        
+        form_data["status_code"] = self.status_code
+        form_data["status_title"] = self.status_title if self.status_title else 'انتخاب تسک توسط مجریان'
+
+        # دریافت اطلاعات کاربر جاری
+        form_data["current_user"] = self.current_user_nationalcode
+        form_data["is_task"] = True
+
+        # حالا باید ببینیم این کاربر مجری و یا تستر است؟
+        if self.current_user_nationalcode in [u.national_code for u in self.executors]:
+            self.user_type = 'E' 
+        elif self.current_user_nationalcode in [u.national_code for u in self.testers]:
+            self.user_type = 'T'
+        # در صورتی که کاربر هیچ یک از موارد فوق نباشد، مثلا مدیر مربوطه یا دبیر کمیته باشد
+        else:
+            self.user_type = 'O'
+
+        # بارگذاری اطلاعات گزارش مجری
+        form_data['executor_done_date'] = self.executor_done_date
+        form_data['executor_done_time'] = self.executor_done_time
+        form_data['executor_report'] = self.executor_report
+
+        # باگذاری اطلاعات گزارش تستر
+        form_data['tester_done_date'] = self.tester_done_date
+        form_data['tester_done_time'] = self.tester_done_time
+        form_data['tester_report'] = self.tester_report
+        
+        return form_data
 
     def next_step(self, action_code: str) -> dict:
         """این تابع تسک را به مرحله بعدی می برد. انواع حالتهای ممکن شامل موارد زیر است:
@@ -3554,9 +3240,7 @@ class Task:
         # حالا باید تابع مربوطه را فراخوانی کنیم که بررسی کند آیا آخرین تسک بوده است یا خیر؟
         request_obj.next_task(self)
 
-    def save_task_report(
-        self, request_task_id: int, form_data: dict, user_nationalcode: str
-    ) -> dict:
+    def save_task_report(self, request_task_id: int, form_data: dict, user_nationalcode: str) -> dict:
         """
         ذخیره گزارش تسک
         """
@@ -3586,7 +3270,197 @@ class Task:
           
         except Exception as e:
             return {"success": False, "message": f"خطا در ذخیره گزارش تسک: {str(e)}"}
+    def check_form_status(self ) -> dict:
+        """
+        این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
 
+        Returns:
+            _type_: دو مقدار را بازگشت می دهد، اولی کد وضعیت و دومی فرمی که باید باز شود قالب مقدار بازگشتی به این صورت است
+            {'mode':'form_mode','form':'form_name'}
+            mode:
+                READONLY: فرم در حالت فقط خواندنی است و امکان تغییر ندارد
+                UPDATE: فرم در حالت به روزرسانی است
+                INVALID: فرم معتیر نیست یا کاربر جاری اجازه مشاهده این درخواست را ندارد
+            form:
+                RequestSimple: فرم درخواست ساده، این فرم توسط درخواست دهنده و مدیر مستقیم قابل مشاهده است
+                RequestFull: این فرم شامل همه اطلاعات بوده و توسط مدیر مربوطه و کاربر کمیته قابل مشاهده است
+                task_list:
+        """
+
+        # اگر شناسه درخواست نامعتبر باشد  در حالت درج باید باز شود
+        if not self.request_id or self.request_id <= 0:
+            return {"mode": "INSERT", "form": "RequestSimple"}
+
+        # این متغییرها وضعیت و فرم را مشخص می کنند
+        mode = "Readonly"
+        form = "Invalid"
+
+        # اینجا نوع فرم را بر اساس وضعیت فرم و کاربر جاری به دست می آوریم
+        # موضوع این است که وقتی مثلا مجری با تستر یکسان باشد، قدری پیچیده می شود
+
+
+        # انواع وضعیت هایی که تسک می تواند داشته باشد:
+        # ('EXERED', 'آماده انتخاب مجری')
+        # مجاز به ویرایش : مجریان       فرم: انتخاب تسک
+        # فقط خواندنی: تسترها، مدیر مربوطه، کمیته       فرم: انتخاب تسک
+
+        # ('EXESEL', 'مجری انتخاب شده'),
+        # مجاز به ویرایش : مجری منتخب      فرم: گزارش تسک
+        # فقط خواندنی: مجریان، تسترها، مدیر مربوطه، کمیته       فرم: انتخاب تسک
+
+        # ('TESRED', 'آماده انتخاب تستر'),
+        # مجاز به ویرایش: تسترها        فرم: انتخاب تسک
+        # فقط خواندنی: مجری منتخب، مدیر مربوطه، کمیته       فرم: گزارش تسک
+        # فقط خواندنی: مجریان       فرم: انتخاب تسک
+        
+        # ('TESSEL', 'تستر انتخاب شده'),
+        # مجاز به ویرایش: تستر منتخب       فرم : گزارش تسک
+        # فقط خواندنی: مجری منتخب، مدیر مربوطه، کمیته       فرم: گزارش تسک
+        # فقط خواندنی: مجریان و تسترها      فرم: انتخاب تسک
+        
+        # ('FINISH', 'انجام موفق'),
+        # ('FAILED', 'انجام ناموفق'),    
+        # فقط خواندنی: تستر منتخب، مجری منتخب، مدیر مربوطه، کمیته       فرم: گزارش تسک
+        
+        
+        
+        #توجه کنید، ممکن بود این کد را به صورت ساده تر و فشرده تر نوشت، ولی به دلیل خوانایی از فاکتور گیری و یا مقادیر پیش فرض چندگانه اجتناب شده است
+            
+        # حالا کنترل می کنیم که وضعیت تسک چیست؟
+        # حالتهایی که ممکن است اتفاق بیافتد:
+        # ('EXERED', 'آماده انتخاب مجری'),
+        # ('EXESEL', 'مجری انتخاب شده'),
+        # ('TESRED', 'آماده انتخاب تستر'),
+        # ('TESSEL', 'تستر انتخاب شده'),
+        # ('FINISH', 'انجام موفق'),
+        # ('FAILED', 'انجام ناموفق'),                
+
+        # نکات مهم:
+        # 1- این کد به دلیل افزایش خوانایی غیرفشرده نوشته شده است
+        # 2- با توجه به اینکه مثلا یک مجری می تواند تستر هم باشد، ترتیب کنترل شرط ها مهم است
+        
+        # تسک هنوز شروع نشده است
+        if self.status_code == 'DEFINE':
+            form = "Invalid"
+            mode = "INVALID"
+        
+        # این کاربران هم بایدبتوانند فرم را به صورت فقط خواندنی ببینند
+        allowed_user = [self.obj_request.user_related_manager, self.obj_request.user_committee]
+        
+        # آماده انتخاب مجری
+        if self.status_code == 'EXERED':
+            # اگر کاربر در لیست مجریان باشد
+            if any(self.current_user_nationalcode == executor.national_code for executor in self.executors):
+                form = 'TaskSelect'
+                mode = "UPDATE"
+            # اگر کاربر در لیست تسترها باشد
+            elif any(self.current_user_nationalcode == tester.national_code for tester in self.testers) or self.current_user_nationalcode in allowed_user:
+                form = 'TaskSelect'
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+                
+        # مجری انتخاب شده است
+        elif self.status_code == 'EXESEL':
+            # اگر کاربر مجری منتخب باشد
+            if self.selected_executor and self.current_user_nationalcode == self.selected_executor.national_code:
+                form = 'TaskReport'
+                mode = "UPDATE"
+            # اگر مدیر مربوطه یا کمیته باشد
+            elif self.current_user_nationalcode in allowed_user:
+                form = 'TaskReport'
+                mode = "READONLY"
+            # اگر کاربر مجری منتخب نباشد، ولی در لیست مجریان باشد
+            elif any(self.current_user_nationalcode == executor.national_code for executor in self.executors):
+                form = 'TaskSelect'
+                mode = "READONLY"
+            # اگر کاربر در لیست تسترهای منختب باشد
+            elif any(self.current_user_nationalcode == tester.national_code for tester in self.testers):
+                form = 'TaskSelect'
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+        
+        # آماده انتخاب تستر
+        elif self.status_code == 'TESRED':
+            # اگر کاربر در لیست تسترها باشد
+            if any(self.current_user_nationalcode == tester.national_code for tester in self.testers):
+                form = 'TaskSelect'
+                mode = "UPDATE"
+            # اگر کاربر مجری منتخب باشد
+            elif self.selected_executor and self.current_user_nationalcode == self.selected_executor.national_code or self.current_user_nationalcode in allowed_user:
+                form = 'TaskReport'
+                mode = "READONLY"
+            # اگر کاربر در لیست مجریان باشد
+            elif any(self.current_user_nationalcode == executor.national_code for executor in self.executors):
+                form = 'TaskSelect'
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+        
+        # تستر انتخاب شده است
+        elif self.status_code == 'TESSEL':
+            # اگر کاربر تستر منتخب باشد
+            if self.selected_tester and self.current_user_nationalcode == self.selected_tester.national_code:
+                form = 'TaskReport'
+                mode = "UPDATE"
+            # اگر کاربر مجری منتخب باشد
+            elif self.selected_executor and self.current_user_nationalcode == self.selected_executor.national_code:
+                form = 'TaskReport'
+                mode = "READONLY"
+            # اگر کاربر در لیست تسترها باشد
+            elif any(self.current_user_nationalcode == tester.national_code for tester in self.testers):
+                form = 'TaskSelect'
+                mode = "READONLY"
+            # اگر کاربر در لیست مجریان باشد
+            elif any(self.current_user_nationalcode == executor.national_code for executor in self.executors):
+                form = 'TaskSelect'
+                mode = "READONLY"
+            # اگر مدیر مربوطه یا کاربر کمیته باشد
+            elif self.current_user_nationalcode in allowed_user:
+                form = 'TaskSelect'
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+        
+        # تسک موفقیت آمیز خاتمه یافته
+        # انجام تسک ناموفق بوده است
+        elif self.status_code == 'FINISH' or self.status_code == 'FAILED':
+            # اگر کاربر تستر منتخب باشد
+            if self.current_user_nationalcode == self.selected_tester.national_code:
+                form = 'TaskReport'
+                mode = "READONLY"
+            # اگر کاربر مجری منتخب باشد
+            elif self.current_user_nationalcode == self.selected_executor.national_code:
+                form = 'TaskReport'
+                mode = "READONLY"
+            # اگر مدیر مربوطه یا کاربر کمیته باشد
+            elif self.current_user_nationalcode in allowed_user:
+                form = 'TaskSelect'
+                mode = "READONLY"
+            # اگر کاربر در لیست تسترها باشد
+            elif any(self.current_user_nationalcode == tester.national_code for tester in self.testers):
+                form = 'TaskSelect'
+                mode = "READONLY"
+            # اگر کاربر در لیست مجریان باشد
+            elif any(self.current_user_nationalcode == executor.national_code for executor in self.executors):
+                form = 'TaskSelect'
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+        else:
+            # وضعیت نامعتبر
+            form = "Invalid"
+            mode = "INVALID"
+
+            
+        return {"mode": mode, "form": form}
+    
 class ChangeType:
     change_type_id:int=-1
     change_type_instance:m.ChangeType=None
@@ -4004,7 +3878,7 @@ class Request:
         # یک نمونه از شی مدیریت فرم را ایجاد می کنیم
         obj_form_manager = self.obj_form_manager if self.obj_form_manager else FormManager(self.current_user_national_code, -1)
         # مشخص می کنیم که وضعیت فعلی فرم چیست؟
-        form_status = obj_form_manager.check_form_status(
+        form_status = obj_form_manager.check_request_form_status(
             user_nationalcode=user_nationalcode,
             request_id=self.request_id)
         form_data["mode"] = form_status["mode"]
@@ -4495,6 +4369,206 @@ class Request:
         
         return {'success':True}
     
+# این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
+    def check_form_status(self ) -> dict:
+        """
+        این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
+
+        Returns:
+            _type_: دو مقدار را بازگشت می دهد، اولی کد وضعیت و دومی فرمی که باید باز شود قالب مقدار بازگشتی به این صورت است
+            {'mode':'form_mode','form':'form_name'}
+            mode:
+                INSERT: فرم در حالت درج است
+                READONLY: فرم در حالت فقط خواندنی است و امکان تغییر ندارد
+                UPDATE: فرم در حالت به روزرسانی است
+                INVALID: فرم معتیر نیست یا کاربر جاری اجازه مشاهده این درخواست را ندارد
+            form:
+                RequestSimple: فرم درخواست ساده، این فرم توسط درخواست دهنده و مدیر مستقیم قابل مشاهده است
+                RequestFull: این فرم شامل همه اطلاعات بوده و توسط مدیر مربوطه و کاربر کمیته قابل مشاهده است
+                task_list:
+        """
+
+        # اگر شناسه درخواست نامعتبر باشد  در حالت درج باید باز شود
+        if not self.request_id or self.request_id <= 0:
+            return {"mode": "INSERT", "form": "RequestSimple"}
+
+        # این متغییرها وضعیت و فرم را مشخص می کنند
+        mode = "Readonly"
+        form = "Invalid"
+
+        # اینجا نوع فرم را بر اساس وضعیت فرم و کاربر جاری به دست می آوریم
+        # موضوع این است که وقتی مثلا درخواست کننده با مدیر مربوطه یکسان باشد، قدری پیچیده می شود
+        # در چنین مواردی اینکه تشخیص بدهیم که آیا باید فرم Simple را نشان بدهیم یا Full را
+        # دشوار است
+        
+        # در چه صورتی فرم ساده باید نمایش داده شود؟
+        # در صورتی که کاربر جاری درخواست دهنده و یا مدیر مستقیم باشد
+        
+        # با توجه به مقدار request_status وضعیت فرم و دسترسی کاربر را تعیین می‌کنیم
+        # برای اینکه اشتباهی رخ ندهد، بهتر است این کار را بکنیم
+        # به ازای هر وضعیت، بررسی زیر را انجام دهیم
+        # 1- کاربر جاری را بررسی کنیم
+        # 2- اگر کاربر باید به این فرم دسترسی به روزرسانی داشته باشد، به وی اجازه به روزرسانی بدهیم
+        # 3- اگر کاربر در مرحله های قبلی بوده است باید به این فرم دسترسی فقط خواندنی داشته باشد
+        # 4- اگر کاربر مربوط به مراحل بعدی است غیر مجاز است
+        # 5- اگر کاربر مربوط به این درخواست نیست غیر مجاز است
+        
+        # انواع وضعیت هایی که درخواست می تواند داشته باشد:
+       
+        # ('DRAFTD', 'پیش نویس'): 
+        # مجاز به ویرایش: درخواست دهنده         فرم : درخواست ساده
+        # فقط خواندنی: مدیر درخواست دهنده      فرم: درخواست ساده
+       
+        # ('DIRMAN', 'اظهار نظر مدیر مستقیم'):
+        # مجاز به ویرایش: مدیر مستقیم       فرم:درخواست ساده
+        # فقط خواندنی: درخواست دهنده        فرم: درخواست ساده
+       
+        # ('RELMAN', 'اظهار نظر مدیر مربوطه')
+        # مجاز به ویرایش: مدیر مربوطه                  فرم: درخواست کامل
+        # فقط خواندنی: دبیر کمیته       فرم: درخواست کامل فقط خواندنی
+        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
+
+        # برای اینکه اشتباهی رخ ندهد، بهتر است این کار را بکنیم
+        # به ازای هر وضعیت، بررسی زیر را انجام دهیم
+        # 1- کاربر جاری را بررسی کنیم
+        # 2- اگر کاربر باید به این فرم دسترسی به روزرسانی داشته باشد، به وی اجازه به روزرسانی بدهیم
+        # 3- اگر کاربر در مرحله های قبلی بوده است باید به این فرم دسترسی فقط خواندنی داشته باشد
+        # 4- اگر کاربر مربوط به مراحل بعدی است غیر مجاز است
+        # 5- اگر کاربر مربوط به این درخواست نیست غیر مجاز است
+        
+        # انواع وضعیت هایی که درخواست می تواند داشته باشد:
+       
+        # ('DRAFTD', 'پیش نویس'): 
+        # مجاز به ویرایش: درخواست دهنده         فرم : درخواست ساده
+        # فقط خواندنی: مدیر درخواست دهنده      فرم: درخواست ساده
+       
+        # ('DIRMAN', 'اظهار نظر مدیر مستقیم'):
+        # مجاز به ویرایش: مدیر مستقیم       فرم:درخواست ساده
+        # فقط خواندنی: درخواست دهنده        فرم: درخواست ساده
+       
+        # ('RELMAN', 'اظهار نظر مدیر مربوطه')
+        # مجاز به ویرایش: مدیر مربوطه                  فرم: درخواست کامل
+        # فقط خواندنی: دبیر کمیته       فرم: درخواست کامل فقط خواندنی
+        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
+        
+        # ('COMITE', 'اظهار نظر کمیته'): 
+        # مجاز به ویرایش: دبیرکمیته                    فرم: درخواست کامل
+        # فقط خواندنی: مدیر درخواست دهنده       فرم: درخواست کامل فقط خواندنی
+        # فقط خواندنی: درخواست دهنده و مدیر مستقیم      فرم: درخواست ساده
+        
+        # ('DOTASK', 'انجام تسک ها'): 
+        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
+        
+        # ('FINISH', 'خاتمه یافته'):
+        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
+        
+        # ('FAILED', 'خاتمه ناموفقیت آمیز'):
+        # فقط خواندنی: درخواست دهنده، مدیر مستقیم، مدیر مربوطه، دبیرکمیته           فرم:لیست تسک ها فقط خواندنی
+        
+        
+        #توجه کنید، ممکن بود این کد را به صورت ساده تر و فشرده تر نوشت، ولی به دلیل خوانایی از فاکتور گیری و یا مقادیر پیش فرض چندگانه اجتناب شده است
+        if self.status_code == "DRAFTD":
+            # پیش نویس
+            if self.current_user_national_code == self.user_requestor.national_code:
+                form = "RequestSimple"
+                mode = "UPDATE"
+            elif self.current_user_national_code ==self.user_direct_manager.national_code:
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif self.status_code == "DIRMAN":
+            # اظهار نظر مدیر مستقیم
+            if self.current_user_national_code == self.user_direct_manager.national_code:
+                form = "RequestSimple"
+                mode = "UPDATE"
+            elif self.current_user_national_code == self.user_requestor.national_code:
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif self.status_code == "RELMAN":
+            # اظهار نظر مدیر مربوطه
+            if self.current_user_national_code == self.user_related_manager.national_code:
+                form = "RequestFull"
+                mode = "UPDATE"
+            elif self.current_user_national_code == self.user_committee.national_code:
+                form = "RequestFull-Readonly"
+                mode = "READONLY"
+            elif self.current_user_national_code in (
+                self.user_requestor.national_code,
+                self.user_direct_manager.national_code,
+            ):
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif self.status_code == "COMITE":
+            # اظهار نظر کمیته
+            if self.current_user_national_code == self.user_committee.national_code if self.user_committee else '':
+                form = "RequestFull"
+                mode = "UPDATE"
+            elif self.current_user_national_code == self.user_related_manager.national_code:
+                form = "RequestFull-Readonly"
+                mode = "READONLY"
+            elif self.current_user_national_code in (
+                self.user_requestor.national_code,
+                self.user_direct_manager.national_code,
+            ):
+                form = "RequestSimple"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"
+
+        elif self.status_code == "DOTASK":
+            # انجام تسک ها
+            if self.current_user_national_code in (
+                self.user_requestor.national_code,
+                self.user_direct_manager.national_code,
+                self.user_related_manager.national_code,
+                getattr(self.user_committee, 'national_code', None),
+            ):
+                form = "TaskList"
+                mode = "READONLY"
+            else:
+                form = "Invalid"
+                mode = "INVALID"                    
+        elif self.status_code in ("FINISH", "FAILED"):
+            # خاتمه یافته یا خاتمه ناموفقیت آمیز
+            mode = "READONLY"
+            
+            # اگر درخواست دهنده و یا مدیر مستقیم باشند
+            valid_users = [self.user_requestor.national_code,self.user_direct_manager.national_code]
+            # باید فرم ساده را ببیند
+            if self.current_user_national_code in valid_users:
+                form = "RequestSimple"
+            else:
+                # اگر مدیر درخواست دهنده و یا دبیر کمیته باشند
+                valid_users = [self.user_related_manager.national_code,]
+                if self.user_committee and getattr(self.user_committee, "national_code", None):
+                    valid_users.append(self.user_committee.national_code)
+                if self.current_user_national_code in valid_users:
+                    form = "RequestFull-Readonly"
+
+                # در صورتی که هیچ یک از این موارد نباشند
+                else:
+                    form = "Invalid"
+                    mode = "INVALID"
+
+        else:
+            # وضعیت نامعتبر
+            form = "Invalid"
+            mode = "INVALID"
+
+            
+        return {"mode": mode, "form": form}
 
     def create_request(self, form_data: dict, user_nationalcode: str) -> dict:
         """
@@ -5323,7 +5397,7 @@ class Notification:
                 E : ایمیل
                 S : پیامک
                 C : تلفن گویا
-            reqeust_task (str): مشخص می کند که این اطلاع رسانی مربوط به درخواست است یا تسک
+            request_task (str): مشخص می کند که این اطلاع رسانی مربوط به درخواست است یا تسک
                 R : درخواست
                 T : تسک
         """
@@ -5950,7 +6024,205 @@ class ErrorLog:
         
         
     def error_log(self, function_name:str, parameter_values:dict,error_desciption:str):
-        pass
+        
+        id = 'E-0' # شناسه اصلی است.  این شناسه می تواند شناسه درخواست یا تسک یا نوع تغییر باشد
+        
+        # در صورتی که اطلاعات درخواست موجود باشد
+        if self.request_obj:
+            request_info = {
+                'id': self.request_obj.request_id,
+                'title': self.request_obj.request_instance.change_title,
+                'change_type_id': self.request_obj.request_instance.change_type_id,
+                'change_type_title': self.request_obj.request_instance.change_type,
+                'status_code': self.request_obj.status_code,
+                'status_title': self.request_obj.status_title,
+                'doc_id': self.request_obj.obj_cartable.doc_id
+            }
+            id = f'R-{self.request_obj.request_id}'
+            
+        # درصورتی که اطلاعات تسک موجود باشد
+        if self.task_obj:
+            task_info = {
+                'reqeust_task_id':self.task_obj.request_task_id,
+                'request_id':self.task_obj.request_id,
+                'task_id':self.task_obj.task_id,
+                'doc_id': self.task_obj.doc_id,
+                'task_title': self.task_obj.task_title,
+                'task_executors': self.task_obj.executors_names,
+                'task_selected_executor': self.task_obj.selected_executor.fullname,
+                'task_testers': self.task_obj.testers_names,
+                'task_selected_tester': self.task_obj.selected_tester.fullname,
+                'status_code': self.task_obj.status_code,
+                'status_title': self.task_obj.status_title,
+            }
+            if self.request_object:
+                id = f'R-{self.request_obj.request_id}-T-{self.task_obj.request_task_id}'
+            else:
+                id = f'T-{self.task_obj.request_task_id}'
+        
+        if self.change_type_obj:
+            change_type_info = {
+                'id': self.change_type_obj.request_id,
+                'title': self.change_type_obj.request_instance.change_title,
+            }
+            id = f'C-{self.change_type_obj.change_type_id}'
 
+        if self.current_user_national_code:
+            user_obj:m.User = m.User.objects.filter(national_code = self.current_user_national_code).first()
+            
+            current_user = {
+                'national_code': self.current_user_national_code
+            }
+            if user_obj:
+                current_user.update({
+                    'username': user_obj.username,
+                    'fullname': user_obj.fullname,
+                    'role_id': user_obj.get_role_id,
+                    'role_title': user_obj.get_role,
+                    'team_code': user_obj.get_team_code,
+                    'team_name': user_obj.get_team
+                })
+            
+
+        execution_info = {
+            'function_name':function_name,
+            'parameter_values':parameter_values,
+            'error_desciption':error_desciption,
+        }
+        information = {
+            'request_info':request_info,
+            'task_info':task_info,
+            'change_type_info':change_type_info,
+            'current_user':current_user,
+            'execution_info':execution_info,
+        }
+        
+        # حالا در فایل ذخیره می کنیم
+        self.error_log_file(id, information)
+        
     
+    def error_log_file(self, main_id: str, info: dict):
+        """
+        این تابع یک دیتا به صورت دیکشنری می گیرد و اطلاعات را در یک فایل متنی ذخیره می کند
+        اسم فایل برابر با شناسه اصلی و تاریخ جاری به شمسی است
+        Args:
+            main_id (str): شناسه اصلی است که به صورت پارامتر ورودی ارسال می شود و برای نام فایل ارسال می شود
+            info (dict): یک دیکشنری است که شامل دیکشتری هایی است که هر کدام از آنها مجموعه ای از ویژگی ها را دارند که در فایل به ترتیب ثبت می شوند
+            مثلا اگر به صورت زیر باشد:
+            {'request_info': {
+                'id': 12,
+                'title': 'اعطای دسترسی جدید',
+                'change_type_id':23,
+                'change_type_title': 'تغییر تنظیمات سیستم',
+                'status_code': 'RELMAN',
+                'status_title': 'بررسی مدیر مربوطه',
+                'doc_id': 12465
+            },
+            'task_info':{
+                'reqeust_task_id':25,
+                'request_id':12,
+                'task_id':7,
+                'doc_id': 12480,
+                'task_title': 'تعریف دسترسی در اکتیو دایرکتوری',
+                'task_executors': 'حسن رضایی، محمود تقی نژاد',
+                'task_selected_executor': 'حسن رضایی',
+                'task_testers': 'مینا محمودی',
+                'task_selected_tester': None,
+                'status_code': 'TESSEL',
+                'status_title': 'انتخاب تستر',
+            },
+            'change_type_info':None,
+            'current_user':
+            {
+                'username': 'm.hamidi@eit',
+                'fullname': 'محمد حمیدی',
+                'role_id': 121,
+                'role_title': 'مدیر تولید',
+                'team_code': 'CAR'
+                'team_name': 'خودرو'               
+            },
+            'execution_info':
+            {
+                'function_name':'Request.nextstep',
+                'parameter_values':'{'request_id':14}'
+                'error_desciption':'امکان تغییر وضعیت وجود ندارد',           
+            },
+        }
+        آنگاه فایل خروجی به این صورت خواهد بود: هر مورد در یک سطر می آید و بین موارد اصلی --------------- به صورت جداکننده آورده می شود
     
+        --------------------------------------------------------
+            request_info :
+                'id': 12,
+                'title': 'اعطای دسترسی جدید',
+                'change_type_id':23,
+                'change_type_title': 'تغییر تنظیمات سیستم',
+                'status_code': 'RELMAN',
+                'status_title': 'بررسی مدیر مربوطه',
+                'doc_id': 12465
+        --------------------------------------------------------
+            'task_info':
+                'reqeust_task_id':25,
+                'request_id':12,
+                'task_id':7,
+                'doc_id': 12480,
+                'task_title': 'تعریف دسترسی در اکتیو دایرکتوری',
+                'task_executors': 'حسن رضایی، محمود تقی نژاد',
+                'task_selected_executor': 'حسن رضایی',
+                'task_testers': 'مینا محمودی',
+                'task_selected_tester': None,
+                'status_code': 'TESSEL',
+                'status_title': 'انتخاب تستر',
+        --------------------------------------------------------
+            'change_type_info':None,
+        --------------------------------------------------------
+            'current_user':
+                'username': 'm.hamidi@eit',
+                'fullname': 'محمد حمیدی',
+                'role_id': 121,
+                'role_title': 'مدیر تولید',
+                'team_code': 'CAR'
+                'team_name': 'خودرو'               
+        --------------------------------------------------------
+            'execution_info':
+                'function_name':'Request.nextstep',
+                'parameter_values':'{'request_id':14}'
+                'error_desciption':'امکان تغییر وضعیت وجود ندارد',           
+        --------------------------------------------------------
+       
+        """
+        import os
+        try:
+            import jdatetime
+        except ImportError:
+            from datetime import datetime
+        from Config import settings
+
+        # تعیین نام فایل به فرمت خواسته شده (main_id-jalalidate-error.log)
+        try:
+            jalali_date = jdatetime.datetime.now().strftime('%Y%m%d')
+        except Exception:
+            # اگر کتابخانه jdatetime در دسترس نبود، تاریخ شمسی را به میلادی جایگزین می‌کنیم
+            from datetime import datetime
+            jalali_date = datetime.now().strftime('%Y%m%d')
+
+        filename = f"{main_id}-{jalali_date}-error.log"
+        log_dir = os.path.join(settings.BASE_DIR, 'static', 'ConfigurationChangeRequest', 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        path = os.path.join(log_dir, filename)
+
+        divider = "-" * 56
+        with open(path, "a", encoding="utf-8") as f:
+            for key in ['request_info', 'task_info', 'change_type_info', 'current_user', 'execution_info']:
+                f.write(f"{divider}\n")
+                value = info.get(key)
+                # خروجی دهی منظم بر اساس نوع value
+                if isinstance(value, dict):
+                    f.write(f"    {key} :\n")
+                    for k, v in value.items():
+                        f.write(f"        '{k}': {repr(v)},\n")
+                elif value is None:
+                    f.write(f"    {key}: None,\n")
+                else:
+                    # اگر چیزی غیر از دیکشنری یا None بود (مثلا رشته)
+                    f.write(f"    {key}: {repr(value)},\n")
+            f.write(f"{divider}\n\n")

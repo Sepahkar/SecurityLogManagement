@@ -41,17 +41,21 @@ urlpatterns = [
     # اضافه/حذف کردن گروه اطلاع رسانی به/از نوع درخواست
     path('change-type/<int:change_type_id>/notify-group/<str:operation_type>/<int:notify_group_id>/', views.change_type_notify_group_management, name='change_type_notify_group_management'),
     
+    # نمایش فرم تسک
+    path('task/<int:request_task_id>/', views.task_view, name='task_view'),
+    
+    
     # انتخاب تسک (برای مجری/تستر)
-    path('task/select/<int:request_id>/<int:task_id>/', views.task_select_view, name='task_select'),
+    path('task/select/<int:request_id>/<int:request_task_id>/', views.task_select_view, name='task_select'),
     
     # گزارش تسک (برای مجری/تستر)
-    path('task/report/<int:request_id>/<int:task_id>/', views.task_report_view, name='task_report'),
+    path('task/report/<int:request_id>/<int:request_task_id>/', views.task_report_view, name='task_report'),
     
     # عملیات روی درخواست (تایید/رد/بازگشت)
     path('request/action/<int:request_id>/<str:action>/', views.request_action_view, name='request_action'),
     
     # عملیات روی تسک (تایید/رد/بازگشت)
-    path('task/action/<int:request_id>/<int:task_id>/<str:action>/', views.task_action_view, name='task_action'),
+    path('task/action/<int:request_id>/<int:request_task_id>/<str:action>/', views.task_action_view, name='task_action'),
     
     # مشاهده درخواست (فقط خواندنی)
     path('request/view/<int:request_id>/', views.request_view_view, name='request_view'),

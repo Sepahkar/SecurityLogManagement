@@ -5795,3 +5795,106 @@ TypeError: FormManager.__init__() got an unexpected keyword argument 'request_id
 2025-11-04 22:34:57,078 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-11-04 22:35:20,608 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-11-04 22:35:25,074 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-07 11:52:08,452 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/558/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+TypeError: task_view() got an unexpected keyword argument 'reqeust_task_id'. Did you mean 'request_task_id'?
+2025-11-07 11:53:34,593 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-07 11:53:47,467 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/558/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+TypeError: task_view() got an unexpected keyword argument 'reqeust_task_id'. Did you mean 'request_task_id'?
+2025-11-07 11:54:15,849 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\urls.py changed, reloading.
+2025-11-07 11:56:19,635 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-07 11:56:51,135 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/558/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 464, in task_view
+    return JsonResponse({'success': False, 'message': obj_task.error_messager})
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Task' object has no attribute 'error_messager'. Did you mean: 'error_message'?
+2025-11-07 11:57:00,268 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:14:06,778 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:14:16,181 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:16:20,164 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-11-07 12:24:05,112 - WARNING - Not Found: /favicon.ico
+2025-11-07 12:24:39,833 - WARNING - Not Found: /favicon.ico
+2025-11-07 12:29:12,525 - WARNING - Not Found: /favicon.ico
+2025-11-07 12:32:09,928 - WARNING - Not Found: /favicon.ico
+2025-11-07 12:33:45,812 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:33:46,063 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/558/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 464, in task_view
+    return render(request, 'ConfigurationChangeRequest/error.html',{'return-url': '/ConfigurationChangeRequest', 'message': obj_task.error_message})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\backends\django.py", line 33, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 481, in parse
+    raise self.error(token, e)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 479, in parse
+    filter_expression = self.compile_filter(token.contents)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 597, in compile_filter
+    return FilterExpression(token, self)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\template\base.py", line 698, in __init__
+    raise TemplateSyntaxError(
+    ...<2 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '-url' from 'return-url'
+2025-11-07 12:34:01,420 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:34:32,857 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2025-11-07 12:34:56,235 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-11-07 12:37:38,234 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-11-07 12:41:06,396 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:41:06,638 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/558/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 476, in task_view
+    # «ê— ›—„ «‰ Œ«»  ”ò »«‘œ
+  File "D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 498, in task_select_view
+AttributeError: 'FormManager' object has no attribute 'load_task_data'
+2025-11-07 12:42:34,297 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:42:43,766 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-11-07 12:42:56,079 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.

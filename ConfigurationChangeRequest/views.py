@@ -13,77 +13,79 @@ def get_current_user(request):
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
-        request_id = 167
-        from . import models as m
-        objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
-        
-        if objRequest:
-            requestor = objRequest.requestor_nationalcode.national_code
-            rel_manger = objRequest.related_manager_nationalcode.national_code
-            manager = objRequest.direct_manager_nationalcode.national_code
-            commitee = objRequest.committee_user_nationalcode.national_code if objRequest.committee_user_nationalcode else None
-            # استخراج همه تسک‌های مربوط به این درخواست
-            tasks = m.RequestTask.objects.filter(request_id=request_id)
-            Task = []
-
-            for task in tasks:
-                # پیدا کردن اولین مجری (RoleCode='E') و اولین تستر (RoleCode='T') برای هر تسک
-                executor_user = task.requesttaskuser_set.filter(user_role_code='E').first()
-                tester_user = task.requesttaskuser_set.filter(user_role_code='T').first()
-
-                executor_name = executor_user.user_nationalcode.national_code if executor_user else ''
-                tester_name = tester_user.user_nationalcode.national_code if tester_user else ''
-
-                Task.append([executor_name, tester_name])
-            # حالا Task[i][0] مجری و Task[i][1] تستر تسک iام است (i از 0 شروع می‌شود)
-            print(Task)
+        force_user = ''
+        if force_user != '':
+            request_id = 167
+            from . import models as m
+            objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
             
-        else:
-            requestor = '1280419180'
-            manager = '1379150728'
-            rel_manger = '0081578091'
-            commitee = '5228300880'
+            if objRequest:
+                requestor = objRequest.requestor_nationalcode.national_code
+                rel_manger = objRequest.related_manager_nationalcode.national_code
+                manager = objRequest.direct_manager_nationalcode.national_code
+                commitee = objRequest.committee_user_nationalcode.national_code if objRequest.committee_user_nationalcode else None
+                # استخراج همه تسک‌های مربوط به این درخواست
+                tasks = m.RequestTask.objects.filter(request_id=request_id)
+                Task = []
 
-            task1_executor = '6309920952'
-            task1_test = '0074322060'
+                for task in tasks:
+                    # پیدا کردن اولین مجری (RoleCode='E') و اولین تستر (RoleCode='T') برای هر تسک
+                    executor_user = task.requesttaskuser_set.filter(user_role_code='E').first()
+                    tester_user = task.requesttaskuser_set.filter(user_role_code='T').first()
 
-            task2_executor = '0063425750'
-            task2_test = ''
+                    executor_name = executor_user.user_nationalcode.national_code if executor_user else ''
+                    tester_name = tester_user.user_nationalcode.national_code if tester_user else ''
 
-            task3_executor = '0074322060'
-            task3_test = '6309920952'
+                    Task.append([executor_name, tester_name])
+                # حالا Task[i][0] مجری و Task[i][1] تستر تسک iام است (i از 0 شروع می‌شود)
+                print(Task)
+                
+            else:
+                requestor = '1280419180'
+                manager = '1379150728'
+                rel_manger = '0081578091'
+                commitee = '5228300880'
 
-            task4_executor = '0080556787'
-            task4_test = '6000091631'
+                task1_executor = '6309920952'
+                task1_test = '0074322060'
 
-        # حالا بر اساس مرحله، کاربر جاری را مشخص می کنیم
-        if objRequest:
-            if objRequest.status_code == 'DRAFTD':
-                current_user = requestor
-            elif objRequest.status_code == 'DIRMAN':
-                current_user = manager
-            elif objRequest.status_code == 'RELMAN':
-                current_user = rel_manger
-            elif objRequest.status_code == 'COMITE':
-                current_user = commitee
-            elif objRequest.status_code == 'DOTASK':
-                # اینجا نخستین تسکی که وضعیت آن TASFIN یا TASFAL نیست را پیدا می کنیم.
-                first_valid_task = None
-                for idx, task in enumerate(tasks):
-                    if task.status_code not in ['TASFIN', 'TASFAL']:
-                        first_valid_task = (idx, task)
-                        break
+                task2_executor = '0063425750'
+                task2_test = ''
 
-                if first_valid_task is not None:
-                    idx, task_obj = first_valid_task
-                    if task_obj.status_code in ['EXESEL', 'EXERED', 'DEFINE']:
-                        current_user = Task[idx][0]  # مجری
+                task3_executor = '0074322060'
+                task3_test = '6309920952'
+
+                task4_executor = '0080556787'
+                task4_test = '6000091631'
+
+            # حالا بر اساس مرحله، کاربر جاری را مشخص می کنیم
+            if objRequest:
+                if objRequest.status_code == 'DRAFTD':
+                    current_user = requestor
+                elif objRequest.status_code == 'DIRMAN':
+                    current_user = manager
+                elif objRequest.status_code == 'RELMAN':
+                    current_user = rel_manger
+                elif objRequest.status_code == 'COMITE':
+                    current_user = commitee
+                elif objRequest.status_code == 'DOTASK':
+                    # اینجا نخستین تسکی که وضعیت آن TASFIN یا TASFAL نیست را پیدا می کنیم.
+                    first_valid_task = None
+                    for idx, task in enumerate(tasks):
+                        if task.status_code not in ['TASFIN', 'TASFAL']:
+                            first_valid_task = (idx, task)
+                            break
+
+                    if first_valid_task is not None:
+                        idx, task_obj = first_valid_task
+                        if task_obj.status_code in ['EXESEL', 'EXERED', 'DEFINE']:
+                            current_user = Task[idx][0]  # مجری
+                        else:
+                            current_user = Task[idx][1]  # تستر
                     else:
-                        current_user = Task[idx][1]  # تستر
-                else:
-                    current_user = ''  # اگر تسک معتبری نبود
-        else:     
-            current_user = requestor
+                        current_user = ''  # اگر تسک معتبری نبود
+            else:     
+                current_user = requestor
 
     if current_user == '':
         current_user = '1280419180'
@@ -308,7 +310,7 @@ def request_view(request, request_id:int):
     
     # اگر درخواست معتبر باشد، باید بررسی کنیم که کدام فرم باید برای این کاربر باز شود
     form_manager = FormManager(current_user_national_code=current_user_nationalcode, id=request_id)   
-    result = form_manager.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+    result = request_obj.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
     
     # وضعیت فرم را به دست می آوریم. وضعیت پیش فرض درج است
     mode = result.get('mode', 'INSERT')
@@ -384,18 +386,10 @@ def request_view(request, request_id:int):
     # اگر فرم درخواست کامل فقط خواندنی باشد
     elif form == 'RequestFull-Readonly':
         return request_full_view(request, request_id, data, True)
-    
-    # اگر فرم لیست تسک ها باشد
-    elif form == 'TaskList':
-        return task_list_view(request, request_obj)
 
-    # اگر فرم انتخاب تسک باشد
-    elif form == 'TaskSelect':
-        return task_select_view(request, request_obj, request_obj.current_task, mode)
-    
-    # اگر فرم گزارش تسک باشد
-    elif form == 'TaskReport':
-        return task_report_view(request, request_obj, request_obj.current_task, mode)
+    # اگر فرم لیست تسک ها باشد
+    if form == 'TaskList':
+        return task_list_view(request, request_obj)
     
     # در غیر این صورت، فرم پیش‌فرض برای ایجاد درخواست بارگذاری می شود
     return request_create(request)
@@ -440,12 +434,61 @@ def request_full_view(request, request_id, data, readonly=False):
     else:
         return render(request, 'ConfigurationChangeRequest/request-full.html', data)
 
+def task_view(request, request_task_id:int):
+    """
+    این تابع اصلی برای مشاهده اطلاعات مربوط به  تسک تعریف شده ذیل یک درخواست است
+    شناسه تسک درخواست (با شناسه تسک فرق دارد) به صورت پارامتر ارسال می شود
+    بر مبنای وضعیت تسک، و کاربر جاری تصمیم می گیریم که کدام فرم به کاربر نمایش داده شود
+    TaskSelect : این فرم برای مجریان یا تسترها نمایش داده می شود. آنها می توانند تسک را جهت انجام انتخاب نمایند
+    TaskReport : این فرم برای مجری و یا تستر منتخب (کسی که تسک را جهت اجرا انتخاب کرده است) نشان داده می شود تا وی گزارش انجام را وارد کند
+    در صورتی که سایر افراد مجاز (مدیر مربوطه یا کمیته) بخواهند به این فرم ها دسترسی پیدا کنند
+    دسترسی آنها از نوع فقط خواندنی به همین فرم ها خواهد بد
+
+    Args:
+        request (http request): شی request است که شامل اطلاعات مربوط به فرم ها و کاربر جاری و ... می باشد
+        request_task_id (int): شناسه تسک درخواست (با شناسه تسک فرق دارد)
+
+    Returns:
+        _type_: بنا به وضعیت، فرم مربوطه را رندر می کند و یا پیام خطا را ارسال می نماید
+    """
+    # کاربر جاری را به دست می آوریم
+    current_user = get_current_user(request)
+    
+    # یک نمونه از شی تسک ایجاد می کنیم
+    obj_task = Task(request_task_id=request_task_id, current_user=current_user)
+
+    # اگر چنین درخواستی وجود نداشته باشد، باید پیام خطا به کاربر بدهیم
+    if obj_task.request_task_id is None or obj_task.request_task_id < 0:
+        return render(request, 'ConfigurationChangeRequest/404.html', {'success':False, 'message':'شناسه تسک درخواست معتبر نیست'})        
+
+    # حالا کنترل می کنیم که آیا خطایی رخ داده است یا خیر
+    if obj_task.error_message and obj_task.error_message != '':
+        return render(request, 'ConfigurationChangeRequest/error.html',{'return_url': '/ConfigurationChangeRequest', 'message': obj_task.error_message})
+    
+    # اول باید مشخص کنیم که چه فرمی و در چه حالتی باید نمایش داده شود
+    result = obj_task.check_form_status()
+
+    # وضعیت فرم را به دست می آوریم. وضعیت پیش فرض نامعتبر است
+    mode = result.get('mode', 'INVALID')
+    # نوع فرم را به دست می آوریم، نوع پیش فرض، نامعتبر است
+    form = result.get('form', 'Invalid')
+    
+    # اگر فرم انتخاب تسک باشد
+    if form == 'TaskSelect':
+        return task_select_view(request, obj_task.obj_request, obj_task, mode)
+    
+    # اگر فرم گزارش تسک باشد
+    elif form == 'TaskReport':
+        return task_report_view(request, obj_task.obj_request, obj_task, mode)    
+    
+    # در صورتی که دسترسی غیرمجاز باشد
+    return render(request, 'ConfigurationChangeRequest/403.html', {'success':False, 'message':'دسترسی مجاز نمی باشد'})        
+
 def task_select_view(request, request_obj:Request, task_obj:Task, mode:str='READONLY'):
     """
     انتخاب تسک (برای مجری/تستر)
     """
     current_user_nationalcode =  get_current_user(request)
-    form_manager = FormManager(current_user_nationalcode)
     
     if request.method == 'POST':
         # تسک توسط کاربر جاری انتخاب شده است
@@ -453,7 +496,7 @@ def task_select_view(request, request_obj:Request, task_obj:Task, mode:str='READ
         return JsonResponse({'success': result.get('success',True), 'message': result.get('message','')})
     
     # بارگذاری داده‌های تسک
-    data = form_manager.load_task_data(request_obj, task_obj, current_user_nationalcode)
+    data = task_obj.load_task_data(request_obj, task_obj, current_user_nationalcode)
     data['mode'] = mode
     return render(request, 'ConfigurationChangeRequest/request-task-select.html', data)
 
@@ -480,7 +523,6 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     گزارش تسک (برای مجری/تستر)
     """
     current_user_nationalcode =  get_current_user(request)
-    form_manager = FormManager(current_user_nationalcode)
 
     if request.method == 'POST':
         # دریافت گزارش تسک
@@ -506,7 +548,7 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
             return JsonResponse({'success': False, 'message': result['message']})
 
     # بارگذاری داده‌های تسک
-    data = form_manager.load_task_data(request_obj, task_obj, current_user_nationalcode)
+    data = task_obj.load_task_data(request_obj, task_obj, current_user_nationalcode)
     data['mode'] = mode
     return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
 
