@@ -156,7 +156,8 @@ class Cartable:
             receivers_list.append({'national_code':user_national_code, 'role_id':role_id, 'team_code':team_code})
 
         # ارسال می کنیم
-        result = send_document(doc_id=self.doc_id, sender_nationalcode=sender,
+        result = send_document(doc_id=self.doc_id,         
+                               sender_nationalcode=sender,
                                inbox_owners_nationalcode=receivers_list, 
                                flow_step=flow_step, 
                                new_doc_state=new_doc_state, 
@@ -205,6 +206,8 @@ class FormManager:
     """
 
     request_obj:"Request" = None
+    change_type_obj:"ChangeType" = None
+    task_obj: "Task" = None
     error_message: str = None
     request_id: int = -1
     change_type_id: int = -1
@@ -216,13 +219,35 @@ class FormManager:
                             # T : تسک
     
 
-    def __init__(self,current_user_national_code:str, id: int = -1, object_type:str='R'):
+    def __init__(self,current_user_national_code:str, id: int = -1, object_type:str='R', obj:object=None):
         self.current_user_national_code = current_user_national_code
         self.request_obj = None
         self.error_message = None
-        self.request_id = id if id and id > 0 and object_type == 'R' else -1
-        self.change_type_id = id if id and id > 0 and object_type == 'C' else -1
-        self.task_id = id if id and id > 0 and object_type == 'T' else -1
+        
+        # اگر نوع شی درخواست باشد، و شناسه آن معتبر باشد
+        if object_type == 'R':
+            self.request_id = id 
+            if obj:
+                self.request_obj = obj
+            else:
+                self.request_obj = Request(current_user_national_code, id, self)
+            
+        
+        # اگر نوع شی نوع تغییر باشد و شناسه آن معتبر باشد
+        if object_type == 'C':
+            self.change_type_id = id 
+            if obj:
+                self.change_type_obj = obj
+            else:
+                self.change_type_obj = ChangeType(current_user_national_code, id, self)
+        
+        # اگر نوع شی تسک باشد و شناسه آن معتبر باشد
+        if object_type == 'T':
+            self.task_id = id                         
+            if obj:
+                self.task_obj = obj
+            else:
+                self.task_obj = Task(id, current_user_national_code, self)
 
     def __get_team_role(self, team_role: str, value: str):
         """
@@ -424,10 +449,7 @@ class FormManager:
         # در صورتی که فرم درخواست باشد
         # وضعیت جاری فرم را به دست می آوریم
         if record_type == 'R':
-            form_status = self.check_request_form_status(
-                user_nationalcode=user_nationalcode,
-                request_id=request_id,
-            )
+            form_status = self.request_obj.check_form_status()
             form_mode = form_status["mode"]
             form_name = form_status["form"]
 
@@ -2669,7 +2691,7 @@ class Task:
     
     reject_description:str=''
 
-    def __init__(self, request_task_id, current_user:str, obj_request: "Request"=None):
+    def __init__(self, request_task_id, current_user:str, obj_request: "Request"=None, obj_form_manager: FormManager=None):
         try:
             self.obj_error_log = ErrorLog(current_user_national_code=current_user,
                                           request_obj=obj_request,
@@ -2718,10 +2740,17 @@ class Task:
                     self.obj_request = Request(current_user, self.request_id)
 
                 # سایر اشیا را ایجاد می کنیم
-                self.obj_form_manager = FormManager(current_user, request_task_id, 'T')
+                if obj_form_manager:
+                    self.obj_form_manager = obj_form_manager
+                else:
+                    self.obj_form_manager = FormManager(current_user, request_task_id, 'T', self)
+    
                 self.obj_cartable = Cartable(self.doc_id, 'SLM.CCR.TAS')
                 self.obj_notification = Notification(obj_request=self.obj_request, obj_task=self)
-                
+                self.obj_error_log = ErrorLog(current_user_national_code=current_user,
+                                          request_obj=self.obj_request,
+                                          task_obj=self,
+                                          change_type_obj=None)                
                 # مقداردهی اطلاعات کاربران
                 self.get_users_info()
 
@@ -2814,6 +2843,7 @@ class Task:
 
         # دریافت اطلاعات تسک
         form_data["task"] = self
+        
 
         # دریافت اطلاعات کاربران تسک
         form_data["task_users"] = self.users
@@ -2876,7 +2906,15 @@ class Task:
         receivers = [] #لیست دریافت کنندگان سند
         email_templates = []# لیست دریافت کنندگان ایمیل
         exit_cartable_national_code= [] # لیست کسانی که مدرک باید از کارتابل آنها خارج شود
-        
+        sender = '' # برای خارج کردن از کارتابل، باید فرستنده نیز مشخص باشد
+
+        # شی کاربر جاری را به دست می آوریم
+        current_user = m.User.objects.filter(national_code=self.current_user_nationalcode).first()
+        # اگر کاربر جاری وجود نداشته باشد
+        if not current_user:
+            self.obj_error_log.error_log('next_step',{'action_code':action_code},'کاربر جاری معتبر نمی باشد')
+            return {'success':False, 'message':'کاربر جاری معتبر نمی باشد'}
+            
         if action_code == "CON":
             # از مرحله تعریف تسک به اجرا
             # با تایید مدیر مربوطه/کاربر کمیته تسک ها وارد مرحله اجرا می شوند
@@ -2894,6 +2932,8 @@ class Task:
             # سند از کارتابل سایر مجریان خارج می شود
             elif status_code == "EXERED":
                 new_status = "EXESEL"
+                # کاربر جاری مجری انتخاب شده است
+                self.selected_executor = current_user
                 u = self.selected_executor.fullname_gender if self.selected_executor else '-'
                 message = f'تسک {self.task_title} توسط {u} جهت اجرا انتخاب شد.<br/> وضعیت در انتظار تنظیم گزارش توسط ایشان می باشد'
                 # برای مجری که تسک را انتخاب کرده است، سند را ارسال می نماییم
@@ -2903,7 +2943,11 @@ class Task:
                 # ارسال ایمیل به مدیر مربوطه
                 email_templates.append({'code':'EXE.SEL.REM','receivers':[self.obj_request.user_related_manager.national_code]})
                 # وقتی یک مجری تسکی را انتخاب می کند باید از کارتابل بقیه خارج شود
-                exit_cartable_national_code = [user.national_code for user in self.executors]        
+                exit_cartable_national_code = [user.national_code for user in self.executors]  
+                # برای خارج کردن از کارتابل باید فرستنده مشخص شود
+                # در این حالت فرستنده یا کاربر کمیته و یا مدیر مستقیم است
+                if self.obj_request:
+                    sender = self.obj_request.user_committee.national_code if self.obj_request.user_committee else self.obj_request.user_related_manager.national_code
                 
             # تسک توسط مجری منتخب خاتمه می یابد
             # اگر تستر داشته باشد برای تسترها ارسال می شود
@@ -2929,6 +2973,9 @@ class Task:
                     email_templates.append({'code':'EXE.FIN.REM', 'receivers':[self.obj_request.user_related_manager.national_code]})
                     # تسک از کارتابل مجری منتخب خارج می شود
                     exit_cartable_national_code = [self.selected_executor.national_code]
+                    # برای خارج کردن از کارتابل باید ارسال کننده مشخص شود
+                    # ارسال کننده در اینجا خود مجری است که برایش ارسال شده است
+                    sender = self.selected_executor.national_code
 
             # یکی از تسترها تسک را جهت تست انتخاب می کند
             # سند برای تستر منتخب ارسال می شود
@@ -2936,6 +2983,8 @@ class Task:
             # سند از کارتابل بقیه تسترها خارج می شود
             elif status_code == "TESRED":
                 new_status = "TESSEL"
+                # کاربر جاری تستر منتخب است
+                self.selected_tester = current_user
                 message = f'تسک {self.task_title} توسط {self.selected_tester.fullname_gender} جهت انجام تست انتخاب شد.<br/> وضعیت در انتظار تنظیم گزارش توسط ایشان می باشد'
                 # سند برای تستر منتخب باید ارسال شود
                 receivers =  [self.selected_tester.national_code]       
@@ -2944,7 +2993,10 @@ class Task:
                 # ایمیل به مدیر مربوطه
                 email_templates.append({'code':'TES.SEL.REM', 'receivers':[self.obj_request.user_related_manager.national_code]})
                 # وقتی یک تستر تسکی را انتخاب می کند باید از کارتابل بقیه خارج شود
-                exit_cartable_national_code = [user.national_code for user in self.testers]        
+                exit_cartable_national_code = [user.national_code for user in self.testers]
+                # برای خارج کردن از کارتابل باید ارسال کننده مشخص شود
+                # در این مورد ارسال کننده مجری منتخب بوده است
+                sender = self.selected_executor.national_code   
 
             # با تایید تست، تسک خاتمه می یابد.
             # فقط اطلاع رسانی به مدیر مربوطه انجام می شود
@@ -3019,6 +3071,7 @@ class Task:
                 email_templates.append({'code':'TES.REJ.REM','receivers':[self.obj_request.user_related_manager.national_code]})
                                 
         else:
+            self.obj_error_log.error_log('next_step',{'action_code':action_code}, "نوع عملیات درخواستی معتبر نمی‌باشد")
             return {"success": False, "message": "نوع عملیات درخواستی معتبر نمی‌باشد"}
 
 
@@ -3035,6 +3088,7 @@ class Task:
                 team_code = user_obj.get_team_code
                 role_id = user_obj.get_role_id
             except Exception as e:
+                self.obj_error_log.error_log('next_step',{'action_code':action_code}, 'امکان تشخیص کاربر جاری وجود ندارد')
                 return {'success':False, 'message':'امکان تشخیص کاربر جاری وجود ندارد'}
 
             
@@ -3050,6 +3104,7 @@ class Task:
             opinion = m.ConstValue.objects.filter(Code=opinion_code).first()
             
             if not opinion:
+                self.obj_error_log.error_log('next_step',{'action_code':action_code}, "کد نوع عملیات در مقادیر ثابت تعریف نشده است.")
                 return {"success": False, "message": "کد نوع عملیات در مقادیر ثابت تعریف نشده است."}
             
             # تاریخ و زمان جاری را به دست می آوریم
@@ -3061,6 +3116,8 @@ class Task:
                 return result
             
             if 'record_data' not in result:
+                self.obj_error_log.error_log('next_step',{'action_code':action_code},'امکان واکشی اطلاعات رکورد وجود ندارد')
+                
                 return {'success':False, 'message': 'امکان واکشی اطلاعات رکورد وجود ندارد'}
 
             data = result['record_data']                
@@ -3082,7 +3139,14 @@ class Task:
                     user_reject_description = self.reject_description
                 )
             except Exception as e:
+                self.obj_error_log.error_log('next_step',{'action_code':action_code}, f"خطا در ذخیره گردش مدرک: {str(e)}")
+                
                 return {"success": False, "message": f"خطا در ذخیره گردش مدرک: {str(e)}"}
+
+
+            # حالا باید از کارتابل افرادی هم خارج کنیم
+            for user in exit_cartable_national_code:
+                result = self.obj_cartable.exit_cartable(user, sender)
 
             # به کارتابل نفرات بعدی ارسال می کنیم
             for receiver in receivers:
@@ -3090,9 +3154,6 @@ class Task:
                 if not result.get('success', False):
                     return result
 
-            # حالا باید از کارتابل افرادی هم خارج کنیم
-            for user in exit_cartable_national_code:
-                result = self.obj_cartable.exit_cartable(user)
 
             # اگر ارسال به کارتابل موفقیت آمیز بوده است، باید اطلاع رسانی را هم انجام دهیم
             # یک نمونه از کلاس اطلاع 
@@ -3102,6 +3163,7 @@ class Task:
                 for receiver in receivers:
                     result = obj_notify.send_email(email_code=email.get('code',''), reciver=receiver)
                     if not result.get('success', False):
+                        self.obj_error_log.error_log('next_step',{'action_code':action_code}, result.get('message',''))
                         return result
                     
                 
@@ -3111,6 +3173,7 @@ class Task:
                 for receiver in receivers:
                     result = self.obj_cartable.exit_cartable(receiver=receiver, sender_national_code=self.current_user_nationalcode)
                     if not result.get('success', False):
+                        self.obj_error_log.error_log('next_step',{'action_code':action_code}, result.get('message',''))
                         return result                
 
             # وضعیت جدید را در شی مربوطه به روز می کنیم
@@ -3139,29 +3202,14 @@ class Task:
             }
             
         else:
+            self.obj_error_log.error_log('next_step',{'action_code':action_code},"تغییر وضعیت برای حالت فعلی این تسک امکان‌پذیر نیست")
 
             return {
                 "success": False,
                 "message": "تغییر وضعیت برای حالت فعلی این تسک امکان‌پذیر نیست",
             }
 
-    def exit_cartable(self, user_nationalcode: str):
-        """
-        خارج کردن تسک از کارتابل سایر کاربران به جز کاربر جاری
-        """
-        # یک نمونه از شی کارتابل را ایجاد می کنیم
-        # از این شی برای خارج کردن سند از کارتابل سایر مجریان استفاده می شود
-        obj_cartable = Cartable()
-        # شناسه سند را از جدول درخواست به دست آورده و در شی کارتابل به روز می کنیم
-        obj_cartable.doc_id = self.request_task_instance.request.doc_id
-        # به ازای هر کاربر به جز کاربر جاری باید مدرک را از کارتابل آنها خارج کنیم
-        for user in self.users:
-            if user.national_code != user_nationalcode:
-                result = obj_cartable.exit_from_cartable(national_code=user.national_code)
-                if not result.get('success'):
-                    return result
 
-        return {'success':True}
     
     def select_task(self, user_nationalcode: str) -> dict:
         """
@@ -3175,32 +3223,28 @@ class Task:
             ).first()
 
             if not request_task_user:
+                self.obj_error_log.error_log('select_task',{'user_nationalcode':user_nationalcode},'کاربر جاری مجری تسک نیست')
                 return {"success": False, "message": "شما مجری یا تستر این تسک نیستید"}
 
 
-            # باید رکوردی در جدول کاربران انتخاب کننده تسک درج کنیم
-            task_user_selected = m.RequestTaskUserSelected.objects.create(
-                pickup_date = datetime.now(),
-                request_task_user = request_task_user
-            )
-
-
-            # خارج کردن از کارتابل سایر کاربران
-            result = self.exit_cartable( user_nationalcode)
-            if not result.get('success'):
-                return result
 
             # حالا به تسک را به مرحله بعدی می بریم
             result = self.next_step('CON')
             
-            # اگر همه چیز اوکی باشد باید ذخیره کنیم
+            # اگر همه چیز اوکی باشد باید انتخاب این تسک توسط این کاربر را ذخیره کنیم
             if result.get('success'):
+                # باید رکوردی در جدول کاربران انتخاب کننده تسک درج کنیم
+                task_user_selected = m.RequestTaskUserSelected.objects.create(
+                    pickup_date = datetime.now(),
+                    request_task_user = request_task_user
+                )
                 task_user_selected.save()
                 
             return result
 
         except Exception as e:
-            return {"success": False, "message": f"خطا در انتخاب تسک: {str(e)}"}
+            self.obj_error_log.error_log('select_task',{'user_nationalcode':user_nationalcode},f"خطا در انتخاب تسک: {str(e)}")
+            return {"success": False, "message": f"خطا در انتخاب تسک: <br/>{str(e)}"}
 
     def start_task(self):
         """
@@ -3431,11 +3475,11 @@ class Task:
         # انجام تسک ناموفق بوده است
         elif self.status_code == 'FINISH' or self.status_code == 'FAILED':
             # اگر کاربر تستر منتخب باشد
-            if self.current_user_nationalcode == self.selected_tester.national_code:
+            if self.selected_tester and self.current_user_nationalcode == self.selected_tester.national_code:
                 form = 'TaskReport'
                 mode = "READONLY"
             # اگر کاربر مجری منتخب باشد
-            elif self.current_user_nationalcode == self.selected_executor.national_code:
+            elif self.selected_executor and self.current_user_nationalcode == self.selected_executor.national_code:
                 form = 'TaskReport'
                 mode = "READONLY"
             # اگر مدیر مربوطه یا کاربر کمیته باشد
@@ -3467,13 +3511,14 @@ class ChangeType:
     error_message:str = ''
     objform_manager:FormManager = None
     obj_error_log: "ErrorLog" = None
-    current_user_natioal_code:str= ''
+    current_user_national_code:str= ''
     
-    def __init__(self,current_user_national_code:str, change_type_id=None):
+    def __init__(self,current_user_national_code:str, change_type_id=None, obj_form_manager: FormManager=None):
         obj_error_log = ErrorLog(current_user_national_code= current_user_national_code,
                                  request_obj=None,
                                  task_obj=None,
-                                 change_type_obj=self)
+                                 change_type_obj=self,
+                                 )
         
         if change_type_id and change_type_id > 0:
             self.change_type_instance = m.ChangeType.objects.filter(id=change_type_id).first()
@@ -3481,8 +3526,11 @@ class ChangeType:
                 self.error_message = 'شناسه نوع تغییر نامعتبر است'
             else:
                 self.change_type_id = change_type_id
-        self.objform_manager = FormManager(current_user_national_code=current_user_national_code, id=-1, object_type='R')
-        self.current_user_natioal_code = current_user_national_code
+        if obj_form_manager:
+            self.objform_manager = obj_form_manager
+        else:
+            self.objform_manager = FormManager(current_user_national_code=current_user_national_code, id=-1, object_type='C',obj=self)
+        self.current_user_national_code = current_user_national_code
     
     def __repr__(self) -> str:
         return f'{self.change_type_instance.change_title}'
@@ -3732,20 +3780,22 @@ class Request:
     def _sync_status_title(self, status_code: str = None):
         code = status_code if status_code is not None else self.status_code
         try:
-            self.status_title = dict(
-                m.ConfigurationChangeRequest.STATUS_CHOICES
-            ).get(code, code)
+            self.status_title = dict(m.ConfigurationChangeRequest.STATUS_CHOICES).get(code, code)
         except Exception:
             self.status_title = code
 
-    def __init__(self, current_user_national_code, request_id):
+    def __init__(self, current_user_national_code, request_id, obj_form_manager: FormManager=None):
         self.obj_error_log = ErrorLog(current_user_national_code=current_user_national_code,
-                                        request_obj=self,
-                                        task_obj=None,
-                                        change_type_obj=None)        
+                            request_obj=self,
+                            task_obj=None,
+                            change_type_obj=None)        
         
         # یک نمونه از شی FormManager را ایجاد می کنیم
-        self.obj_form_manager = FormManager(current_user_national_code, request_id)
+        if obj_form_manager:
+            self.obj_form_manager = obj_form_manager
+        else:
+            self.obj_form_manager = FormManager(current_user_national_code, request_id, self)
+            
         self.current_user_national_code = current_user_national_code
 
         self.error_message = None
@@ -3878,9 +3928,8 @@ class Request:
         # یک نمونه از شی مدیریت فرم را ایجاد می کنیم
         obj_form_manager = self.obj_form_manager if self.obj_form_manager else FormManager(self.current_user_national_code, -1)
         # مشخص می کنیم که وضعیت فعلی فرم چیست؟
-        form_status = obj_form_manager.check_request_form_status(
-            user_nationalcode=user_nationalcode,
-            request_id=self.request_id)
+        form_status = self.check_form_status()
+        
         form_data["mode"] = form_status["mode"]
         form_data["form"] = form_status["form"]
 
@@ -4369,7 +4418,7 @@ class Request:
         
         return {'success':True}
     
-# این تابع بررسی می کند که با توجه به وضعیت فعلی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
+# این تابع بررسی می کند که با توجه به وضعیت ف39علی سیستم، کدام فرم و در چه حالتی برای این کاربر باید به چه صورتی نمایش داده شود؟
     def check_form_status(self ) -> dict:
         """
         این تابع با توجه به کاربر جاری و شناسه درخواست، مشخص می کند که کدام فرم و در چه حالتی باید باز شود
@@ -5864,12 +5913,12 @@ class Notification:
             user (m.User]): آرایه ای از افرادی که باید اطلاع رسانی برای آنها انجام شود
         """
         variable_values = {}
-        to_users_emails = [str]
+        to_users_emails = []
         
         # آدرس ایمیل افراد را استخراج می کنیم 
         for user in users:
             # ادرس ایمیل را باید اصلاح کنیم
-            email = user.usermame.split('@')[0] + '@iraneit.com'
+            email = user.username.split('@')[0] + '@iraneit.com'
             to_users_emails.append(email)
         
         # حالا متغییرها را به روز می کنیم
@@ -5909,7 +5958,7 @@ class Notification:
         variable_values['task_status'] = self.current_task.status_title
         
         # فراخوانی را انجام می دهیم
-        result = send_email(template_code=template_code, variable_value=variable_values, to=to_users_emails, cc=None, bcc=None)
+        result = send_email_api(template_code=template_code, variable_value=variable_values, to=to_users_emails, cc=[], bcc=[])
         
         # رکورد متناظر را در جدول سوابق اطلاع رسانی درج می کنیم
         nl = m.NotificationLog.objects.create(
@@ -6011,16 +6060,19 @@ class ErrorLog:
         if request_obj : 
             self.request_obj = request_obj
             id = request_obj.request_id
-        
+            self.form_manager_obj = FormManager(self.current_user_national_code, id, 'R', request_obj)
+            
         if task_obj:
             self.task_obj = task_obj
             id = task_obj.request_task_id
+            self.form_manager_obj = FormManager(self.current_user_national_code, id, 'T', task_obj)
             
         if change_type_obj:
             self.change_type_obj = change_type_obj
             id = change_type_obj.change_type_id
+            self.form_manager_obj = FormManager(self.current_user_national_code, id, 'C', change_type_obj)
         
-        self.form_manager_obj = FormManager(self.current_user_national_code, id)
+        
         
         
     def error_log(self, function_name:str, parameter_values:dict,error_desciption:str):
@@ -6028,12 +6080,13 @@ class ErrorLog:
         id = 'E-0' # شناسه اصلی است.  این شناسه می تواند شناسه درخواست یا تسک یا نوع تغییر باشد
         
         # در صورتی که اطلاعات درخواست موجود باشد
+        request_info = None
         if self.request_obj:
             request_info = {
                 'id': self.request_obj.request_id,
-                'title': self.request_obj.request_instance.change_title,
-                'change_type_id': self.request_obj.request_instance.change_type_id,
-                'change_type_title': self.request_obj.request_instance.change_type,
+                'title': self.request_obj.request_instance.change_title if  self.request_obj.request_instance else None,
+                'change_type_id': self.request_obj.request_instance.change_type_id if  self.request_obj.request_instance else None,
+                'change_type_title': self.request_obj.request_instance.change_type.change_type_title if  self.request_obj.request_instance  and  self.request_obj.request_instance.change_type else None,
                 'status_code': self.request_obj.status_code,
                 'status_title': self.request_obj.status_title,
                 'doc_id': self.request_obj.obj_cartable.doc_id
@@ -6041,6 +6094,7 @@ class ErrorLog:
             id = f'R-{self.request_obj.request_id}'
             
         # درصورتی که اطلاعات تسک موجود باشد
+        task_info = None
         if self.task_obj:
             task_info = {
                 'reqeust_task_id':self.task_obj.request_task_id,
@@ -6049,24 +6103,23 @@ class ErrorLog:
                 'doc_id': self.task_obj.doc_id,
                 'task_title': self.task_obj.task_title,
                 'task_executors': self.task_obj.executors_names,
-                'task_selected_executor': self.task_obj.selected_executor.fullname,
+                'task_selected_executor': self.task_obj.selected_executor.fullname if self.task_obj.selected_executor else None,
                 'task_testers': self.task_obj.testers_names,
-                'task_selected_tester': self.task_obj.selected_tester.fullname,
+                'task_selected_tester': self.task_obj.selected_tester.fullname if self.task_obj.selected_tester else None,
                 'status_code': self.task_obj.status_code,
                 'status_title': self.task_obj.status_title,
             }
-            if self.request_object:
-                id = f'R-{self.request_obj.request_id}-T-{self.task_obj.request_task_id}'
-            else:
-                id = f'T-{self.task_obj.request_task_id}'
+            id = f'R-{self.task_obj.obj_request.request_id}-T-{self.task_obj.request_task_id}'
         
+        change_type_info = None
         if self.change_type_obj:
             change_type_info = {
                 'id': self.change_type_obj.request_id,
-                'title': self.change_type_obj.request_instance.change_title,
+                'title': self.change_type_obj.request_instance.change_title if  self.change_type_obj.request_instance else None,
             }
             id = f'C-{self.change_type_obj.change_type_id}'
 
+        current_user = None
         if self.current_user_national_code:
             user_obj:m.User = m.User.objects.filter(national_code = self.current_user_national_code).first()
             
@@ -6099,8 +6152,7 @@ class ErrorLog:
         
         # حالا در فایل ذخیره می کنیم
         self.error_log_file(id, information)
-        
-    
+
     def error_log_file(self, main_id: str, info: dict):
         """
         این تابع یک دیتا به صورت دیکشنری می گیرد و اطلاعات را در یک فایل متنی ذخیره می کند
@@ -6191,38 +6243,79 @@ class ErrorLog:
        
         """
         import os
-        try:
-            import jdatetime
-        except ImportError:
-            from datetime import datetime
+
+        # مطمئن شویم که BASE_DIR مقدار دارد و string است و به طور صحیح resolve شود
         from Config import settings
+
+        # جدا از jdatetime و datetime، ابتدا base_dir را resolve کن
+        base_dir = getattr(settings, 'BASE_DIR', None)
+        if not base_dir:
+            # مسیر را برای اطمینان current working directory قرار می‌دهیم
+            base_dir = os.getcwd()
 
         # تعیین نام فایل به فرمت خواسته شده (main_id-jalalidate-error.log)
         try:
-            jalali_date = jdatetime.datetime.now().strftime('%Y%m%d')
+            import jdatetime
+            jalali_now = jdatetime.datetime.now()
+            jalali_date = jalali_now.strftime('%Y%m%d')
+            jalali_time = jalali_now.strftime('%H%M%S')
         except Exception:
-            # اگر کتابخانه jdatetime در دسترس نبود، تاریخ شمسی را به میلادی جایگزین می‌کنیم
             from datetime import datetime
-            jalali_date = datetime.now().strftime('%Y%m%d')
+            now = datetime.now()
+            jalali_date = now.strftime('%Y%m%d')
+            jalali_time = now.strftime('%H%M%S')
 
-        filename = f"{main_id}-{jalali_date}-error.log"
-        log_dir = os.path.join(settings.BASE_DIR, 'static', 'ConfigurationChangeRequest', 'logs')
-        os.makedirs(log_dir, exist_ok=True)
+        filename = f"{main_id}-{jalali_date}-{jalali_time}-error.log"
+        # مسیر پوشه و فایل لاگ باید در root پروژه و فولدر logs ساخته شود نه داخل static
+        log_dir = os.path.join(str(base_dir), 'logs')
+
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+        except Exception as e:
+            # اگر خطا داشتیم، یک فولدر fallback در کنار فایل فعال بساز
+            fallback_log_dir = os.path.join(os.getcwd(), 'ConfigurationChangeRequest_logs_fallback')
+            os.makedirs(fallback_log_dir, exist_ok=True)
+            log_dir = fallback_log_dir
+
         path = os.path.join(log_dir, filename)
 
         divider = "-" * 56
-        with open(path, "a", encoding="utf-8") as f:
-            for key in ['request_info', 'task_info', 'change_type_info', 'current_user', 'execution_info']:
-                f.write(f"{divider}\n")
-                value = info.get(key)
-                # خروجی دهی منظم بر اساس نوع value
-                if isinstance(value, dict):
-                    f.write(f"    {key} :\n")
-                    for k, v in value.items():
-                        f.write(f"        '{k}': {repr(v)},\n")
-                elif value is None:
-                    f.write(f"    {key}: None,\n")
-                else:
-                    # اگر چیزی غیر از دیکشنری یا None بود (مثلا رشته)
-                    f.write(f"    {key}: {repr(value)},\n")
-            f.write(f"{divider}\n\n")
+
+        try:
+            with open(path, "a", encoding="utf-8") as f:
+                for key in ['request_info', 'task_info', 'change_type_info', 'current_user', 'execution_info']:
+                    f.write(f"{divider}\n")
+                    value = info.get(key)
+                    # خروجی دهی منظم بر اساس نوع value
+                    if isinstance(value, dict):
+                        f.write(f"    {key} :\n")
+                        for k, v in value.items():
+                            f.write(f"        '{k}': {repr(v)},\n")
+                    elif value is None:
+                        f.write(f"    {key}: None,\n")
+                    else:
+                        # اگر چیزی غیر از دیکشنری یا None بود (مثلا رشته)
+                        f.write(f"    {key}: {repr(value)},\n")
+                f.write(f"{divider}\n\n")
+        except Exception as ex:
+            # در صورتی که به هر دلیل نشد فایل بسازد، یکبار دیگر در پوشه fallback امتحان می‌کنیم
+            fallback_log_dir = os.path.join(os.getcwd(), 'ConfigurationChangeRequest_logs_fallback')
+            try:
+                os.makedirs(fallback_log_dir, exist_ok=True)
+                fallback_path = os.path.join(fallback_log_dir, filename)
+                with open(fallback_path, "a", encoding="utf-8") as f:
+                    for key in ['request_info', 'task_info', 'change_type_info', 'current_user', 'execution_info']:
+                        f.write(f"{divider}\n")
+                        value = info.get(key)
+                        if isinstance(value, dict):
+                            f.write(f"    {key} :\n")
+                            for k, v in value.items():
+                                f.write(f"        '{k}': {repr(v)},\n")
+                        elif value is None:
+                            f.write(f"    {key}: None,\n")
+                        else:
+                            f.write(f"    {key}: {repr(value)},\n")
+                    f.write(f"{divider}\n\n")
+            except Exception as exc:
+                # آخرین راهکار لاگ خطا در کنسول
+                print("خطا در ایجاد فایل لاگ:", exc)

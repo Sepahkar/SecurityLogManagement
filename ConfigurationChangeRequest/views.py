@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect
+
+from ConfigurationChangeRequest.models import RequestTask
 from .business import ChangeType, Request, FormManager, Task
 from django.http import JsonResponse
 import logging
@@ -13,10 +15,33 @@ def get_current_user(request):
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
-        force_user = ''
-        if force_user != '':
-            request_id = 167
-            from . import models as m
+        request_task_id = -1
+        request_id = 168
+        from . import models as m
+
+        if request_task_id > 0:
+            obj_task:RequestTask = m.RequestTask.objects.filter(id=request_task_id).first()
+            if obj_task:
+                # کاربران تسک را انتخاب می کنیم
+                obj_task_user = m.RequestTaskUser.objects.filter(request_task_id=request_task_id)
+                # کاربران منتخب تسک را انتخاب می کنیم
+                obj_task_selected_user = m.RequestTaskUserSelected.objects.filter(request_task_user__in = obj_task_user)
+                # وضعیت تسک را بررسی می کنیم
+                # اگر در یکی از حالت های زیر باشد باید نخستین مجری را انتخاب کنیم
+                if obj_task.status_code in ('DEFINE', 'EXERED','EXESEL'):
+                    obj_task_user = obj_task_user.filter(user_role_code='E').first()
+                    if obj_task_user:
+                        current_user = obj_task_user.user_nationalcode.national_code
+                # اگر در وضعیت تستر باشیم
+                elif obj_task.status_code in ('TESRED', 'TESSEL'):
+                    obj_task_user = obj_task_user.filter(user_role_code='T').first()
+                    if obj_task_user:
+                        current_user = obj_task_user.user_nationalcode.national_code
+                else:    
+                    # در غیر این صورت مدیر مربوطه را قرار می دهیم
+                    current_user = obj_task.request.related_manager_nationalcode.national_code
+                    
+        elif request_id > 0:
             objRequest = m.ConfigurationChangeRequest.objects.filter(id=request_id).first()
             
             if objRequest:
@@ -28,18 +53,6 @@ def get_current_user(request):
                 tasks = m.RequestTask.objects.filter(request_id=request_id)
                 Task = []
 
-                for task in tasks:
-                    # پیدا کردن اولین مجری (RoleCode='E') و اولین تستر (RoleCode='T') برای هر تسک
-                    executor_user = task.requesttaskuser_set.filter(user_role_code='E').first()
-                    tester_user = task.requesttaskuser_set.filter(user_role_code='T').first()
-
-                    executor_name = executor_user.user_nationalcode.national_code if executor_user else ''
-                    tester_name = tester_user.user_nationalcode.national_code if tester_user else ''
-
-                    Task.append([executor_name, tester_name])
-                # حالا Task[i][0] مجری و Task[i][1] تستر تسک iام است (i از 0 شروع می‌شود)
-                print(Task)
-                
             else:
                 requestor = '1280419180'
                 manager = '1379150728'
@@ -68,25 +81,9 @@ def get_current_user(request):
                     current_user = rel_manger
                 elif objRequest.status_code == 'COMITE':
                     current_user = commitee
-                elif objRequest.status_code == 'DOTASK':
-                    # اینجا نخستین تسکی که وضعیت آن TASFIN یا TASFAL نیست را پیدا می کنیم.
-                    first_valid_task = None
-                    for idx, task in enumerate(tasks):
-                        if task.status_code not in ['TASFIN', 'TASFAL']:
-                            first_valid_task = (idx, task)
-                            break
-
-                    if first_valid_task is not None:
-                        idx, task_obj = first_valid_task
-                        if task_obj.status_code in ['EXESEL', 'EXERED', 'DEFINE']:
-                            current_user = Task[idx][0]  # مجری
-                        else:
-                            current_user = Task[idx][1]  # تستر
-                    else:
-                        current_user = ''  # اگر تسک معتبری نبود
-            else:     
-                current_user = requestor
-
+        else:     
+            current_user = requestor
+            
     if current_user == '':
         current_user = '1280419180'
 
@@ -264,7 +261,7 @@ def request_create(request):
         
         if validation_result['success']:
             # ایجاد درخواست
-            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=-1)
+            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=-1, obj_form_manager=form_manager)
             result = request_obj.create_request(form_data, current_user_nationalcode)
             
             if result['success']:
@@ -309,8 +306,8 @@ def request_view(request, request_id:int):
         return JsonResponse({'success': False, 'message': request_obj.error_message})
     
     # اگر درخواست معتبر باشد، باید بررسی کنیم که کدام فرم باید برای این کاربر باز شود
-    form_manager = FormManager(current_user_national_code=current_user_nationalcode, id=request_id)   
-    result = request_obj.check_form_status(user_nationalcode=current_user_nationalcode, request_id=request_id)
+    form_manager = FormManager(current_user_national_code=current_user_nationalcode, id=request_id, object_type='R', obj=request_obj)   
+    result = request_obj.check_form_status()
     
     # وضعیت فرم را به دست می آوریم. وضعیت پیش فرض درج است
     mode = result.get('mode', 'INSERT')
@@ -412,7 +409,7 @@ def request_full_view(request, request_id, data, readonly=False):
         
         if validation_result['success']:
             # به‌روزرسانی درخواست
-            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id)
+            request_obj = Request(current_user_national_code=current_user_nationalcode, request_id=request_id, obj_form_manager=form_manager)
             result = request_obj.update_request(form_data)
             
             if result['success']:
@@ -493,26 +490,37 @@ def task_select_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     if request.method == 'POST':
         # تسک توسط کاربر جاری انتخاب شده است
         result = task_obj.select_task(current_user_nationalcode)
-        return JsonResponse({'success': result.get('success',True), 'message': result.get('message','')})
+        data = {
+                'success': result.get('success',True), 
+                'message': result.get('message',''), 
+                'task_id':task_obj.request_task_id
+                }
+        if not result.get('success',False):
+            return JsonResponse(data)
+    
+        # اگر انتخاب تسک با موفقیت انجام شده باشد باید صفحه گزارش را نمایش دهیم
+        return render(request, 'ConfigurationChangeRequest/request-task-list.html', data)
     
     # بارگذاری داده‌های تسک
-    data = task_obj.load_task_data(request_obj, task_obj, current_user_nationalcode)
+    data = task_obj.load_task_data()
     data['mode'] = mode
+    data['form_type'] = 'task_select'
     return render(request, 'ConfigurationChangeRequest/request-task-select.html', data)
 
 def task_list_view(request, request_obj:Request):
     """
     مشاهده لیست تسک ها
     """
-    current_user_nationalcode =  get_current_user(request)
+    current_user_nationalcode = get_current_user(request)
 
     # بارگذاری داده‌های تسک
     # data = form_manager.load_task_data(request_obj, task_obj, current_user_nationalcode)
     data = {'success':True,
             'is_task':True,
             'mode':'READONLY',
-        'request':request_obj.request_instance,
-        'tasks':request_obj.tasks
+            'request':request_obj.request_instance,
+            'tasks':request_obj.tasks,
+            'form_type':'task_list'
         
     }
     return render(request, 'ConfigurationChangeRequest/request-task-list.html', data)
@@ -550,6 +558,7 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     # بارگذاری داده‌های تسک
     data = task_obj.load_task_data(request_obj, task_obj, current_user_nationalcode)
     data['mode'] = mode
+    data['form_type'] = 'task_report'    
     return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
 
 
@@ -574,12 +583,12 @@ def request_notify_group_management(request, request_id:int, operation_type:str,
     """
     
     current_user_national_code = get_current_user(request)
-    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, id=-1)
     result = obj_form_manager.notify_group_managment(request_id, notify_group_id, operation_type, 'R')
     return JsonResponse(result)
 
 
-def request_task_management(request, request_id:int, operation_type:str, task_id:int)-> dict:
+def request_task_management(request, request_id:int, operation_type:str, request_task_id:int)-> dict:
     """
     این تابع افراد ذیل یک تسک را مدیریت می کند.
 
@@ -599,8 +608,8 @@ def request_task_management(request, request_id:int, operation_type:str, task_id
     
     """
     current_user_national_code = get_current_user(request)
-    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
-    result = obj_form_manager.task_management(request_id, task_id, operation_type, 'R')
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, id=-1)
+    result = obj_form_manager.task_management(request_id, request_task_id, operation_type, 'R')
     return JsonResponse(result)
 
 
@@ -627,7 +636,7 @@ def request_task_user_management(request, request_task_id:int)-> dict:
     user_team_code = request.POST.get('team_code', '')
     user_role_code = request.POST.get('role_code', 'E')
         
-    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, id=-1)
     result = obj_form_manager.task_user_management(request_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'R')
     return JsonResponse(result)
 
@@ -652,7 +661,7 @@ def change_type_notify_group_management(request, change_type_id:int, operation_t
     """
     
     current_user_national_code = get_current_user(request)
-    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, id=-1)
     result = obj_form_manager.notify_group_managment(change_type_id, notify_group_id, operation_type, 'T')
     return JsonResponse(result)
 
@@ -677,7 +686,7 @@ def change_type_task_management(request, change_type_id:int, operation_type:str,
     """
     
     current_user_national_code = get_current_user(request)
-    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, id=-1)
     result = obj_form_manager.task_management(change_type_id, task_id, operation_type, 'T')
     return JsonResponse(result)
 
@@ -708,7 +717,7 @@ def change_type_user_management(request, change_type_task_id:int)-> dict:
     user_role_code = request.POST.get('role_code', 'E')
     
     
-    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, request_id=-1)
+    obj_form_manager = FormManager(current_user_national_code=current_user_national_code, id=-1)
     result = obj_form_manager.task_user_management(change_type_task_id, operation_type, user_national_code,user_role_id, user_team_code, user_role_code, 'T')
     return JsonResponse(result)
 
@@ -727,7 +736,7 @@ def change_type_create(request):
     obj_change_type:ChangeType = ChangeType(current_user, -1)
     
     if request.method == 'POST':
-        obj_form_manager = FormManager(current_user_national_code=current_user,request_id=-1)
+        obj_form_manager = FormManager(current_user_national_code=current_user,id=-1, object_type='C', obj=obj_change_type)
 
         # دریافت اطلاعات فرم
         form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)      
@@ -797,7 +806,7 @@ def change_type_view(request, change_type_id):
     # اگر حالت به روزرسانی باشد
     # و داده های جدید ارسال شده باشند
     if request.method == 'POST':
-        obj_form_manager = FormManager(current_user_national_code=current_user,id=-1)
+        obj_form_manager = FormManager(current_user_national_code=current_user,id=-1, object_type='C', obj=obj_change_type)
 
         # دریافت اطلاعات فرم
         form_data = get_full_form_data(request=request, objFormManager=obj_form_manager)      

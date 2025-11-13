@@ -745,7 +745,7 @@ class TaskUser(models.Model):
         managed = True  
     
     def __str__(self) -> str:
-        return self.task      
+        return self.user_nationalcode      
 
 
 class RequestTask(models.Model):
@@ -836,7 +836,7 @@ class RequestTaskUser(models.Model):
         managed = True  
     
     def __str__(self) -> str:
-        return f'{self.request_task}'
+        return f'{self.user_nationalcode}'
 
 
 class RequestTaskUserSelected(models.Model):

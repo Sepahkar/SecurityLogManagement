@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+                                                <html lang="fa" dir="rtl">
+                                                <head>
+                                                <meta charset="UTF-8">
+                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                <title>REM.CON.EXE</title>
+                                                </head>
+                                                <body>
+                                                <style>
+                        .email-body
+                        {
+                                font-family: tahoma;
+                                font: size 12pt;
+                                color: black;
+                                direction: rtl;
+                        }
+                        .text
+                        {
+                                color:blue;
+                                font-style: italic;
+                        }
+                        .title
+                        {
+                                font-weight: bold;
+                        }
+                </style>
+                <div class="email-body">
+                        <span class="title">{{ receiver_fullname }}</span>
+                        <p>
+                                با عرض سلام و خسته نباشید؛
+                        </p>
+                        <p>
+                                به استحضار می رساند که فرم انجام تسک <span class="text">«انجام تنظیمات فایروال»</span>
+                                مربوط به درخواست تغییرات با عنوان <span class="text">«اعمال تغییر در سرورهای هورایزن تست 22 آبان ساعت 14:09»</span>
+                                 از نوع <span class="text">«اعمال تغییر در سرورهای هورایزن»</span>
+                                 توسط {{sender}} جهت انجام برای شما ارسال گردیده است.
+                                شما می توانید از طریق کارتابل ورودی در <a href='http://eit-app' title='سامانه های اطلاعاتی فناوران'>http://eit-app</a>
+                                 و یا لینک زیر به آن دسترسی پیدا کرده و نسبت به انتخاب تسک، جهت اجرا اقدام نمایید.
+                        </p>
+                        <p>
+                                <a href="http://127.0.0.1:8000/ConfigurationChangeRequest/168" title="اعمال تغییر در سرورهای هورایزن تست 22 آبان ساعت 14:09">http://127.0.0.1:8000/ConfigurationChangeRequest/168</a>
+                        </p>
+                        <p>
+                                در صورت نیاز به راهنمای تکمیل فرم می توانید روی <a href="http://127.0.0.1:8000/static/ConfigurationChangeRequest/help/COMITE.pdf" title="راهنمای کاربری مرحله اظهار نظر کمیته">این لینک</a> کلیک کنید.
+                        </p>
+                </div>
+                                                </body>
+                                                </html>

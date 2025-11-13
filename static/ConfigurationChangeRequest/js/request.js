@@ -305,81 +305,6 @@ function toggleFieldValidation(selector, isValid, errorMessage, showError) {
         });
     }
     
-// function handleFormSubmit(e, actionType = null) 
-// {
-
-//     // جلوگیری از ارسال چندباره
-//     if (typeof isSubmitting !== 'undefined' && isSubmitting) {
-//         return;
-//     }
-    
-//     const message_manager_obj = new message_manager()
-//     // اعتبارسنجی فرم (با نمایش خطاها)
-//     if (!validateForm(true)) {
-//         // toggleSubmitButton(false);
-//         message_manager_obj.showWarningMessage('لطفاً خطاهای فرم را برطرف کنید.');
-//         return;
-//     }
-    
-//     const form_manager_obj = new form_manager()
-//     // نمایش loading
-//     form_manager_obj.showLoading(actionType);
-    
-//     // داده های فرم را دریافت می کنیم
-//     const formEl = $('#requestForm')[0];
-//     const formData = new FormData(formEl);
-
-//     // در صورتی که action
-//     // نامعلوم باشد از مقدار پیش فرض استفاده می کنیم
-//     const resolvedAction = actionType || 'start';
-//     // action را در داده ها قرار می دهیم
-//     formData.set('action', resolvedAction);
-    
-//     // فرم را ارسال می کنیم
-//     fetch('', {
-//         method: 'POST',
-//         body: formData,
-//         headers: {
-//             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-//         }
-//     })
-//     // در صورتی که جوابی از سرور دریافت نشود
-//     .then(response => {
-//         if (!response.ok) {
-//             throw new Error('خطا در ارتباط با سرور');
-//         }
-//         return response.json();
-//     })
-//     // در صورتی که جواب دریافت شود
-//     .then(data => {
-
-//         form_manager_obj.hideLoading();
-//         // در صورتی که عملیات موفقیت آمیز باشد
-//         if (data.success) {
-//             // پیام موفقیت آمیز را نمایش می دهیم
-//             const message = data.message
-//             message_manager_obj.showSuccessMessage(message);
-//             // حالت فرم را می خوانیم
-//             var formMode = data.mode
-//             // در صورتی که شناسه درخواست وجود داشته باشد
-//             if (data.request_id) {
-//                 setTimeout(() => {
-//                     window.location.href = '/ConfigurationChangeRequest/' + data.request_id + '/';
-//                 }, 2000);
-//             }
-//         } 
-//         // اگر خطا بازگشت شده باشد
-//         else {
-//             message_manager_obj.showErrorMessage('خطا: ' + data.message);
-//         }
-//     })
-//     // اگر خطای مدیریت نشده ای رخ داده باشد
-//     .catch(error => {
-//         form_manager_obj.hideLoading();
-//         console.error('Error:', error);
-//         message_manager_obj.showErrorMessage('خطا در ارسال درخواست: ' + error.message);
-//     });
-// }
 
 function handleFormSubmit(e, actionType = null) {
     e.preventDefault(); // جلوگیری از رفتار پیش‌فرض فرم
@@ -480,18 +405,32 @@ function handleFormSubmit(e, actionType = null) {
     AJAX_call(submitUrl,formData,
         function on_success(data)
         {
+            // پیام موفقیت آمیز بودن را به کاربر نمایش می دهیم
             message_manager_obj.showSuccessMessage(data.message);
 
             if (data.request_id) {
                 var new_address =  window.location.origin + '/ConfigurationChangeRequest/' 
-                if (form_type != 'request')
-                    new_address += 'change-type/'
+                switch (form_type) {
+                    case 'request':
+                        new_address += data.request_id + '/';
+                        break;
+                    case 'task_select':
+                        new_address += 'task/' + data.task_id;
+                        break;
+                    case 'change_type':
+                        // شناسه نوع تغییر هم در متغییر زیر ارسال می شود
+                        // request_id
+                        new_address += 'change-type/' + data.request_id + '/';
+                        break;
+                    default:
+                        break;
+                }
                 
-                new_address += data.request_id + '/';
-
+                form_manager_obj.hideLoading(actionType);
+                // بعد از 5 ثانیه به صفحه جدید منتقل می شویم
                 setTimeout(() => {
                     window.location.href =new_address;
-                }, 2000);
+                }, 5000);
             }
 
             isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
@@ -502,45 +441,10 @@ function handleFormSubmit(e, actionType = null) {
         {
             // message_manager_obj.showErrorMessage('خطا: ' + data.message);
             isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
+            form_manager_obj.hideLoading(actionType);
         })
 
 
-    // // ارسال درخواست
-    // fetch(submitUrl, {
-    //     method: 'POST',
-    //     body: formData,
-    //     headers: {
-    //         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-    //     }
-    // })
-    // .then(response => {
-    //     if (!response.ok) {
-    //         throw new Error('خطا در ارتباط با سرور: ' + response.status);
-    //     }
-    //     return response.json();
-    // })
-    // .then(data => {
-    //     form_manager_obj.hideLoading(actionType);
-    //     if (data.success) {
-    //         message_manager_obj.showSuccessMessage(data.message);
-
-    //         if (data.request_id) {
-    //             setTimeout(() => {
-    //                 window.location.href = window.location.origin + '/ConfigurationChangeRequest/' + data.request_id + '/';
-    //             }, 2000);
-    //         }
-    //     } else {
-    //         message_manager_obj.showErrorMessage('خطا: ' + data.message);
-    //     }
-    // })
-    // .catch(error => {
-    //     form_manager_obj.hideLoading(actionType);
-    //     console.log('Error during fetch:', error);
-    //     message_manager_obj.showErrorMessage('خطا در ارسال درخواست: ' + error.message);
-    // })
-    // .finally(() => {
-    //     isSubmitting = false; // بازگرداندن پرچم به حالت اولیه
-    // });
 }
 
 
