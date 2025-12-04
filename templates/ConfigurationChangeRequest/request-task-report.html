@@ -18,19 +18,23 @@
             <div class="row mb-3">
                 <div class="col-2">
                     <span class="label-title">شناسه تسک:</span>
-                    <span class="label-text">{{ task.id }}</span>
+                    <span class="label-text">{{ task.task_id }}</span>
                 </div>
                 <div class="col-2">
                     <span class="label-title">ترتیب تسک:</span>
-                    <span class="label-text">{{ task.order_number }}</span>
+                    <span class="label-text">{{ task.request_task_id }}</span>
                 </div>                
                 <div class="col-2">
                     <span class="label-title">تاریخ انتخاب:</span>
-                    <span class="label-text">{{ task.pickup_date|to_jalali }}</span>
+                    {%if tasl.status_code == 'EXESEL'%}
+                        <span class="label-text">{{ task.executor_select_date }}</span>
+                    {%else%}
+                        <span class="label-text">{{ task.tester_select_date }}</span>
+                    {%endif%}
                 </div>
                 <div class="col-6">
                     <span class="label-title">عنوان تسک:</span>
-                    <span class="label-text">{{ task.title }}</span>
+                    <span class="label-text">{{ task.task_title }}</span>
                 </div>
             </div>
         </div>

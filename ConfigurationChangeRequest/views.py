@@ -8,6 +8,24 @@ import json
 import inspect
 from Config import settings
 
+from django.http import HttpResponse
+
+def whoami(request):
+    return HttpResponse(f"{request.user.username} / nationalcode: {getattr(request.user, 'nationalcode', None)}")
+
+
+def test_ok(request):
+    return HttpResponse("OK TEST")
+
+from django.http import JsonResponse
+
+def debug_headers(request):
+    return JsonResponse({
+        "path": request.path,
+        "host": request.get_host(),
+        "meta": {k: v for k, v in request.META.items()},
+    })
+
 
 def get_current_user(request):
     current_user = '1280419180'
@@ -16,7 +34,7 @@ def get_current_user(request):
         current_user = request.user.national_code
     else:
         request_task_id = -1
-        request_id = 168
+        request_id = 170
         from . import models as m
 
         if request_task_id > 0:
@@ -82,7 +100,7 @@ def get_current_user(request):
                 elif objRequest.status_code == 'COMITE':
                     current_user = commitee
         else:     
-            current_user = requestor
+            current_user = '0081578091'
             
     if current_user == '':
         current_user = '1280419180'
@@ -499,7 +517,7 @@ def task_select_view(request, request_obj:Request, task_obj:Task, mode:str='READ
             return JsonResponse(data)
     
         # اگر انتخاب تسک با موفقیت انجام شده باشد باید صفحه گزارش را نمایش دهیم
-        return render(request, 'ConfigurationChangeRequest/request-task-list.html', data)
+        return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
     
     # بارگذاری داده‌های تسک
     data = task_obj.load_task_data()
@@ -556,7 +574,7 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
             return JsonResponse({'success': False, 'message': result['message']})
 
     # بارگذاری داده‌های تسک
-    data = task_obj.load_task_data(request_obj, task_obj, current_user_nationalcode)
+    data = task_obj.load_task_data()
     data['mode'] = mode
     data['form_type'] = 'task_report'    
     return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)

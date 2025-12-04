@@ -10,7 +10,7 @@ from django.core.signals import request_started
 from django.db.models.functions import Upper
 from django.db.transaction import commit
 # from requests import request
-from datetime import datetime
+
 
 from urllib3 import request
 # from ConfigurationChangeRequest.views import get_current_user
@@ -20,15 +20,16 @@ from Utility.APIManager.Portal import terminate_flow
 # from ConfigurationChangeRequest.views import commitee
 from . import models as m
 import jdatetime
+
 from . import validator
 from django.core.exceptions import ValidationError
-from datetime import datetime
 from Utility.APIManager.Portal.register_document import ver2 as register_document
 from Utility.APIManager.Portal.send_document import ver2 as send_document
 from Utility.APIManager.Portal.exit_cartable import ver1 as exit_cartable
 from Utility.APIManager.Portal.finish_flow import ver2 as finish_flow
 from Utility.APIManager.Portal.document_flow_url import ver1 as document_flow_url
 from Utility.APIManager.Portal.comment_url import ver1 as comment_url
+
 
 
 # from Utility.APIManager.Portal.update_document_state_code import (
@@ -2674,14 +2675,16 @@ class Task:
     selected_executor: m.User = None
     executor_done_date:datetime = None
     executor_done_time:str= ''
-    executor_report: str=''    
+    executor_report: str=''
+    executor_select_date: str = ''
     
     testers: List[m.User] = []
     testers_names:str = ''
     selected_tester: m.User = None
     tester_done_date:datetime = None
     tester_done_time:str= ''
-    tester_report: str=''    
+    tester_report: str=''
+    tester_select_date:str = ''
 
     current_user_nationalcode:str = ''
     user_type:str = '' # نوع کاربر یکی از موارد زیر است:
@@ -2795,7 +2798,7 @@ class Task:
             self.testers_names = '، '.join([user.fullname_gender for user in self.testers])
 
             # مقداردهی مجری منتخب (در صورت وجود)
-            selected_executor_obj = m.RequestTaskUserSelected.objects.filter(
+            selected_executor_obj:m.RequestTaskUserSelected = m.RequestTaskUserSelected.objects.filter(
                 request_task_user__request_task__task_id=self.task_id, 
                 request_task_user__request_task__request_id = self.request_id, 
                 request_task_user__user_role_code="E"
@@ -2807,7 +2810,10 @@ class Task:
                 self.executor_done_date = selected_executor_obj.user_done_date
                 self.executor_done_time = selected_executor_obj.user_done_time
                 self.executor_report = selected_executor_obj.user_report_description
-
+                self.executor_select_date = selected_executor_obj.pickup_date
+                if selected_executor_obj.pickup_date:
+                    self.executor_select_date = jdatetime.date.fromgregorian(date=selected_executor_obj.pickup_date)
+                
             # مقداردهی تستر منتخب (در صورت وجود)
             selected_tester_obj = m.RequestTaskUserSelected.objects.filter(
                 request_task_user__request_task__task_id=self.task_id, 
@@ -2821,6 +2827,8 @@ class Task:
                 self.tester_done_date = selected_tester_obj.user_done_date
                 self.tester_done_time = selected_tester_obj.user_done_time
                 self.tester_report = selected_tester_obj.user_report_description
+                if selected_tester_obj.pickup_date:
+                    self.tester_select_date = jdatetime.date.fromgregorian(date=selected_tester_obj.pickup_date)
                 
 
         except m.RequestTaskUser.DoesNotExist:
@@ -4621,7 +4629,7 @@ class Request:
 
     def create_request(self, form_data: dict, user_nationalcode: str) -> dict:
         """
-        این تابع برای ایجاد یک نسخه جدید از درخواست مورد استفاده قرار می گیرد
+        این تابع برای ایجاد یک رکورد جدید در جدول درخواست مورد استفاده قرار می گیرد
 
         Args:
             form_data (dict): این متغییر دربردارنده کلیه اطلاعات فرم در زمان ایجاد است
@@ -4864,7 +4872,7 @@ class Request:
         ('COMITE', 'اظهار نظر کمیته'): CON->DOTASK, RET->RELMAN, REJ->FAILED
         ('DOTASK', 'انجام تسک ها'): CON->FINISH, REJ->FAILED
         ('FINISH', 'خاتمه یافته'):
-        ('FAILED', 'خاتمه ناموفقیت آمیز'):
+        ('FAILED', 'خاتمه ناموفق'):
 
         Args:
             action_code (str): یک کد سه حرفی است که نوع عملیات انتخاب شده توسط کاربر را مشخص می کند و یکی از مقادیر زیر است:
