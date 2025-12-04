@@ -3852,28 +3852,23 @@ class Request:
                 # مشخصات کاربر درخواست دهنده
                 self.user_requestor = self.request_instance.requestor_nationalcode
                 self.user_requestor_role_id = self.request_instance.requestor_role_id
-                self.user_requestor_team_code = (
-                    self.request_instance.requestor_team_code
-                )
+                self.user_requestor_team_code = self.request_instance.requestor_team_code
+                
 
                 # اطلاعات سایر افراد درگیر
-                self.user_direct_manager = (
-                    self.request_instance.direct_manager_nationalcode
-                )
-                self.user_related_manager = (
-                    self.request_instance.related_manager_nationalcode
-                )
+                self.user_direct_manager = self.request_instance.direct_manager_nationalcode
+
+                self.user_related_manager = self.request_instance.related_manager_nationalcode
+                
 
                 # در شرایطی ممکن است کاربر کمیته تغییر کرده باشد، بایستی اطلاعات کاربر جدید کمیته را به روز کنیم
                 if self.need_committee:
                     committee: m.Committee
-                    committee = (
-                        self.request_instance.committee
-                    )  # فرض بر این است که فیلد committee یک شیء است
+                    committee = self.request_instance.committee
+                      # فرض بر این است که فیلد committee یک شیء است
                     if committee and committee.is_active:
-                        self.request_instance.committee_user_nationalcode = (
-                            committee.administrator_nationalcode
-                        )
+                        self.request_instance.committee_user_nationalcode =   committee.administrator_nationalcode
+                        
                         self.request_instance.save()
                         self.user_committee = committee.administrator_nationalcode
                     else:
@@ -3886,9 +3881,8 @@ class Request:
 
                 # لیست تسک ها را به دست می آوریم
                 # دریافت لیست تسک‌های مربوط به این درخواست
-                tasks = list(
-                    m.RequestTask.objects.filter(request=self.request_instance)
-                )
+                tasks = listm.RequestTask.objects.filter(request=self.request_instance)
+                
                 # به ازای هر یک از این تسک ها یک نمونه از شی 
                 # Task
                 # ایجاد می کنیم و در آرایه 
@@ -3909,9 +3903,8 @@ class Request:
                 self.current_task = next((t for t in self.tasks if t.status_code not in ("FINISH", "FAILED")), None)
 
                 # آیا هیچ تسکی باقی مانده است؟
-                self.has_any_task_left = any(
-                    t.status_code != "FINISH" for t in self.tasks
-                )
+                self.has_any_task_left = anyt.status_code != "FINISH" for t in self.tasks
+                
                 
             except m.ConfigurationChangeRequest.DoesNotExist as e:
                 self.request_instance = None
@@ -4326,6 +4319,7 @@ class Request:
                 )
 
         except Exception as e:
+            self.obj_error_log.log_error(function_name='get_change_type_data', parameter_values={'form_data':form_data}, error_desciption=f"خطا در دریافت اطلاعات نوع تغییر: {str(e)}")
             return {"success": False, "message": f"خطا در دریافت اطلاعات نوع تغییر: {str(e)}"}
 
         return form_data
