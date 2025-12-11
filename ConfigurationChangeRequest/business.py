@@ -105,6 +105,10 @@ class Cartable:
 
     def update_priority(self, new_priority):
         if not self.validate_doc():
+            self.obj_error_log.log_error(function_name='get_change_type_data', 
+            parameter_values={'doc_title':doc_title,'id':id, 'document_owner_national_code':document_owener_national_code, 
+            'current_user_national_code': current_user_national_code, 'receivers':receivers, 'priority':priority }, 
+            error_desciption=f"قبل از به روزرسانی اولویت، سند باید ایجاد شده باشد")
             return {
                 "success": False,
                 "message": "قبل از به روزرسانی اولویت، سند باید ایجاد شده باشد",
@@ -137,6 +141,7 @@ class Cartable:
         """
         # اگر سند وجود نداشته باشد پیام خطا می دهد
         if not self.validate_doc():
+            self.obj_error_log.log_error(function_name='send_cartable', parameter_values={'receivers':receivers, 'sender':sender, 'flow_step':flow_step, 'new_doc_state':new_doc_state}, error_desciption=f"قبل از ارسال، سند باید ایجاد شده باشد:")
             return {
                 "success": False,
                 "message": "قبل از ارسال، سند باید ایجاد شده باشد",
@@ -150,6 +155,9 @@ class Cartable:
             # کاربر مربوطه را پیدا می کنیم
             user_obj:m.User = m.User.objects.filter(national_code=user_national_code).first()
             if not user_obj:
+                self.obj_error_log.log_error(function_name='send_cartable', 
+                parameter_values={'receivers':receivers, 'sender':sender, 'flow_step':flow_step, 'new_doc_state':new_doc_state},
+                error_desciption=f"کاربری با کد ملی {user_national_code} یافت نشد.:")
                 return {'success':False, 'message':f'کاربری با کد ملی {user_national_code} یافت نشد.'}
 
             role_id = user_obj.get_role_id
@@ -3881,7 +3889,7 @@ class Request:
 
                 # لیست تسک ها را به دست می آوریم
                 # دریافت لیست تسک‌های مربوط به این درخواست
-                tasks = listm.RequestTask.objects.filter(request=self.request_instance)
+                tasks = m.RequestTask.objects.filter(request=self.request_instance)
                 
                 # به ازای هر یک از این تسک ها یک نمونه از شی 
                 # Task
@@ -3903,7 +3911,7 @@ class Request:
                 self.current_task = next((t for t in self.tasks if t.status_code not in ("FINISH", "FAILED")), None)
 
                 # آیا هیچ تسکی باقی مانده است؟
-                self.has_any_task_left = anyt.status_code != "FINISH" for t in self.tasks
+                self.has_any_task_left = any(t.status_code != "FINISH" for t in self.tasks)
                 
                 
             except m.ConfigurationChangeRequest.DoesNotExist as e:
@@ -4546,8 +4554,8 @@ class Request:
             # اظهار نظر مدیر مربوطه
             if self.current_user_national_code == self.user_related_manager.national_code:
                 form = "RequestFull"
-                mode = "UPDATE"
-            elif self.current_user_national_code == self.user_committee.national_code:
+                mode = "UPDATE"    
+            elif self.user_committee and self.current_user_national_code == self.user_committee.national_code:
                 form = "RequestFull-Readonly"
                 mode = "READONLY"
             elif self.current_user_national_code in (
@@ -5072,7 +5080,11 @@ class Request:
                     result = task.start_task()
                     if not result['success']:
                         return result
-            
+            # در صورتی که تمامی تسک ها قبلا اجرا شده باشند پیام حطا میدهیم
+            if not result.get('success',False):
+                result['message'] = 'تمامی تسک های مربوط به این درخواست قبلا اجرا شده اند. <br> جهت رفع مشکل با ادمین تماس بگیرید.'
+                self.obj_error_log.error_log(function_name='do_task', parameter_values={'tasks':self.tasks}, error_desciption= result.get('message',''))   
+                return result
             result['message'] = 'کلیه تسک ها برای تمامی مجریان مربوطه ارسال گردید'
             return result
 

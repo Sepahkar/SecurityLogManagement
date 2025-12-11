@@ -28,13 +28,13 @@ def debug_headers(request):
 
 
 def get_current_user(request):
-    current_user = '1280419180'
+    current_user = '0025629123'
     
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
         request_task_id = -1
-        request_id = 170
+        request_id = 174
         from . import models as m
 
         if request_task_id > 0:
