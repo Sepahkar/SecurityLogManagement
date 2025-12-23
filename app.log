@@ -27411,3 +27411,220 @@ RecursionError: maximum recursion depth exceeded
 2025-11-13 14:49:40,145 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2025-11-13 14:50:14,841 - WARNING - Not Found: /ConfigurationChangeRequest/168/static/ConfigurationChangeRequest/favicon.ico
 2025-11-13 14:50:40,830 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-04 13:57:03,329 - WARNING - Not Found: /
+2025-12-04 13:57:40,870 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-12-04 14:04:03,937 - WARNING - Not Found: /ConfigurationChangeRequest/171/static/ConfigurationChangeRequest/favicon.ico
+2025-12-04 14:09:32,045 - WARNING - Not Found: /ConfigurationChangeRequest/170/static/ConfigurationChangeRequest/favicon.ico
+2025-12-04 14:09:58,610 - WARNING - Not Found: /ConfigurationChangeRequest/160/static/ConfigurationChangeRequest/favicon.ico
+2025-12-04 14:10:16,228 - ERROR - Internal Server Error: /ConfigurationChangeRequest/152/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 328, in request_view
+    result = request_obj.check_form_status()
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4556, in check_form_status
+    elif self.current_user_national_code == self.user_committee.national_code:
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-12-04 14:12:27,275 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-04 14:12:51,537 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-04 14:15:04,106 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-04 17:10:39,183 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-04 17:10:52,409 - WARNING - Not Found: /ConfigurationChangeRequest/90/static/ConfigurationChangeRequest/favicon.ico
+2025-12-04 17:11:13,132 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-04 18:35:34,668 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-04 19:52:03,470 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-04 19:52:21,970 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-11 13:08:03,814 - WARNING - Not Found: /
+2025-12-11 13:08:09,013 - WARNING - Not Found: /favicon.ico
+2025-12-11 18:17:46,890 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-12-11 18:32:51,247 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-11 19:08:21,619 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-11 19:11:09,426 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-11 19:12:32,387 - WARNING - Not Found: /ConfigurationChangeRequest/175/static/ConfigurationChangeRequest/favicon.ico
+2025-12-11 19:15:12,195 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-11 19:25:19,488 - ERROR - Internal Server Error: /ConfigurationChangeRequest/175/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 328, in request_view
+    result = request_obj.check_form_status()
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4558, in check_form_status
+    elif self.current_user_national_code == self.user_committee.national_code:
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-12-11 19:25:19,489 - ERROR - Internal Server Error: /ConfigurationChangeRequest/175/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 328, in request_view
+    result = request_obj.check_form_status()
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4558, in check_form_status
+    elif self.current_user_national_code == self.user_committee.national_code:
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-12-11 19:29:34,593 - ERROR - Internal Server Error: /ConfigurationChangeRequest/175/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 328, in request_view
+    result = request_obj.check_form_status()
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4558, in check_form_status
+    elif self.current_user_national_code == self.user_committee.national_code:
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-12-11 19:31:14,667 - ERROR - Internal Server Error: /ConfigurationChangeRequest/175/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 328, in request_view
+    result = request_obj.check_form_status()
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4558, in check_form_status
+    elif self.current_user_national_code == self.user_committee.national_code:
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-12-11 19:31:15,171 - ERROR - Internal Server Error: /ConfigurationChangeRequest/175/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 328, in request_view
+    result = request_obj.check_form_status()
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4558, in check_form_status
+    elif self.current_user_national_code == self.user_committee.national_code:
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-12-11 19:35:53,557 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-11 19:35:53,783 - ERROR - Internal Server Error: /ConfigurationChangeRequest/175/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 328, in request_view
+    result = request_obj.check_form_status()
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4558, in check_form_status
+    elif self.user_committee and self.current_user_national_code == self.user_committee.national_code:
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'national_code'
+2025-12-11 19:38:57,714 - WARNING - Not Found: /ConfigurationChangeRequest/174/static/ConfigurationChangeRequest/favicon.ico
+2025-12-11 21:07:56,773 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-11 21:16:57,629 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-21 14:34:45,290 - WARNING - Not Found: /
+2025-12-21 14:34:55,819 - WARNING - Not Found: /
+2025-12-21 14:35:02,620 - WARNING - Not Found: /
+2025-12-21 14:35:29,540 - WARNING - Not Found: /
+2025-12-21 14:35:32,301 - WARNING - Not Found: /favicon.ico
+2025-12-21 14:35:39,279 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2025-12-21 15:15:12,729 - WARNING - Not Found: /ConfigurationChangeRequest/176/static/ConfigurationChangeRequest/favicon.ico
+2025-12-21 15:23:41,674 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-21 15:59:15,366 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 16:05:33,378 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 16:07:13,178 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 16:08:24,900 - WARNING - Not Found: /ConfigurationChangeRequest/175/static/ConfigurationChangeRequest/favicon.ico
+2025-12-21 16:09:24,406 - WARNING - Not Found: /ConfigurationChangeRequest/170/static/ConfigurationChangeRequest/favicon.ico
+2025-12-21 16:09:49,961 - WARNING - Not Found: /ConfigurationChangeRequest/160/static/ConfigurationChangeRequest/favicon.ico
+2025-12-21 16:11:51,553 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 17:35:46,002 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 17:37:04,209 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 17:40:05,077 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 17:51:25,797 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2025-12-21 17:51:26,081 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': result['message']})
+                                                      ~~~~~~^^^^^^^^^^^
+KeyError: 'message'
+2025-12-21 17:56:15,748 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-21 17:56:16,005 - ERROR - Internal Server Error: /ConfigurationChangeRequest/176/
+Traceback (most recent call last):
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "p:\2\Fan Avaran\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 387, in request_view
+    return JsonResponse({'success': False, 'message': validation_result['message']})
+                                                      ^^^^^^^^^^^^^^^^^
+KeyError: 'message'
+2025-12-22 22:15:28,574 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2025-12-22 22:15:54,360 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2025-12-22 22:52:08,194 - WARNING - Not Found: /ConfigurationChangeRequest/178/static/ConfigurationChangeRequest/favicon.ico
+2025-12-22 22:53:05,773 - INFO - P:\2\Fan Avaran\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.

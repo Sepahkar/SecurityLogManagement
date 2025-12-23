@@ -644,19 +644,13 @@ class FormManager:
             # کنترل کمیته مربوطه و کاربر آن، در صورتی انجام می شود که گزینه نیاز به کمیته دارد انتخاب شده باشد
             if form_data.get("need_committee", False):
                 # شناسه کمیته
-                if (
-                    form_data.get("committee")
-                    and not m.Committee.objects.filter(id=form_data["committee"]).exists()
-                ):
+                committe_id = form_data.get("committee",-1)
+                if (not m.Committee.objects.filter(id=committe_id).exists()):
                     error_message.append("شناسه کمیته نامعتبر است.")
 
                 # کد ملی کاربر کمیته
-                if (
-                    form_data.get("committee_user_nationalcode")
-                    and not m.User.objects.filter(
-                        national_code=form_data["committee_user_nationalcode"]
-                    ).exists()
-                ):
+                committee_user_nationalcode = form_data.get("committee_user_nationalcode","")
+                if (not m.User.objects.filter(national_code=committee_user_nationalcode).exists()):
                     error_message.append("کد ملی دبیر کمیته نامعتبر است.")
 
                 if not form_data.get("committee_user_nationalcode"):

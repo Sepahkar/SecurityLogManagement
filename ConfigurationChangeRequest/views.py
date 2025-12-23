@@ -34,7 +34,7 @@ def get_current_user(request):
         current_user = request.user.national_code
     else:
         request_task_id = -1
-        request_id = 174
+        request_id = 178
         from . import models as m
 
         if request_task_id > 0:
@@ -384,7 +384,7 @@ def request_view(request, request_id:int):
             else:
                 return JsonResponse({'success': False, 'message': result['message']})     
         else:
-            return JsonResponse({'success': False, 'message': result['message']})         
+            return JsonResponse({'success': False, 'message': validation_result['message']})         
         
         
     # بارگذاری داده‌های فرم
