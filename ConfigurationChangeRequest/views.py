@@ -33,7 +33,7 @@ def get_current_user(request):
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
-        request_task_id = -1
+        request_task_id = 603
         request_id = 180
         from . import models as m
 

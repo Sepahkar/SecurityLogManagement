@@ -3186,20 +3186,21 @@ class Task:
                         self.obj_error_log.error_log('next_step',{'action_code':action_code}, result.get('message',''))
                         return result                
 
-            # وضعیت جدید را در شی مربوطه به روز می کنیم
-            self.request_task_instance.status_code = new_status
-            self.request_task_instance.save()           
+                      
             
             
             # حالا باید کنترل کنیم که آیا این تسک آخرین تسک بوده است یا خیر؟
             # برای این کار ابتدا یک نمونه شی درخواست را ایجاد می کنیم
             if new_status in ('FINISH','FAILED'):
-                result = self.request.notify_task_finished(self)
+                result = self.obj_request.notify_task_finished(self)
                 if not result.get('success', False):
                     return result
                 
             
-                    
+             # وضعیت جدید را در شی مربوطه به روز می کنیم
+            self.request_task_instance.status_code = new_status
+            self.request_task_instance.save()
+
             return {
                 "success": True,
                 "message":message,
@@ -4862,10 +4863,10 @@ class Request:
         try: 
             for task in self.tasks:
                 if task.status_code not in ("FINISH", "FAILED"):
-                    return {'success': True , 'message' : f"همه تسک ها تمام نشده است: {str(e)}"}
+                    return {'success': True , 'message' : f"همه تسک ها تمام نشده است"}
             return self.next_step("CON")
         except Exception as e:
-            self.obj_error_log.error_log(function_name='notify_task_finished', parameter_values={'task': task}, error_desciption= result.get('message','خطا در ایجاد درخواست:'))
+            self.obj_error_log.error_log(function_name='notify_task_finished', parameter_values={'task': task}, error_desciption= f"خطا در اطلاع رسانی خاتمه تسک: {str(e)}" )
             return {'success': False , 'message' : f"خطا در اطلاع رسانی خاتمه تسک: {str(e)}"}
 
 
