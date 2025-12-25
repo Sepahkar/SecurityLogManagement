@@ -34,7 +34,7 @@ def get_current_user(request):
         current_user = request.user.national_code
     else:
         request_task_id = -1
-        request_id = 179
+        request_id = 180
         from . import models as m
 
         if request_task_id > 0:
@@ -99,8 +99,10 @@ def get_current_user(request):
                     current_user = rel_manger
                 elif objRequest.status_code == 'COMITE':
                     current_user = commitee
+                else: 
+                    current_user = rel_manger
         else:     
-            current_user = '0081578091'
+            current_user = '1280419180'
             
     if current_user == '':
         current_user = '1280419180'
