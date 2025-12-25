@@ -38,7 +38,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*uel5ub@1-smn^=s!oer6*#t#v$yw5!gg^p_0!b8#i7smri$ae'
+# SECRET_KEY is loaded from environment variables (see line 228)
+# Never hardcode secrets in source code!
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -119,7 +120,7 @@ WSGI_APPLICATION = 'Config.wsgi.application'
 #         "ENGINE": "mssql",  # 'mssql',sql_server.pyodbc
 #         "NAME": "SecurityLogManagement",
 #         "USER": "sa",
-#         "PASSWORD": "Master123",
+#         "PASSWORD": os.getenv("DATABASE_PASSWORD"),  # Never hardcode passwords!
 #         "HOST": "EIT-DJANGO-DB\\DJANGODB",
 #         #"HOST": "EIT-CALSQL\CALSQL",
 
@@ -226,6 +227,8 @@ else:
     print("request.user: ", DEV_USER)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable must be set!")
 JWT_SECRET = SECRET_KEY
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 DATABASES = {

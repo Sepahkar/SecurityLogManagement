@@ -3194,17 +3194,11 @@ class Task:
             # حالا باید کنترل کنیم که آیا این تسک آخرین تسک بوده است یا خیر؟
             # برای این کار ابتدا یک نمونه شی درخواست را ایجاد می کنیم
             if new_status in ('FINISH','FAILED'):
-                request_obj:Request = Request(current_user_national_code=self.current_user_nationalcode,request_id=self.request_id)
-                result = request_obj.next_task(self)
-                if not result.get('success',True):
-                    # وضعیت را به وضعیت قبل بازگشت می دهیم
-                    self.request_task_instance.status_code = new_status
-                    self.request_task_instance.save()           
-                                        
-                    
+                result = self.request.notify_task_finished(self)
+                if not result.get('success', False):
                     return result
-                elif result.get('message','') != '':
-                    message = result.get('message')
+                
+            
                     
             return {
                 "success": True,
@@ -4726,6 +4720,7 @@ class Request:
                     reason_other_description=form_data.get('reason_other_description'),
                 )
             except Exception as e:
+                self.obj_error_log.error_log(function_name='Create_request', parameter_values={'form_data': form_data, 'user_national_code': user_national_code}, error_desciption= result.get('message','خطا در ایجاد درخواست:'))   
                 return {
                     "success": False,
                     "message": f"خطا در ایجاد درخواست: {str(e)}",
@@ -4857,6 +4852,23 @@ class Request:
         ):
             errors.append("کد ملی درخواست کننده نامعتبر است.")
 
+    def notify_task_finished(self, task: Task):
+        """
+        در این متد، زمانی که تسک کامل انجام میشود، بررسی میشود که آیا تسک انجام نشده ای باقی مانده است یا نه:
+        1. اگر تسک انحام نشده باقی مانده باشد، کاری انجام نمیدهد
+        2. اگر همه تسک ها انجام شذه باشد، next_step را صدا میزند 
+        """
+
+        try: 
+            for task in self.tasks:
+                if task.status_code not in ("FINISH", "FAILED"):
+                    return {'success': True , 'message' : f"همه تسک ها تمام نشده است: {str(e)}"}
+            return self.next_step("CON")
+        except Exception as e:
+            self.obj_error_log.error_log(function_name='notify_task_finished', parameter_values={'task': task}, error_desciption= result.get('message','خطا در ایجاد درخواست:'))
+            return {'success': False , 'message' : f"خطا در اطلاع رسانی خاتمه تسک: {str(e)}"}
+
+
 
     def next_step(
         self, action_code: str, user_nationalcode: str, form_data: dict = None
@@ -4922,8 +4934,10 @@ class Request:
                         # ارسال به کارتابل مجریان
                         result = self.do_task()
                         if not result.get('success',True):
-                            return result                        
-                        next_user = self.current_task.executors
+                            return result 
+                        message = result.get('message', '')
+                        # چون به حالت ارسال تسک رفتیم، کاربر بعدی نداریم یعنی درخواست برای کسی ارسال نمیشود.                       
+                        next_user = None
                 # در صورتی که کاربر کمیته باشد
                 elif current_status == "COMITE":
                     new_status = "DOTASK"
@@ -4932,6 +4946,8 @@ class Request:
                     if not result.get('success',True):
                         return result
                     message = result.get('message', '')
+                     # چون به حالت ارسال تسک رفتیم، کاربر بعدی نداریم یعنی درخواست برای کسی ارسال نمیشود.                       
+                    next_user = None
                 # در صورتی که در مرحله انجام تسک باشد، مرحله بعدی خاتمه فرآیند است
                 elif current_status == "DOTASK":
                     new_status = "FINISH"
@@ -5032,6 +5048,7 @@ class Request:
                         user_reject_description = self.reject_description
                     )
                 except Exception as e:
+                    self.obj_error_log.error_log(function_name='next_step', parameter_values={'action_code': action_code, 'user_nationalcode': user_nationalcode, 'form_data': form_data}, error_desciption= result.get('message',' خطا در ذخیره گردش مدرک:'))   
                     return {"success": False, "message": f"خطا در ذخیره گردش مدرک: {str(e)}"}
 
                 # ارسال به کارتابل کاربر بعدی
@@ -5062,9 +5079,10 @@ class Request:
 
     def do_task(self):
         """
-        اجرای آخرین تسک فعال
+        اجرای تمامی تسک های درخواست 
         """
         try:
+            #یک مقدار پیش فرض برای متغییر داده میشود که اگر هیج تسکی پیدا نشد، این مقدار را برگرداند.
             result = {'success':False, 'message':'هیچ تسکی برای اجرا وجود ندارد'}
 
             # به ازای هر تسک، آن را شروع می کنیم
@@ -5072,7 +5090,7 @@ class Request:
                 # اگر وضعیت تسک تعریف باشد، باید آن را شروع کنیم
                 if task.status_code == "DEFINE":
                     result = task.start_task()
-                    if not result['success']:
+                    if not result.get('success',False):
                         return result
             # در صورتی که تمامی تسک ها قبلا اجرا شده باشند پیام حطا میدهیم
             if not result.get('success',False):
