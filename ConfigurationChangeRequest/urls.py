@@ -59,7 +59,9 @@ urlpatterns = [
     
     # مشاهده درخواست (فقط خواندنی)
     path('request/view/<int:request_id>/', views.request_view_view, name='request_view'),
-    
+
+
     # تست پیام‌ها
     path('test/messages/', views.test_messages_view, name='test_messages'),
+    path('test/', views.test_ajax, name='test_messages'),
 ]

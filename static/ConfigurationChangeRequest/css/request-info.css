@@ -44,16 +44,12 @@
     box-sizing: border-box;
 }
 
-.user-list .fieldBox {
-    width: calc(25% - 10px);
-
-}
 
 .request-info.fieldBox
 {
     width: calc(100% - 35px);    
     padding: 15px;
-}
+} 
 .request-info.fieldBox .row
 {
     margin-top: 10px;

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 
 from ConfigurationChangeRequest.models import RequestTask
 from .business import ChangeType, Request, FormManager, Task
+
 from django.http import JsonResponse
 import logging
 import json
@@ -17,6 +18,14 @@ def whoami(request):
 def test_ok(request):
     return HttpResponse("OK TEST")
 
+
+def test_ajax(request):
+    data = {'success':True, 'message':'hello'}
+    if request.method == 'POST':
+        return JsonResponse(data)
+    
+    return render(request, 'ConfigurationChangeRequest/test2.html', data)
+
 from django.http import JsonResponse
 
 def debug_headers(request):
@@ -28,13 +37,13 @@ def debug_headers(request):
 
 
 def get_current_user(request):
-    current_user = '0025629123'
+    current_user = '0074322060'
     
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
     else:
         request_task_id = -1
-        request_id = 178
+        request_id = -1
         from . import models as m
 
         if request_task_id > 0:
@@ -99,8 +108,10 @@ def get_current_user(request):
                     current_user = rel_manger
                 elif objRequest.status_code == 'COMITE':
                     current_user = commitee
-        else:     
-            current_user = '0081578091'
+                else: 
+                    current_user = rel_manger
+        # else:     
+        #     current_user = '1280419180'
             
     if current_user == '':
         current_user = '1280419180'
@@ -511,13 +522,15 @@ def task_select_view(request, request_obj:Request, task_obj:Task, mode:str='READ
         data = {
                 'success': result.get('success',True), 
                 'message': result.get('message',''), 
-                'task_id':task_obj.request_task_id
+                'task_id':task_obj.request_task_id,
+                'request_id':task_obj.request_id,
+                'form_type':'task_select'
                 }
-        if not result.get('success',False):
-            return JsonResponse(data)
+        # if not result.get('success',False):
+        return JsonResponse(data)
     
         # اگر انتخاب تسک با موفقیت انجام شده باشد باید صفحه گزارش را نمایش دهیم
-        return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
+        # return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
     
     # بارگذاری داده‌های تسک
     data = task_obj.load_task_data()
@@ -548,7 +561,7 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     """
     گزارش تسک (برای مجری/تستر)
     """
-    current_user_nationalcode =  get_current_user(request)
+    current_user_nationalcode = get_current_user(request)
 
     if request.method == 'POST':
         # دریافت گزارش تسک
@@ -558,26 +571,34 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
         form_data['operation_date'] = form_data.get('done_date')
         form_data['operation_time'] = form_data.get('done_time')
         form_data['operation_report'] = form_data.get('report_text')
-        form_data['operation_result'] = 'true'  # فرض بر موفقیت عملیات
+        form_data['user_reject_description'] = form_data.get('user_reject_description')
 
-        # ذخیره گزارش تسک
+        # # ذخیره گزارش تسک
         result = task_obj.save_task_report(task_obj.request_task_id, form_data, current_user_nationalcode)
 
         if result['success']:
             # انتقال به مرحله بعدی
-            next_result = task_obj.next_step('CON')
-            if next_result['success']:
-                return JsonResponse({'success': True, 'message': next_result.get('message', 'گزارش تسک با موفقیت ذخیره شد'), 'request_id': request_obj.request_id})
-            else:
-                return JsonResponse({'success': False, 'message': next_result['message']})
-        else:
-            return JsonResponse({'success': False, 'message': result['message']})
+            result = task_obj.next_step(form_data.get('action'))
+
+        data = {
+                'success': result.get('success',True), 
+                'message': result.get('message',''), 
+                'task_id':task_obj.request_task_id,
+                'request_id':task_obj.request_id,
+                'form_type':'task_report'
+                }
+        # if not result.get('success',False):
+        return JsonResponse(data)
+
 
     # بارگذاری داده‌های تسک
     data = task_obj.load_task_data()
     data['mode'] = mode
-    data['form_type'] = 'task_report'    
-    return render(request, 'ConfigurationChangeRequest/request-task-report.html', data)
+    data['form_type'] = 'task_report'   
+    if task_obj.status_code == 'EXESEL': 
+        return render(request, 'ConfigurationChangeRequest/request-task-report-executor.html', data)
+    elif task_obj.status_code == 'TESSEL': 
+        return render(request, 'ConfigurationChangeRequest/request-task-report-tester.html', data)
 
 
 
@@ -804,6 +825,8 @@ def change_type_view(request, change_type_id):
 
     # بارگذاری داده های مربوط به نوع تغییر
     obj_change_type = ChangeType(current_user, change_type_id)
+
+    data = {'success':False}
 
     # اگر چنین درخواستی وجود نداشته باشد، باید پیام خطا به کاربر بدهیم
     if obj_change_type is None or obj_change_type.change_type_id < 0:

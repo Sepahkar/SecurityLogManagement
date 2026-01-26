@@ -41,8 +41,7 @@ tbody .col-task-tester,tbody  .col-task-executor
     table-layout: fixed;
 }
 
-.col-task-id { width: 4%; }
-.col-task-order { width: 4%; }
+.col-task-id { width: 5%; }
 .col-task-title { width: 24%; }
 .col-task-status { width: 7%; }
 .col-task-executor { width: 23%; }
@@ -60,6 +59,11 @@ tbody .col-task-date
 {
     font-size: 10pt;
 }
+.task-table th
+{
+    vertical-align: middle;
+}
+
 .task-table-header {
     background-color: blue;
     text-align: center;
@@ -94,6 +98,13 @@ tbody .col-task-date
   font-size: 0.8rem;
   margin-top: 0.3rem;
 }
+
+.task-table tbody tr:hover
+{
+    background-color: #f8f8e0;
+    cursor: pointer;
+}
+
 
 i.fa-clipboard-list
 {

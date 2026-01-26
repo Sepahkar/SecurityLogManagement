@@ -170,7 +170,9 @@
                                 <button type="button" class="btn btn-primary" onclick="handleFormSubmit(event, 'SEL')" data-original-text="انتخاب تسک">انتخاب تسک</button>
                         {% endif %}
                     {% elif status_code|slice:"-3:" == 'SEL'%}
+                        {% if mode != "READONLY" %}
                         <button type="button" class="btn  btn-success" onclick="handleFormSubmit(event, 'CON')" data-original-text="تایید">تایید</button>
+                        {% endif %}
                         {% if status_code == 'TESSEL' %}
                         <button type="button" class="btn btn-danger" onclick="handleFormSubmit(event, 'REJ')" data-original-text="عدم تایید">عدم تایید</button>
                         {% endif %}

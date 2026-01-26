@@ -8,6 +8,7 @@
 <link href="{% static 'ConfigurationChangeRequest/css/request-task-list.css' %}" rel="stylesheet">
 {% endblock %}
 
+
 {% block main_content %}
 <div class="request-task-list-container">
     {% if success %}
@@ -21,10 +22,7 @@
                 <thead>
                     <tr class="task-table-header">
                         <th class="col-task-id">
-                            شناسه تسک
-                        </th>
-                        <th class="col-task-order">
-                            شناسه تسک درخواست
+                            شناسه
                         </th>
                         <th class="col-task-title">
                             عنوان تسک
@@ -48,11 +46,8 @@
                 </thead>
                 <tbody>
                     {% for task in tasks %}
-                        <tr>
+                        <tr data-task-id="{{ task.request_task_id }}">
                             <td class="col-task-id">
-                                {{ task.task_id }}
-                            </td>
-                            <td class="col-task-order">
                                 {{ task.request_task_id }}
                             </td>
                             <td class="col-task-title">
@@ -116,6 +111,7 @@
                                 data-report="{{task.executor_report}}"></i>
                             </td>
                         </tr>
+                    </a>
                     {% empty %}
                         <tr>
                             <td colspan="8">

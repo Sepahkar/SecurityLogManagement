@@ -297,8 +297,17 @@ class CommitteeAdmin(admin.ModelAdmin):
     administrator_display.short_description = "دبیر کمیته"        
         
 # سایر مدل‌ها (بدون تغییر ظاهری)
-admin.site.register(Role)
-admin.site.register(UserTeamRole)
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ('role_id', 'role_title')
+    list_filter = ('role_id',)
+    search_fields = ('role_title',)
+
+@admin.register(UserTeamRole)
+class UserTeamRoleAdmin(admin.ModelAdmin):
+    list_display = ('national_code', 'role_id', 'team_code', 'manager_national_code')
+    list_filter = ('role_id', 'team_code')
+    search_fields = ('national_code__first_name', 'national_code__last_name', 'role_id__role_title', 'team_code__team_name')
 
 @admin.register(ConstValue)
 class ConstValueAdmin(admin.ModelAdmin):
@@ -307,11 +316,29 @@ class ConstValueAdmin(admin.ModelAdmin):
     search_fields = ('Caption', 'Code')
 
 
-admin.site.register(Corp)
+@admin.register(Corp)
+class CorpAdmin(admin.ModelAdmin):
+    list_display = ('corp_code', 'corp_name')
+    list_filter = ('corp_code',)
+    search_fields = ('corp_name',)
 
-admin.site.register(ChangeType)
-admin.site.register(NotifyGroup)
-admin.site.register(NotifyGroupUser)
+@admin.register(ChangeType)
+class ChangeTypeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'change_type_title', 'change_title', 'change_description', 'related_manager_nationalcode', 'change_location_data_center', 'change_location_database', 'change_location_system_services', 'change_location_other', 'change_location_other_description', 'need_committee', 'committee', 'change_level', 'classification', 'priority', 'risk_level', 'change_domain', 'stop_critical_service', 'critical_service_title', 'stop_sensitive_service', 'stop_service_title', 'downtime_duration', 'downtime_duration_worstcase', 'has_role_back_plan', 'role_back_plan_description', 'reason_regulatory', 'reason_technical', 'reason_security', 'reason_business', 'reason_other', 'reason_other_description', 'changing_duration')
+    list_filter = ('change_type_title','code')
+    search_fields = ('change_type_title',)
+
+@admin.register(NotifyGroup)
+class NotifyGroupAdmin(admin.ModelAdmin):
+    list_display = ('code', 'title', 'role_id', 'team_code')
+    list_filter = ('code',)
+    search_fields = ('title',)
+
+@admin.register(NotifyGroupUser)
+class NotifyGroupUserAdmin(admin.ModelAdmin):
+    list_display = ('notify_group', 'user_nationalcode', 'user_role_id', 'user_team_code')
+    list_filter = ('notify_group', 'user_role_id', 'user_team_code')
+    search_fields = ('user_nationalcode__first_name', 'user_nationalcode__last_name', 'user_role_id__role_title', 'user_team_code__team_name')
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
@@ -348,13 +375,9 @@ class TesterInline(admin.TabularInline):
 
 @admin.register(TaskUser)
 class TaskUserAdmin(admin.ModelAdmin):
-    list_display = ('task', 'user_display', 'user_role_icon', 'user_team_code', 'is_active')
-    list_filter = ('user_role_code', 'is_active', 'user_team_code')
-    search_fields = (
-        'user_nationalcode__first_name',
-        'user_nationalcode__last_name',
-        'user_nationalcode__username',
-    )
+    list_display = ('task', 'user_nationalcode', 'user_role_id', 'user_team_code', 'is_active')
+    list_filter = ('user_role_id', 'is_active', 'user_team_code')
+    search_fields = ('user_nationalcode__first_name', 'user_nationalcode__last_name', 'user_role_id__role_title', 'user_team_code__team_name')
     # autocomplete_fields = ['task', 'user_nationalcode', 'user_role_id', 'user_team_code']
     # inlines = [ExecutorInline, TesterInline]
         
@@ -383,20 +406,89 @@ class TaskUserAdmin(admin.ModelAdmin):
         }
 
 
-admin.site.register(RequestTask)
-admin.site.register(RequestTask_ChangeType)
-admin.site.register(RequestTaskUser)
-admin.site.register(RequestTaskUserSelected)
-admin.site.register(RequestFlow)
-admin.site.register(RequestNotifyGroup)
-admin.site.register(RequestNotifyGroup_ChangeType)
-admin.site.register(RequestCorp_ChangeType)
-admin.site.register(RequestTeam_ChangeType)
-admin.site.register(RequestExtraInformation_ChangeType)
-admin.site.register(RequestCorp)
-admin.site.register(RequestTeam)
-admin.site.register(NotificationLog)
-admin.site.register(DataHistory)
+@admin.register(RequestTask)
+class RequestTaskAdmin(admin.ModelAdmin):
+    list_display = ('request', 'task', 'order_number', 'status_code')
+    list_filter = ( 'task', 'status_code')
+    search_fields = ('request__change_title', 'task__title')
+
+@admin.register(RequestTask_ChangeType)
+class RequestTask_ChangeTypeAdmin(admin.ModelAdmin):
+    list_display = ('changetype', 'task', 'order_number')
+    list_filter = ('changetype', 'task')
+    search_fields = ('changetype__change_type_title', 'task__title')
+
+@admin.register(RequestTaskUser)
+class RequestTaskUserAdmin(admin.ModelAdmin):
+    list_display = ('request_task', 'user_nationalcode', 'user_role_id', 'user_team_code','user_role_code')
+    list_filter = ('request_task', 'user_role_id', 'user_team_code')
+    search_fields = ('user_nationalcode__first_name', 'user_nationalcode__last_name', 'user_role_id__role_title', 'user_team_code__team_name')
+
+@admin.register(RequestTaskUserSelected)
+class RequestTaskUserSelectedAdmin(admin.ModelAdmin):
+    list_display = ('request_task_user', 'pickup_date', 'user_report_result', 'user_report_date', 'user_report_time', 'user_done_date', 'user_done_time', 'user_report_description')
+    list_filter = ('request_task_user', 'pickup_date', 'user_report_result', 'user_report_date', 'user_report_time', 'user_done_date', 'user_done_time')
+    search_fields = ('request_task_user__user_nationalcode__first_name', 'request_task_user__user_nationalcode__last_name', 'user_report_description')
+
+# @admin.register(RequestFlow)
+# class RequestFlowAdmin(admin.ModelAdmin):
+#     list_display = ('request', 'user_nationalcode', 'user_role_id', 'user_team_code', 'receiver_date', 'send_date', 'fields_value', 'user_send_date', 'user_send_time', 'user_reject_description')
+#     list_filter = ( 'user_team_code',)
+#     search_fields = ('request__change_title', 'user_nationalcode__first_name', 'user_nationalcode__last_name', 'user_role_id__role_title', 'user_team_code__team_name')
+
+@admin.register(RequestNotifyGroup)
+class RequestNotifyGroupAdmin(admin.ModelAdmin):
+    list_display = ('request', 'notify_group', 'by_email', 'by_sms', 'by_phone')
+    list_filter = ( 'notify_group', 'by_email', 'by_sms', 'by_phone')
+    search_fields = ('request', 'notify_group__title')
+
+@admin.register(RequestNotifyGroup_ChangeType)
+class RequestNotifyGroup_ChangeTypeAdmin(admin.ModelAdmin):
+    list_display = ('changetype', 'notify_group', 'by_email', 'by_sms', 'by_phone')
+    list_filter = ('changetype', 'notify_group', 'by_email', 'by_sms', 'by_phone')
+    search_fields = ('changetype', 'notify_group__title')
+
+@admin.register(RequestCorp_ChangeType)
+class RequestCorp_ChangeTypeAdmin(admin.ModelAdmin):
+    list_display = ('changetype', 'corp_code')
+    list_filter = ('changetype', 'corp_code')
+    search_fields = ('changetype__change_type_title', 'corp_code__corp_name')
+
+@admin.register(RequestTeam_ChangeType)
+class RequestTeam_ChangeTypeAdmin(admin.ModelAdmin):
+    list_display = ('changetype', 'team_code')
+    list_filter = ( 'team_code','changetype')
+    search_fields = ('changetype__change_type_title', 'team_code__team_name')
+
+@admin.register(RequestExtraInformation_ChangeType)
+class RequestExtraInformation_ChangeTypeAdmin(admin.ModelAdmin):
+    list_display = ('extra_info', 'changetype')
+    list_filter = ('changetype',)
+    search_fields = ('changetype',)
+
+@admin.register(RequestCorp)
+class RequestCorpAdmin(admin.ModelAdmin):
+    list_display = ('request', 'corp_code', )
+    list_filter = ('corp_code',)
+    search_fields = ('request__change_title', 'corp_code__corp_name')
+
+@admin.register(RequestTeam)
+class RequestTeamAdmin(admin.ModelAdmin):
+    list_display = ('request', 'team_code')
+    list_filter = ('team_code',)
+    search_fields = ('request__change_title', 'team_code__team_name')
+
+@admin.register(NotificationLog)
+class NotificationLogAdmin(admin.ModelAdmin):
+    list_display = ('request', 'request_status', 'task_status','template_code','email_to','email_cc','email_bcc','variables','service_data','service_return_val')
+    list_filter = ('request', 'request_status', 'task_status','template_code','email_to','variables')
+    search_fields = ('request__change_title', 'request_status', 'task_status','template_code','email_to')
+
+@admin.register(DataHistory)
+class DataHistoryAdmin(admin.ModelAdmin):
+    list_display = ('record_type','old_data','new_data','record_id')
+    list_filter = ('record_type',)
+    search_fields = ('record_type', 'record_id')
 
 # =======================
 # Admin Site Config

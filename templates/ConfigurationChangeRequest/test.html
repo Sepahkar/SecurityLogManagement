@@ -4,6 +4,105 @@
     <meta charset="UTF-8">
     <title>تست توابع</title>
     <script>
+
+
+        class message_manager
+        {
+            processContextMessages() {
+                const contextMessage = $('meta[name="context-message"]').attr('content');
+                const contextSuccess = $('meta[name="context-success"]').attr('content');
+                const contextSuccessMessage = $('meta[name="context-success-message"]').attr('content');
+                const contextWarningMessage = $('meta[name="context-warning-message"]').attr('content');
+                
+                if (contextMessage) {
+                    if (contextSuccess === 'false') {
+                        this.showErrorMessage(contextMessage);
+                    } else {
+                        this.showSuccessMessage(contextMessage);
+                    }
+                }
+                
+                if (contextSuccessMessage) {
+                    this.showSuccessMessage(contextSuccessMessage);
+                }
+                
+                if (contextWarningMessage) {
+                    this.showWarningMessage(contextWarningMessage);
+                }
+            }
+            
+            initializeForm() {
+                let formMode = $('form').hasClass('readonly-form') ? 'READONLY' : 'EDIT';        
+                console.log('فرم در حال بارگذاری...');
+                console.log('حالت فرم:', formMode);
+        
+            }
+        
+        
+            showSuccessMessage(message) {
+                if (typeof showSuccess === 'function') {
+                    showSuccess(message, 'موفقیت');
+                } else {
+                    alert(message);
+                }
+            }
+            
+            showErrorMessage(message) {
+                if (typeof showError === 'function') {
+                    showError(message, 'خطا');
+                } else {
+                    alert(message);
+                }
+            }
+            
+            showWarningMessage(message) {
+                if (typeof showWarning === 'function') {
+                    showWarning(message, 'هشدار');
+                } else {
+                    alert(message);
+                }
+            }
+        
+            /*
+            چرا این کد درست کار نمی‌کند؟
+            1. نام تابع فراخوانی شده در اینجا confirmDelete است، اما در فایل message-handler.js تابع به صورت MessageHandler.confirmDelete تعریف شده و همچنین به صورت window.showConfirmDelete نیز به window متصل شده است، و به احتمال زیاد confirmDelete به صورت global تابع نیست، بلکه باید از showConfirmDelete استفاده شود.
+            2. حتی اگر confirmDelete موجود باشد، تابع هیچ عملی روی url و id انجام نمی‌دهد و هیچ فرایند حذف فراخوانی نمی‌شود.
+            3. باید پس از تایید، عملیات حذف (مثلاً فراخوانی AJAX یا هدایت به url) انجام شود.
+            4. بهتر است بررسی به جای typeof confirmDelete، typeof showConfirmDelete انجام شود یا حتی بهترین حالت: همیشه از MessageHandler.confirmDelete استفاده شود که در فایل message-handler.js تعریف شده است.
+        
+            راه حل پیشنهادی:
+            فراخوانی صحیح تابع حذف، استفاده درست از پارامترها، و انجام عملیات پس از تایید کاربر.
+            */
+        
+            confirmDeleteMessage(itemName, url, id, on_success, on_error) {
+                // فرض: عملیات حذف باید با AJAX انجام شود یا به url هدایت شود
+                if (typeof showConfirmDelete === 'function') {
+                    showConfirmDelete(itemName, () => {
+                        // مثال: ارسال درخواست AJAX برای حذف
+                        // فرض: AJAX_call از همین فایل قابل دسترسی است
+                        AJAX_call(
+                            url,
+                            { id: id }, // یا صرفاً null اگر سرور فقط URL نیاز دارد
+                            (response) => { // on_success
+                                if (typeof on_success == 'function')
+                                    on_success(response)
+                                // اختیاری: رفرش جدول، حذف سطر یا ... 
+                                // location.reload(); // یا هر کار دیگر
+                            },
+                            (error) => { // on_error
+                                // this.showErrorMessage('خطا در حذف: ' + (error?.message || ''));
+                            }
+                        );
+                    }, () => {
+                        // کاربر لغو کرد
+                        this.showWarningMessage('عملیات حذف لغو شد.');
+                    });
+                } else {
+                    alert('امکان حذف وجود ندارد');
+                }
+            }
+        }
+        
         const functionParams = JSON.parse(document.getElementById('functionParams').textContent);
 
         function showInputs() {
@@ -44,10 +143,88 @@
                 document.getElementById('output').innerText = data.output;
             });
         }
+
+        function AJAX_call(url, data, on_success, on_error)
+        {
+
+            const message_manager_obj = new message_manager();
+    
+            // let csrftoken = $('input[name="csrfmiddlewaretoken"]').val() || getCookie('csrftoken');
+            alert('AJAX_call: '+url)
+            
+            // مشکل اینه که گاهی توکن موجود در بدنه درخواست با توکن موجود در هدر که از کوکی می خواند فرق می کند
+            // این اتفاق در درخواست های AJAX رخ می دهد
+            // بنابراین ما باید توکن را از بدنه درخواست حذف کنیم و فقط در هدر بفرستیم
+            const res = ensureCSRFInData(data);
+            const csrftoken = res.csrftoken;
+    
+            // فراخوانی سرور  
+            $.ajax({
+                url: url,
+                type: 'POST', // در jQuery بهتر است از type به جای method استفاده شود
+                data: res.data,
+                headers: { "X-CSRFToken": csrftoken },
+                success: function(response) {
+                    debugger
+                    if (response && (response.success === true || response.success === 'True' || response.result === true)) {
+                        if (typeof on_success === "function") {
+                            on_success(response);
+                        }
+                    } else {
+                        let msg = 'خطا: ';
+                        if (response && response.message) {
+                            msg += response.message;
+                        } else {
+                            msg += 'پاسخ نامعتبر از سرور دریافت شد.';
+                        }
+                        message_manager_obj.showErrorMessage(msg);
+                        if (typeof on_error === "function") {
+                            on_error(response);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    debugger
+                    let errorMessage = 'خطا در ارتباط با سرور: ' + xhr.status + " - " + error;
+                    if (xhr.responseText) {
+                        errorMessage += "\nاطلاعات سرور:\n" + xhr.responseText;
+                    }
+                    message_manager_obj.showErrorMessage(errorMessage);
+                    if (typeof on_error === "function") {
+                        on_error(xhr);
+                    }
+                }
+            });
+        }
+    
+    fnction test_ajax()
+    {
+        const formData = $('#requestForm').serialize();
+
+        var submitUrl = window.submitUrl || ''
+        AJAX_call(submitUrl,formData, 
+        function on_success(data)
+        {
+            alert('success')
+        },
+        function on_error(data)
+        {
+            alert('error')
+        }
+        )
+    }
     </script>
 </head>
 <body>
+    <form method="POST">
+        {%csrf_token %}
+        <input type="text" name="test_data"/>
+
+
+    </form>
+    <button>Ajax Test</button>
     <h1>تست توابع</h1>
+    
     <select id="functionSelect" onchange="showInputs()">
         <option value="">انتخاب تابع</option>
         {% for name in functions.keys %}

@@ -1,17 +1,28 @@
 {% load static %}
 {% load custom_filters %}
+<style>
+    .user-list .fieldBox {
+        {% if request.need_committee %}
+        width: calc(25% - 10px);
+        {%else%}
+        width: calc(33% - 7px);
+        {%endif%}
+    
+    }
+</style>
 <div class="col-12 requestor">
     <link rel="stylesheet" type="text/css" href="/static/ConfigurationChangeRequest/css/request-info.css">
     <div class="title">اطلاعات درخواست</div>
     <hr/>
     <div class="content row">
         <div class="user-list row">
-            <div class="fieldBox requestor ">
+            <div class="fieldBox requestor col-4 ">
                 <div class="sub-title">اطلاعات درخواست دهنده</div>
                 <div class="user-info">
                     <div class="user-avatar col-4">
                         <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.requestor_nationalcode.username|split:'@' }}.jpg" 
-                        alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}" class="personnel-avatar">
+                        alt="{{ request.requestor_nationalcode.fullname }}" title="{{ request.requestor_nationalcode.fullname }}" class="personnel-avatar"
+                        onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';">
                     </div>
                     <div class="user-information col-8">
                         <input type="hidden" name="requestor_user_nationalcode" value="{{request.requestor_nationalcode.national_code}}"/>
@@ -21,11 +32,11 @@
                     </div>
                 </div>
             </div>
-            <div class="fieldBox direct-manager ">
+            <div class="fieldBox direct-manager col-4">
                 <div class="sub-title">اطلاعات مدیر مستقیم</div>
                 <div class="user-info">
                     <div class="user-avatar col-3">
-                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.direct_manager_nationalcode.username|split:'@' }}.jpg" 
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.direct_manager_nationalcode.username|split:'@' }}.jpg" onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
                         alt="{{ request.direct_manager_nationalcode.fullname }}" title="{{ request.direct_manager_nationalcode.fullname }}" class="personnel-avatar">
                     </div>
                     <div class="user-information col-8">
@@ -36,11 +47,11 @@
                     </div>
                 </div>
             </div>
-            <div class="fieldBox related-manager">
+            <div class="fieldBox related-manager col-4">
                 <div class="sub-title">اطلاعات مدیر مربوطه</div>
                 <div class="user-info">
                     <div class="user-avatar col-3">
-                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.related_manager_nationalcode.username|split:'@' }}.jpg" 
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.related_manager_nationalcode.username|split:'@' }}.jpg" onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
                         alt="{{ request.related_manager_nationalcode.fullname }}" title="{{ request.related_manager_nationalcode.fullname }}" class="personnel-avatar">
                     </div>
                     <div class="user-information col-8">
@@ -52,11 +63,11 @@
                 </div>
             </div>
             {% if request.need_committee %}
-            <div class="fieldBox commite">
+            <div class="fieldBox commite col-3">
                 <div class="sub-title">اطلاعات کمیته</div>
                 <div class="user-info">
                     <div class="user-avatar col-3">
-                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.committee_user_nationalcode.username|split:'@' }}.jpg" 
+                        <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ request.committee_user_nationalcode.username|split:'@' }}.jpg" onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
                         alt="{{ request.committee_user_nationalcode.fullname }}" title="{{ request.committee_user_nationalcode.fullname }}" class="personnel-avatar">
                     </div>
                     <div class="user-information col-8">
@@ -93,7 +104,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-4">
+                <div class="col-12">
                     <span class="label-title">توضیحات:</span>
                     {{ request.change_description }}
                     <!--

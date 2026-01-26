@@ -304,7 +304,32 @@ function toggleFieldValidation(selector, isValid, errorMessage, showError) {
             }
         });
     }
+
+function ajax_call_test(e)
+    {
+        e.preventDefault(); 
+        alert('call function')
+
+        const formData = $('#requestForm').serialize();
+
+        // تنظیم URL (یا خالی برای URL فعلی یا از متغیر جنگو)
+        var submitUrl = window.submitUrl || ''; // فرض می‌کنیم submitUrl توی HTML تعریف شده
+        debugger
+        AJAX_call(submitUrl,formData,
+            function on_success(data)
+            {
+
+                alert('success')
+                
+            },
+            function on_error(data)
+            {
+                alert('error')
+            })
     
+            
+
+    }
 
 function handleFormSubmit(e, actionType = null) {
     e.preventDefault(); // جلوگیری از رفتار پیش‌فرض فرم
@@ -415,6 +440,7 @@ function handleFormSubmit(e, actionType = null) {
                         new_address += data.request_id + '/';
                         break;
                     case 'task_select':
+                    case 'task_report':
                         new_address += 'task/' + data.task_id;
                         break;
                     case 'change_type':
