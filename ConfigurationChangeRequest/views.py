@@ -110,8 +110,8 @@ def get_current_user(request):
                     current_user = commitee
                 else: 
                     current_user = rel_manger
-        # else:     
-        #     current_user = '1280419180'
+        else:     
+            current_user = '1280419180'
             
     if current_user == '':
         current_user = '1280419180'
