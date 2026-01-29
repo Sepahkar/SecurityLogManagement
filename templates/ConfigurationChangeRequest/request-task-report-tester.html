@@ -121,7 +121,7 @@
                     <span class="label-text">
                         <textarea name="report_text" class="report-text {% if mode == 'READONLY' %}inactive{% endif %}" rows="4" 
                         {% if mode == 'READONLY' %} disabled {% endif %}
-                        placeholder="گزارش انجام تست را وارد کنید">{{ report|default_if_none:'' }}</textarea>
+                        placeholder="گزارش انجام تست را وارد کنید">{{ tester_report|default_if_none:'' }}</textarea>
                     </span>
                 </div>
             </div>

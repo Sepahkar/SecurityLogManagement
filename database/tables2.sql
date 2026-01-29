@@ -1,4 +1,7 @@
+Use SecurityLogManagement
+
 Declare @RequestId int = 174
+Declare @TaskId int = 590
 
 Select * From [dbo].[ConfigurationChangeRequest_configurationchangerequest]
 Where id = @RequestId
@@ -18,7 +21,7 @@ inner join ConfigurationChangeRequest_user u
 on rtu.user_nationalcode = u.national_code
 Where request_task_id in
 (select id from ConfigurationChangeRequest_requesttask
-where request_id = @RequestId
+where request_id = @RequestId and (request_task_id = @TaskId or @TaskId = -1)
 )
 order by request_task_id, user_role_code
 
@@ -31,5 +34,5 @@ on rtu.user_nationalcode = u.national_code
 Where request_task_user_id in
 (Select id From ConfigurationChangeRequest_requesttaskuser Where request_task_id in
 (select id from ConfigurationChangeRequest_requesttask
-where request_id = @RequestId
+where request_id = @RequestId and (request_task_id = @TaskId or @TaskId = -1)
 ))

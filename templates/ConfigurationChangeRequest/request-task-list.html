@@ -64,7 +64,7 @@
                                                 <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ executor.username|split:'@' }}.jpg"
                                                      onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
                                                      alt="{{ executor.fullname }}"
-                                                     {% if executor.national_code == current_user %}
+                                                     {% if executor.national_code == task.selected_executor.national_code %}
                                                      class="active"
                                                      {% else %}
                                                      class="inactive"
@@ -86,7 +86,7 @@
                                                 <img src="{% static 'ConfigurationChangeRequest/images/personnel/' %}{{ tester.username|split:'@' }}.jpg"
                                                      onerror="this.src='{% static 'ConfigurationChangeRequest/images/Avatar.png' %}';"
                                                      alt="{{ tester.fullname }}"
-                                                     {% if tester.national_code == current_user %}
+                                                     {% if tester.national_code == task.selected_tester.national_code %}
                                                      class="active"
                                                      {% else %}
                                                      class="inactive"
