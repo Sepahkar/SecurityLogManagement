@@ -122,4 +122,17 @@
 textarea.inactive
 {
     background-color: #f6f6f6!important;
+    font-style: italic;
+    color: gray!important;
+}
+
+.persian-date
+{
+    width: 100px;
+    font-size: 10pt;
+}
+.timepicker
+{
+    width: 45px;
+    font-size: 10pt;    
 }

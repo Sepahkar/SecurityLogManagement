@@ -47,16 +47,17 @@
                     </span>
                     <span class="label-title">ساعت انجام تسک:</span>
                     <span class="label-text">
-                        <input id="timepicker" name="executor_done_time"  type="text" placeholder="ساعت را انتخاب کنید"
+                        <input id="timepicker" class="timepicker" 
+                        name="executor_done_time"  type="text" placeholder="ساعت را انتخاب کنید"
                          disabled value="{{ executor_done_time|default_if_none:'' }}" />
                     </span>
                 </div>
                 <div class="report-text-container">
                     <span class="label-title">گزارش انجام:</span>
                     <span class="label-text">
-                        <textarea name="report_text" class="report-text {% if mode == 'READONLY' %}inactive{% endif %}" rows="4" 
-                        {% if mode == 'READONLY' %} disabled {% endif %}
-                        placeholder="گزارش انجام تسک را وارد کنید">{{ report|default_if_none:'' }}</textarea>
+                        <textarea name="report_text" class="report-text inactive" rows="4" 
+                         disabled 
+                        placeholder="گزارش انجام تسک را وارد کنید">{{ executor_report|default_if_none:'' }}</textarea>
                     </span>
                 </div>
             </div>
@@ -108,7 +109,7 @@
                     </span>
                     <span class="label-title">ساعت انجام تست:</span>
                     <span class="label-text">
-                        <input id="timepicker" name="done_time"  type="text" placeholder="ساعت را انتخاب کنید"
+                        <input id="timepicker" name="done_time"  class="timepicker" type="text" placeholder="ساعت را انتخاب کنید"
                         {% if mode == 'READONLY' %} disabled {% endif %} value="{{ tester_done_time|default_if_none:'' }}" />
                         <div id="timepicker-container"></div>
                         <input type="hidden" id="done_time" value="{{ tester_done_time|default_if_none:'' }}"
