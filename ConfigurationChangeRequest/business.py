@@ -9,6 +9,7 @@ from django import template
 from django.core.signals import request_started
 from django.db.models.functions import Upper
 from django.db.transaction import commit
+from email_validator import validate_email, EmailNotValidError
 # from requests import request
 
 
@@ -3551,15 +3552,15 @@ class Task:
                 mode = "READONLY"
             # اگر مدیر مربوطه یا کاربر کمیته باشد
             elif self.current_user_nationalcode in allowed_user:
-                form = 'TaskSelect'
+                form = 'TaskReport'
                 mode = "READONLY"
             # اگر کاربر در لیست تسترها باشد
             elif any(self.current_user_nationalcode == tester.national_code for tester in self.testers):
-                form = 'TaskSelect'
+                form = 'TaskReport'
                 mode = "READONLY"
             # اگر کاربر در لیست مجریان باشد
             elif any(self.current_user_nationalcode == executor.national_code for executor in self.executors):
-                form = 'TaskSelect'
+                form = 'TaskReport'
                 mode = "READONLY"
             else:
                 form = "Invalid"
@@ -5061,7 +5062,7 @@ class Request:
                     return {'success': True , 'message' : f"همه تسک ها تمام نشده است"}
             return self.next_step("CON", self.user_related_manager.national_code)
         except Exception as e:
-            self.obj_error_log.error_log(function_name='notify_task_finished', parameter_values={'task': task}, error_desciption= f"خطا در اطلاع رسانی خاتمه تسک: {str(e)}" )
+            self.obj_error_log.error_log(function_name=function_name, parameter_values=parameter_values, error_desciption= f"خطا در اطلاع رسانی خاتمه تسک: {str(e)}" )
             return {'success': False , 'message' : f"خطا در اطلاع رسانی خاتمه تسک: {str(e)}"}
 
 
@@ -5423,7 +5424,9 @@ class Request:
             return {'success':False, 'message':msg}        
         # 4- اطلاع رسانی انجام شود
         try:
-            self.notify(status_code=status_code)
+            notify = Notification(obj_request=self)
+            notify.get_notification_code(current_user = self.user_related_manager.national_code, 
+                                         action = 'CON', notify_type='E', request_task='R')
         except Exception as e:
             msg = f'امکان اطلاع رسانی پایانی به افراد مربوطه وجود ندارد.<br/>{str(e)}'
             self.obj_error_log.error_log(function_name, parameter_values, msg)
@@ -5668,6 +5671,7 @@ class Request:
 class Notification:
     obj_request:Request = None
     obj_task:Task = None
+    obj_error_log:'ErrorLog' = None
 
     # متغییرهای عمومی
     request_title :str = ''
@@ -5729,6 +5733,12 @@ class Notification:
     def __init__(self, obj_request: Request = None, obj_task:Task = None) -> None:
         self.obj_request = obj_request
         self.obj_task = obj_task
+        if obj_task:
+            self.obj_error_log = obj_task.obj_error_log
+        elif obj_request:
+            self.obj_error_log = obj_request.obj_error_log
+        else:
+            self.obj_error_log = ErrorLog('1280419180')
         
         # متغییرهای عمومی را بارگذاری می کنیم
         self.__load_general_variables()
@@ -5755,35 +5765,50 @@ class Notification:
                 R : درخواست
                 T : تسک
         """
+        function_name = 'get_notification_code'
+        parameter_values = {'current_user':current_user, 'action':action, 'notify_type':notify_type, 'request_task':request_task}
+        
         # اول کنترل می کنیم که کاربر جاری کاربر معتبری است
         obj_user:m.User = m.User.objects.filter(national_code=current_user).first()
         if not obj_user:
-            return {'success':False, 'message':'کاربر جاری معتبر نیست'}
+            msg = 'کاربر جاری معتبر نیست'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)            
+            return {'success':False, 'message':msg}
 
         self.sender_full_name = obj_user.fullname_gender
         
         # حالا کنترل می کنیم که نوع عملیات چیست؟
         action = action.upper()
         if action not in ['CON','RET','REJ']:
-            return {'success':False, 'message':'نوع عملیات معتبر نیست'}
+            msg = 'نوع عملیات معتبر نیست'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)            
+            return {'success':False, 'message':msg}
             
         # حالا روش اطلاع  رسانی را کنترل می کنیم
         notify_type = notify_type.upper()
         if notify_type not in ['E','S','C']:
-            return {'success':False, 'message':'روش اطلاع رسانی معتبر نیست'}
+            msg = 'روش اطلاع رسانی معتبر نیست'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)            
+            return {'success':False, 'message':msg}
             
         # کنترل می کنیم که نوع رکورد مشخص شده باشد
         request_task = request_task.upper()
         if request_task not in ['R','T']:
-            return {'success':False, 'message':'نوع رکورد مربوطه معتبر نیست'}
+            msg = 'نوع رکورد مربوطه معتبر نیست'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)            
+            return {'success':False, 'message':msg}
         
         # اگر مربوط به درخواست است باید شی درخواست مقداردهی شده باشد
         if request_task == 'R' and not self.obj_request:
-            return {'success':False, 'message':'درخواست مربوطه نامعتبر است'}
+            msg = 'درخواست مربوطه نامعتبر است'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)            
+            return {'success':False, 'message':msg}
             
         # اگر مربوط به تسک است باید شی تسک مقداردهی شده باشد
         if request_task == 'T' and not self.obj_task:
-            return {'success':False, 'message':'تسک مربوطه نامعتبر است'}
+            msg = 'تسک مربوطه نامعتبر است'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)            
+            return {'success':False, 'message':msg}
             
 
         #  فرستنده را به دست می آوریم
@@ -5801,7 +5826,9 @@ class Notification:
             sender_code = 'COM'
         # اگر کاربر هیچ یک از موارد فوق نباشد، پس معتبر نیست
         else:
-            return {'success':False, 'message':'کاربر جاری نامعتبر است'}             
+            msg = 'کاربر جاری نامعتبر است'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)            
+            return {'success':False, 'message':msg}             
             
         # گیرنده را به دست می آوریم
         receivers = []
@@ -5817,36 +5844,75 @@ class Notification:
             # ('ERRORF', 'خاتمه با خطا'),  
             
             if request_status == 'DRAFTD':
-                receivers = [{'code':'REQ','name':self.obj_request.user_requestor.fullname_title,
+                receivers = [{'code':'REQ',
+                              'name':self.obj_request.user_requestor.fullname_title,
+                              'national_code':self.obj_request.user_requestor.national_code,
                               'email':self.obj_request.user_requestor.username}]
             elif request_status == 'DIRMAN':
-                receivers = [{'code':'DIM','name':self.obj_request.user_direct_manager.fullname_title,
+                receivers = [{'code':'DIM',
+                              'name':self.obj_request.user_direct_manager.fullname_title,
+                              'national_code':self.obj_request.user_direct_manager.national_code,
                               'email':self.obj_request.user_direct_manager.username}]
             elif request_status == 'RELMAN':
-                receivers = [{'code':'REM','name':self.obj_request.user_related_manager.fullname_title,
+                receivers = [{'code':'REM',
+                              'name':self.obj_request.user_related_manager.fullname_title,
+                              'national_code':self.obj_request.user_related_manager.national_code,
                               'email':self.obj_request.user_related_manager.username}]
             elif request_status == 'COMITE':
-                receivers = [{'code':'REM','name':self.obj_request.user_committee.fullname_title,
+                receivers = [{'code':'REM',
+                              'name':self.obj_request.user_committee.fullname_title,
+                              'national_code':self.obj_request.user_committee.national_code,
                               'email':self.obj_request.user_committee.username}]
             elif request_status == 'FINISH':
-                receivers = [{'code':'REQ','name':self.obj_request.user_requestor.fullname_title,
+                receivers = [{'code':'REQ',
+                              'name':self.obj_request.user_requestor.fullname_title,
+                              'national_code':self.obj_request.user_requestor.national_code,
                               'email':self.obj_request.user_requestor.username}, 
-                             {'code':'DIM', 'name':self.obj_request.user_direct_manager.fullname_title,
+                             {'code':'DIM', 
+                              'name':self.obj_request.user_direct_manager.fullname_title,
+                              'national_code':self.obj_request.user_direct_manager.national_code,
                               'email':self.obj_request.user_direct_manager.username}, 
-                             {'code':'REM', 'name':self.obj_request.user_related_manager.fullname_title,
+                             {'code':'REM', 
+                              'name':self.obj_request.user_related_manager.fullname_title,
+                              'national_code':self.obj_request.user_related_manager.national_code,
                               'email':self.obj_request.user_related_manager.username}] 
                 if self.obj_request.user_committee:
-                    receivers.append({'code':'COM','name':self.obj_request.user_committee.fullname_title,       
+                    receivers.append({'code':'COM',
+                                      'name':self.obj_request.user_committee.fullname_title,   
+                                      'national_code':self.obj_request.user_committee.national_code,    
                                       'email':self.obj_request.user_committee.username})
+                # باید اطلاع رسانی مرحله نهایی را هم انجام دهیم
+                result = self.get_notification_group_user('email')
+                if not result.get('success'):
+                    msg = result.get('message','')
+                    self.obj_error_log.error_log(function_name, parameter_values, msg)            
+                    return result
+                
+                users = result.get('users')
+                if not users:
+                    msg = 'هیچ کاربری برای اطلاع رسانی نهایی انتخاب نشده است'
+                    self.obj_error_log.error_log(function_name, parameter_values, msg)
+                    return {'success':False, 'message':msg}
+                    
+                self.send_finish_step_email('TES.CON.ALL', users)
+                    
             elif request_status == 'FAILED':
-                receivers = [{'code':'REQ','name':self.obj_request.user_requestor.fullname_title,
+                receivers = [{'code':'REQ',
+                              'name':self.obj_request.user_requestor.fullname_title,
+                              'national_code':self.obj_request.user_requestor.national_code,
                               'email':self.obj_request.user_requestor.username}, 
-                             {'code':'DIM','name':self.obj_request.user_direct_manager.fullname_title,
+                             {'code':'DIM',
+                              'name':self.obj_request.user_direct_manager.fullname_title,
+                              'national_code':self.obj_request.user_direct_manager.national_code,
                               'email':self.obj_request.user_direct_manager.username}, 
-                             {'code':'REM','name':self.obj_request.user_related_manager.fullname_title,
+                             {'code':'REM',
+                              'name':self.obj_request.user_related_manager.fullname_title,
+                              'national_code':self.obj_request.user_related_manager.national_code,
                               'email':self.obj_request.user_related_manager.username}]
                 if self.obj_request.user_committee:
-                    receivers.append({'code':'COM','name':self.obj_request.user_committee.fullname_title,       
+                    receivers.append({'code':'COM',
+                                      'name':self.obj_request.user_committee.fullname_title,       
+                                      'national_code':self.obj_request.user_committee.national_code,
                                       'email':self.obj_request.user_committee.username})
                 
                 # اگر خاتمه به دلیل رد باشد، باید دلیل رد را هم بخوانیم
@@ -5866,38 +5932,66 @@ class Notification:
                 self.executors = self.obj_task.executors_names
                 
                 # اگر رد باشد مدیر مربوطه هم باید در جریان قرار گیرد
-                receivers = [{'code':'REM','name':self.obj_request.user_related_manager.fullname_title, 'email':self.obj_request.user_related_manager.username}]
+                receivers = [{'code':'REM',
+                              'name':self.obj_request.user_related_manager.fullname_title, 
+                              'email':self.obj_request.user_related_manager.username,
+                              'national_code':self.obj_request.user_related_manager.national_code}]
                 # اگر برگشتی از تستر منتخب باشد
                 if self.obj_task.selected_tester:
-                    receivers.append( {'code':'EXE','name':self.obj_task.selected_tester.fullname_title, 'email':self.obj_task.selected_tester.username})
+                    receivers.append( {'code':'EXE',
+                                       'name':self.obj_task.selected_tester.fullname_title, 
+                                       'email':self.obj_task.selected_tester.username,
+                                       'national_code':self.obj_task.selected_tester.national_code})
                 # به ازای هر یک از مجریان یک نامه ارسال می شود
                 for executor in self.obj_task.executors:
-                    receivers.append( {'code':'EXE','name':executor.fullname_title, 'email':executor.username})
+                    receivers.append( {'code':'EXE',
+                                       'name':executor.fullname_title, 
+                                       'email':executor.username,
+                                       'national_code':executor.national_code})
 
             elif task_status == 'EXESEL':
                 self.select_executor = self.obj_task.selected_executor.fullname
-                receivers =  [{'code':'REM','name':self.obj_request.user_related_manager.fullname_title, 'email':self.obj_request.user_related_manager.username}]
+                receivers =  [{'code':'REM',
+                               'name':self.obj_request.user_related_manager.fullname_title, 
+                               'national_code':self.obj_request.user_related_manager.national_code,
+                               'email':self.obj_request.user_related_manager.username}]
                 if self.obj_task.selected_executor:
-                    receivers.append({'code':'EXE','name':self.obj_task.selected_executor.fullname_title, 'email':self.obj_task.selected_executor.username})
+                    receivers.append({'code':'EXE',
+                                      'name':self.obj_task.selected_executor.fullname_title, 
+                                      'national_code':self.obj_task.selected_executor.national_code,
+                                      'email':self.obj_task.selected_executor.username})
 
             if task_status == 'TESRED':
                 self.testers = self.obj_task.testers_names
                 # اگر بازگشت باشد مدیر مربوطه هم باید در جریان قرار گیرد
-                receivers = [{'code':'REM','name':self.obj_request.user_related_manager.fullname_title, 'email':self.obj_request.user_related_manager.username}]
+                receivers = [{'code':'REM',
+                              'name':self.obj_request.user_related_manager.fullname_title, 
+                              'national_code':self.obj_request.user_related_manager.national_code,
+                              'email':self.obj_request.user_related_manager.username}]
                 # به ازای هر یک از مجریان یک نامه ارسال می شود
                 for tester in self.obj_task.testers:
-                    receivers.append( {'code':'TES','name':tester.fullname_title, 'email':tester.username})
+                    receivers.append( {'code':'TES',
+                                       'name':tester.fullname_title, 
+                                       'national_code':tester.national_code,
+                                       'email':tester.username})
 
             elif task_status == 'TESSEL':
                 self.select_tester = self.obj_task.selected_tester
-                receivers =  [{'code':'REM','name':self.obj_request.user_related_manager.fullname_title, 'email':self.obj_request.user_related_manager.username}]
+                receivers =  [{'code':'REM',
+                               'name':self.obj_request.user_related_manager.fullname_title, 
+                               'national_code':self.obj_request.user_related_manager.national_code,
+                               'email':self.obj_request.user_related_manager.username}]
                 if self.obj_task.selected_tester:
-                    receivers.append({'code':'TES','name':self.obj_task.selected_tester.fullname_title, 'email':self.obj_task.selected_tester.username})
+                    receivers.append({'code':'TES',
+                                      'name':self.obj_task.selected_tester.fullname_title, 
+                                      'national_code':self.obj_task.selected_tester.national_code,
+                                      'email':self.obj_task.selected_tester.username})
 
             elif task_status == 'FINISH':
-                receivers =  [{'code':'REM','name':self.obj_request.user_related_manager.fullname_title, 'email':self.obj_request.user_related_manager.username}]
-                # باید اطلاع رسانی مرحله نهایی را هم انجام دهیم
-                self.send_finish_step_email('TES.CON.ALL', self.get_notification_group_user('email'))
+                receivers =  [{'code':'REM',
+                               'name':self.obj_request.user_related_manager.fullname_title, 
+                               'national_code':self.obj_request.user_related_manager.national_code,
+                               'email':self.obj_request.user_related_manager.username}]
         # فایل json متغییرها را ایجاد می کنیم
         self.__load_variables_json()
         
@@ -5910,10 +6004,11 @@ class Notification:
             
             receiver_fullname = receiver.get('name','')
             receiver_email= receiver.get('email','')
+            receiver_national_code = receiver.get('national_code','')
             
             self.json_variable.update({'receiver_fullname':receiver_fullname,
                                        'receiver_email':receiver_email})
-            self.send_email(code)
+            self.send_email(email_code=code, reciver=receiver_national_code)
     
     def __load_general_variables(self):
         """
@@ -5927,6 +6022,8 @@ class Notification:
         self.change_type = self.obj_request.request_instance.change_type.change_title
         self.request_status = self.obj_request.status_title
         self.form_url = f'http://{settings.SERVER_IP}:{settings.SERVER_PORT}/ConfigurationChangeRequest/{self.obj_request.request_id}'
+        if self.obj_task:
+            self.form_url = f'http://{settings.SERVER_IP}:{settings.SERVER_PORT}/ConfigurationChangeRequest/task/{self.obj_task.request_task_id}'
         self.help_url = f'http://{settings.SERVER_IP}:{settings.SERVER_PORT}/static/ConfigurationChangeRequest/help/{self.obj_request.status_code}.pdf' 
         self.form_register_url = f'http://{settings.SERVER_IP}:{settings.SERVER_PORT}/ConfigurationChangeRequest'
 
@@ -5935,6 +6032,13 @@ class Notification:
         if self.obj_task:
             self.task_title = self.obj_task.task_title
             self.task_status = self.obj_task.status_title
+
+    def __is_valid_email(self, email):
+        try:
+            validate_email(email)
+            return True
+        except EmailNotValidError:
+            return False
 
     def __load_variables_json(self):
         self.json_variable = {}
@@ -6160,65 +6264,77 @@ class Notification:
         
         پارامتر notify_type باید یکی از مقادیر 'email'، 'sms' یا 'phone' باشد.
         """
+        function_name = 'get_notification_group_user'
+        parameter_values = {'notify_type':notify_type }
+        
         if notify_type not in ('email', 'sms', 'phone'):
             return {"sucess":False,"message":"نوع اطلاع رسانی نامعتبر است"}
-        
-        # رکوردهای اطلاع رسانی مربوط به این درخواست را استخراج می کنیم
-        notification_group = m.RequestNotifyGroup.objects.filter(request=self.request_instance)
-        # در صورتی که نوع اطلاع رسانی با استفاده از ایمیل باشد
-        if notify_type == 'email':
-            notification_group = notification_group.filter(by_email=True)
-        # در صورتی نوع اطلاع رسانی با استفاده از پیامک باشد
-        if notify_type == 'sms':
-            notification_group = notification_group.filter(by_sms=True)
-        # در صورتی که نوع اطلاع رسانی با استفاده از تلفن گویا باشد
-        if notify_type == 'phone':
-            notification_group = notification_group.filter(by_phone=True)
+        try:
+            # رکوردهای اطلاع رسانی مربوط به این درخواست را استخراج می کنیم
+            notification_group = m.RequestNotifyGroup.objects.filter(request=self.obj_request.request_instance)
+            # در صورتی که نوع اطلاع رسانی با استفاده از ایمیل باشد
+            if notify_type == 'email':
+                notification_group = notification_group.filter(by_email=True)
+            # در صورتی نوع اطلاع رسانی با استفاده از پیامک باشد
+            elif notify_type == 'sms':
+                notification_group = notification_group.filter(by_sms=True)
+            # در صورتی که نوع اطلاع رسانی با استفاده از تلفن گویا باشد
+            elif notify_type == 'phone':
+                notification_group = notification_group.filter(by_phone=True)
+        except Exception as e:
+            msg = f'امکان تشخیص گروه های اطلاع رسانی وجود ندارد<br/>{str(e)}'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)
+            return {'success':False, 'message':msg}      
         
         users:[m.User] = []
         # به ازای هر رکورد اطلاع رسانی باید کاربران مربوطه را استخراج کنیم و به لیست اضافه کنیم
-        for ng in notification_group:
-            # رکورد گروه اطلاع رسانی را به دست می آوریم
-            notify_group = ng.notifygroup
-            # مقدار فیلد سمت و تیم را به دست می آوریم
-            role_id = notify_group.role_id
-            team_code = notify_group.team_code 
-            # اگر هم سمت و هم تیم مقدار داشته باشد، 
-            # همه کاربرانی که آن سمت و تیم را دارند را استخراج می کنیم
-            # مثلا برنامه نویسان تیم خودرو
-            if role_id and team_code:
-                u = m.UserTeamRole.objects.filter(role_id = role_id, team_code = team_code).values_list('national_code')
-                if u:
-                    # افراد استخراج شده را به لیست اضافه می کنیم
-                    users += u
-            # اگر فقط سمت مقدار داشته باشد
-            # باید برای تمامی کاربرانی که این سمت را دارند ارسال شود
-            # مثلا برای تمامی مدیران پروژه
-            elif role_id:
-                u = m.UserTeamRole.objects.filter(role_id = role_id).values_list('national_code')
-                if u:
-                    # افراد استخراج شده را به لیست اضافه می کنیم
-                    users += u
-            # اگر فقط تیم مقدار داشته باشد
-            # باید برای تمامی کاربرانی که در آن تیم هستند ارسال شود
-            # مثلا برای تمامی اعضای تیم ادمین
-            elif team_code:
-                u = m.UserTeamRole.objects.filter(team_code = team_code).values_list('national_code')
-                if u:
-                    # افراد استخراج شده را به لیست اضافه می کنیم
-                    users += u
-            # در غیر این صورت باید اطلاع رسانی برای افرادی که در این گروه تعریف شده اند انجام شود
-            else:
-                u = m.NotifyGroupUser.objects.filter(notification_group=notify_group).values_list('user_nationalcode')
-                if u:
-                    # افراد استخراج شده را به لیست اضافه می کنیم
-                    users += u
-        
+        try:
+            for ng in notification_group:
+                # رکورد گروه اطلاع رسانی را به دست می آوریم
+                notify_group = ng.notify_group
+                # مقدار فیلد سمت و تیم را به دست می آوریم
+                role_id = notify_group.role_id
+                team_code = notify_group.team_code 
+                # اگر هم سمت و هم تیم مقدار داشته باشد، 
+                # همه کاربرانی که آن سمت و تیم را دارند را استخراج می کنیم
+                # مثلا برنامه نویسان تیم خودرو
+                if role_id and team_code:
+                    u = m.UserTeamRole.objects.filter(role_id = role_id, team_code = team_code).values_list('national_code')
+                    if u:
+                        # افراد استخراج شده را به لیست اضافه می کنیم
+                        users += u
+                # اگر فقط سمت مقدار داشته باشد
+                # باید برای تمامی کاربرانی که این سمت را دارند ارسال شود
+                # مثلا برای تمامی مدیران پروژه
+                elif role_id:
+                    u = m.UserTeamRole.objects.filter(role_id = role_id).values_list('national_code')
+                    if u:
+                        # افراد استخراج شده را به لیست اضافه می کنیم
+                        users += u
+                # اگر فقط تیم مقدار داشته باشد
+                # باید برای تمامی کاربرانی که در آن تیم هستند ارسال شود
+                # مثلا برای تمامی اعضای تیم ادمین
+                elif team_code:
+                    u = m.UserTeamRole.objects.filter(team_code = team_code).values_list('national_code')
+                    if u:
+                        # افراد استخراج شده را به لیست اضافه می کنیم
+                        users += u
+                # در غیر این صورت باید اطلاع رسانی برای افرادی که در این گروه تعریف شده اند انجام شود
+                else:
+                    u = m.NotifyGroupUser.objects.filter(notify_group=notify_group).values_list('user_nationalcode')
+                    if u:
+                        # افراد استخراج شده را به لیست اضافه می کنیم
+                        users += u
+        except Exception as e:
+            msg = f'امکان اطلاع رسانی نهایی وجود ندارد<br/>{str(e)}'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)
+            return {'success':False, 'message':msg}      
+            
         return {'success':True, 'users':users, 'message':''}
         
 
     
-    def send_finish_step_email(self, template_code:str, users:[m.User]):
+    def send_finish_step_email(self, template_code:str, users:[str]):
         """
         این تابع به افرادی که در لیست هستند اطلاع رسانی از طریق ایمیل را انجام می دهد
         برای این کار آدرس ایمیل افراد را استخراج می کند
@@ -6227,69 +6343,87 @@ class Notification:
 
         Args:
             template_code (str): کد الگوی اطلاع رسانی. این کد در دیتابیس سیستم اطلاع رسانی تعریف شده است
-            user (m.User]): آرایه ای از افرادی که باید اطلاع رسانی برای آنها انجام شود
+            user [str]): آرایه ای از کد ملی افرادی که باید اطلاع رسانی برای آنها انجام شود
         """
+        function_name = 'send_finish_step_email'
+        parameter_values = {'template_code':template_code,'users':users }        
+        
         variable_values = {}
         to_users_emails = []
+        national_codes = [u[0] for u in users]
+        users = m.User.objects.filter(national_code__in=national_codes)
         
-        # آدرس ایمیل افراد را استخراج می کنیم 
-        for user in users:
-            # ادرس ایمیل را باید اصلاح کنیم
-            email = user.username.split('@')[0] + '@iraneit.com'
-            to_users_emails.append(email)
+        try:
+            # آدرس ایمیل افراد را استخراج می کنیم 
+            for user in users:
+                # ادرس ایمیل را باید اصلاح کنیم
+                email = user.username.split('@')[0] + '@iraneit.com'
+                if self.__is_valid_email(email):
+                    to_users_emails.append(email)
+            
+            if to_users_emails == []:
+                msg = 'هیچ آدرس ایمیل معتبری برای اطلاع رسانی وجود ندارد'
+                self.obj_error_log.error_log(function_name, parameter_values, msg)
+                return {'success':False, 'message':msg}
+            
+            # حالا متغییرها را به روز می کنیم
+            # عنوان درخواست
+            variable_values['title'] = self.obj_request.request_instance.change_title
+            # عنوان نوع درخواست
+            variable_values['change_type'] = self.obj_request.request_instance.change_type.change_type_title
+            # وضعیت درخواست
+            variable_values['request_status'] = self.obj_request.status_title
+            # اطلاعات درخواست دهنده
+            variable_values['creator_fullname_gender'] = self.obj_request.user_requestor.fullname_gender 
+            variable_values['creator_fullname_title'] = self.obj_request.user_requestor.fullname_title
+            # اطلاعات مدیر مستقیم
+            variable_values['direct_manager_gender'] = self.obj_request.user_direct_manager.fullname_gender 
+            variable_values['direct_manager_title'] = self.obj_request.user_direct_manager.fullname_title
+            # اطلاعات مدیر مربوطه
+            variable_values['related_manager_gender'] = self.obj_request.user_related_manager.fullname_gender 
+            variable_values['related_manager_title'] = self.obj_request.user_related_manager.fullname_title
+            # اطلاعات دبیر کمیته
+            variable_values['committe_user_gender'] = self.obj_request.user_committee.fullname_gender
+            variable_values['committe_user_title'] = self.obj_request.user_committee.fullname_title
+            # نام کمیته
+            variable_values['committe'] = self.obj_request.request_instance.committee
+            # عنوان تسک
+            variable_values['task_title'] = self.obj_request.current_task.task_title
+            # مجریان تسک
+            variable_values['executors_names'] = self.obj_request.current_task.executors_names
+            # تسترهای تسک
+            variable_values['testers_names'] = self.obj_request.current_task.testers_names
+            # مجری منتخب
+            variable_values['selected_executor_gender'] = self.obj_request.current_task.selected_executor.fullname_gender
+            variable_values['selected_executor_title'] = self.obj_request.current_task.selected_executor.fullname_title
+            # تستر منتخب
+            variable_values['selected_tester_gender'] = self.obj_request.current_task.selected_tester.fullname_gender
+            variable_values['selected_tester_title'] = self.obj_request.current_task.selected_tester.fullname_title
+            # وضعیت تسک
+            variable_values['task_status'] = self.obj_request.current_task.status_title
+            
+            # فراخوانی را انجام می دهیم
+            result = send_email_api(template_code=template_code, variable_value=variable_values, to=to_users_emails, cc=[], bcc=[])
+            
+            # رکورد متناظر را در جدول سوابق اطلاع رسانی درج می کنیم
+            nl = m.NotificationLog.objects.create(
+                request=self.obj_request.request_instance,
+                request_status=self.obj_request.status_title,
+                template_code=template_code,
+                email_to=to_users_emails,
+                variables=variable_values,
+                service_data=result,
+                service_return_val=result.get('return_code',-1)
+            )
+            nl.creator_user_id = self.obj_request.current_user_national_code
+            nl.last_modifier_user_id = self.obj_request.current_user_national_code
+            nl.save()
+        except Exception as e:
+            msg = f'امکان ارسال ایمیل اطلاع رسانی نهایی وجود ندارد<br/>{str(e)}'
+            self.obj_error_log.error_log(function_name, parameter_values, msg)
+            return {'success':False, 'message':msg}      
+            
         
-        # حالا متغییرها را به روز می کنیم
-        # عنوان درخواست
-        variable_values['title'] = self.request_instance.change_title
-        # عنوان نوع درخواست
-        variable_values['change_type'] = self.request_instance.change_type.change_type_title
-        # وضعیت درخواست
-        variable_values['request_status'] = self.status_title
-        # اطلاعات درخواست دهنده
-        variable_values['creator_fullname_gender'] = self.user_requestor.fullname_gender 
-        variable_values['creator_fullname_title'] = self.user_requestor.fullname_title
-        # اطلاعات مدیر مستقیم
-        variable_values['direct_manager_gender'] = self.user_direct_manager.fullname_gender 
-        variable_values['direct_manager_title'] = self.user_direct_manager.fullname_title
-        # اطلاعات مدیر مربوطه
-        variable_values['related_manager_gender'] = self.user_related_manager.fullname_gender 
-        variable_values['related_manager_title'] = self.user_related_manager.fullname_title
-        # اطلاعات دبیر کمیته
-        variable_values['committe_user_gender'] = self.user_committee.fullname_gender
-        variable_values['committe_user_title'] = self.user_committee.fullname_title
-        # نام کمیته
-        variable_values['committe'] = self.request_instance.committee
-        # عنوان تسک
-        variable_values['task_title'] = self.current_task.task_title
-        # مجریان تسک
-        variable_values['executors_names'] = self.current_task.executors_names
-        # تسترهای تسک
-        variable_values['testers_names'] = self.current_task.testers_names
-        # مجری منتخب
-        variable_values['selected_executor_gender'] = self.current_task.selected_executor.fullname_gender
-        variable_values['selected_executor_title'] = self.current_task.selected_executor.fullname_title
-        # تستر منتخب
-        variable_values['selected_tester_gender'] = self.current_task.selected_tester.fullname_gender
-        variable_values['selected_tester_title'] = self.current_task.selected_tester.fullname_title
-        # وضعیت تسک
-        variable_values['task_status'] = self.current_task.status_title
-        
-        # فراخوانی را انجام می دهیم
-        result = send_email_api(template_code=template_code, variable_value=variable_values, to=to_users_emails, cc=[], bcc=[])
-        
-        # رکورد متناظر را در جدول سوابق اطلاع رسانی درج می کنیم
-        nl = m.NotificationLog.objects.create(
-            request=self.request_instance,
-            request_status=self.status_title,
-            template_code=template_code,
-            email_to=to_users_emails,
-            variables=variable_values,
-            service_data=result,
-            service_return_val=result.get('return_code',-1)
-        )
-        nl.creator_user = self.current_user_national_code
-        nl.last_modifier_user = self.current_user_national_code
-        nl.save()
         
     def create_template_html_file(self, template_code:str,request_id:int, variable_value:dict):
         """

@@ -37,7 +37,7 @@ def debug_headers(request):
 
 
 def get_current_user(request):
-    current_user = '0081578091'
+    current_user = '0074322060'
     
     if settings.IS_IN_EIT:
         current_user = request.user.national_code

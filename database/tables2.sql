@@ -36,3 +36,7 @@ Where request_task_user_id in
 (select id from ConfigurationChangeRequest_requesttask
 where request_id = @RequestId and (request_task_id = @TaskId or @TaskId = -1)
 ))
+
+select * from ConfigurationChangeRequest_notificationlog
+Where variables like N'%ConfigurationChangeRequest/'+CAST(@RequestId as varchar(10))+'%' or 
+variables like N'%ConfigurationChangeRequest/task/'+CAST(@TaskId as varchar(10))+'%' 
