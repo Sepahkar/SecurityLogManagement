@@ -28150,3 +28150,99 @@ Traceback (most recent call last):
     )
 ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
 2026-01-29 14:55:16,729 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:00:04,903 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:00:18,352 - WARNING - Not Found: /ConfigurationChangeRequest/task/589/static/ConfigurationChangeRequest/favicon.ico
+2026-01-29 16:01:01,142 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/589/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
+2026-01-29 16:07:01,516 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2026-01-29 16:11:27,757 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/589/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
+2026-01-29 16:12:56,732 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/589/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
+2026-01-29 16:17:59,676 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:17:59,886 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/589/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
+2026-01-29 16:18:11,420 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:18:26,437 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/589/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
+2026-01-29 16:18:30,114 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/589/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
+2026-01-29 16:22:47,156 - ERROR - Internal Server Error: /ConfigurationChangeRequest/task/589/
+Traceback (most recent call last):
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "d:\Sepahkar\DjangoProject\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an HttpResponse object. It returned None instead.
+2026-01-29 16:22:47,193 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:51:46,545 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:52:01,712 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:52:52,072 - WARNING - Not Found: /ConfigurationChangeRequest/task/589/static/ConfigurationChangeRequest/favicon.ico
+2026-01-29 16:53:26,027 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:53:38,008 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-01-29 16:53:51,508 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.

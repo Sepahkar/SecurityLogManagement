@@ -37,7 +37,7 @@ def debug_headers(request):
 
 
 def get_current_user(request):
-    current_user = '0012146374'
+    current_user = '3341720121'
     
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
@@ -595,9 +595,9 @@ def task_report_view(request, request_obj:Request, task_obj:Task, mode:str='READ
     data = task_obj.load_task_data()
     data['mode'] = mode
     data['form_type'] = 'task_report'   
-    if task_obj.status_code == 'EXESEL': 
+    if task_obj.status_code == 'EXESEL' or task_obj.status_code == 'TESRED': 
         return render(request, 'ConfigurationChangeRequest/request-task-report-executor.html', data)
-    elif task_obj.status_code == 'TESSEL': 
+    elif task_obj.status_code == 'TESSEL' or task_obj.status_code == 'FINISH' :
         return render(request, 'ConfigurationChangeRequest/request-task-report-tester.html', data)
 
 

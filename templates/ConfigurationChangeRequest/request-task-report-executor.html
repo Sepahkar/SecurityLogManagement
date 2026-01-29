@@ -66,17 +66,17 @@
                         class="persian-date"
                         {% if mode == 'READONLY' %} disabled {% endif %}
                         placeholder="تاریخ انجام را انتخاب کنید"
-                        data-date="{{ done_date|default_if_none:'' }}" 
-                        value="{{ done_date|default_if_none:'' }}"/>
+                        data-date="{{ executor_done_date|default_if_none:'' }}" 
+                        value="{{ executor_done_date|default_if_none:'' }}"/>
                         <!-- hidden input: مقدار میلادی نهایی برای ارسال به سرور -->
-                        <input type="hidden" id="done_date" name="done_date" value="{{ done_date|default_if_none:'' }}">    
+                        <input type="hidden" id="done_date" name="done_date" value="{{ executor_done_date|default_if_none:'' }}">    
                     </span>
                     <span class="label-title">ساعت انجام تسک:</span>
                     <span class="label-text">
                         <input id="timepicker" name="done_time"  type="text" placeholder="ساعت را انتخاب کنید"
-                        {% if mode == 'READONLY' %} disabled {% endif %} value="{{ done_time|default_if_none:'' }}" />
+                        {% if mode == 'READONLY' %} disabled {% endif %} value="{{ executor_done_time|default_if_none:'' }}" />
                         <div id="timepicker-container"></div>
-                        <input type="hidden" id="done_time" value="{{ done_time|default_if_none:'' }}"
+                        <input type="hidden" id="done_time" value="{{ executor_done_time|default_if_none:'' }}"
                         {% if mode == 'READONLY' %} disabled {% endif %}>
                     </span>
                 </div>
@@ -85,7 +85,7 @@
                     <span class="label-text">
                         <textarea name="report_text" class="report-text {% if mode == 'READONLY' %}inactive{% endif %}" rows="4" 
                         {% if mode == 'READONLY' %} disabled {% endif %}
-                        placeholder="گزارش انجام تسک را وارد کنید">{{ report|default_if_none:'' }}</textarea>
+                        placeholder="گزارش انجام تسک را وارد کنید">{{ executor_report|default_if_none:'' }}</textarea>
                     </span>
                 </div>
             </div>
