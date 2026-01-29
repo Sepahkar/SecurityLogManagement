@@ -37,7 +37,7 @@ def debug_headers(request):
 
 
 def get_current_user(request):
-    current_user = '0074322060'
+    current_user = '0012146374'
     
     if settings.IS_IN_EIT:
         current_user = request.user.national_code
@@ -110,8 +110,8 @@ def get_current_user(request):
                     current_user = commitee
                 else: 
                     current_user = rel_manger
-        else:     
-            current_user = '1280419180'
+        # else:     
+        #     current_user = '1280419180'
             
     if current_user == '':
         current_user = '1280419180'
