@@ -51,7 +51,15 @@ import os
 APP_CODE = settings.APPCODE
 
     
-    
+def normalize(data):
+    if isinstance(data, dict):
+        return {k: normalize(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [normalize(v) for v in data]
+    if hasattr(data, "_meta"):
+        return data.pk
+    return data
+  
     
 
 class Cartable:
@@ -142,7 +150,7 @@ class Cartable:
         """
         # اگر سند وجود نداشته باشد پیام خطا می دهد
         if not self.validate_doc():
-            self.obj_error_log.log_error(function_name='send_cartable', parameter_values={'receivers':receivers, 'sender':sender, 'flow_step':flow_step, 'new_doc_state':new_doc_state}, error_desciption=f"قبل از ارسال، سند باید ایجاد شده باشد:")
+            # self.obj_error_log.log_error(function_name='send_cartable', parameter_values={'receivers':receivers, 'sender':sender, 'flow_step':flow_step, 'new_doc_state':new_doc_state}, error_desciption=f"قبل از ارسال، سند باید ایجاد شده باشد:")
             return {
                 "success": False,
                 "message": "قبل از ارسال، سند باید ایجاد شده باشد",
@@ -156,9 +164,9 @@ class Cartable:
             # کاربر مربوطه را پیدا می کنیم
             user_obj:m.User = m.User.objects.filter(national_code=user_national_code).first()
             if not user_obj:
-                self.obj_error_log.log_error(function_name='send_cartable', 
-                parameter_values={'receivers':receivers, 'sender':sender, 'flow_step':flow_step, 'new_doc_state':new_doc_state},
-                error_desciption=f"کاربری با کد ملی {user_national_code} یافت نشد.:")
+                # self.obj_error_log.log_error(function_name='send_cartable'), 
+                # parameter_values={'receivers':receivers, 'sender':sender, 'flow_step':flow_step, 'new_doc_state':new_doc_state},
+                # error_desciption=f"کاربری با کد ملی {user_national_code} یافت نشد.:")
                 return {'success':False, 'message':f'کاربری با کد ملی {user_national_code} یافت نشد.'}
 
             role_id = user_obj.get_role_id
@@ -4934,7 +4942,7 @@ class Request:
                 try:
                     self.request_instance.delete()
                 except:
-                    pass
+                    msg= "امکان حذف رکورد وجود ندارد"
             msg = msg
             self.obj_error_log.error_log(function_name, parameter_values, msg)
             return {"success": False, "message": msg}
@@ -6094,6 +6102,7 @@ class Notification:
         """
         # این متغییرها را برای مدیریت لاگ های خطا مقداردهی می کنیم
         function_name = 'send_email'
+        email_code = f"SLM.CCR.{email_code}"
         parameter_values = {'email_code':email_code, 'reciver':reciver}
 
 

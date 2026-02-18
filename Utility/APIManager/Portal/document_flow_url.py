@@ -8,5 +8,6 @@ def ver1(doc_id:int)-> str:
         Returns:
             str: آدرس صفحه نمایش گردش مدرک
         """
-        
-        return f'http://127.0.0.1:10000/flow/{doc_id}'  
+        return f'http://eit-app:23000/Cartable/WorkFlowTable/?doc_pk={doc_id}' 
+        # return f'http://127.0.0.1:10000/flow/{doc_id}'  
+

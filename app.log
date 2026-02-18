@@ -28315,3 +28315,802 @@ ValueError: The view ConfigurationChangeRequest.views.task_view didn't return an
 2026-01-29 22:24:36,746 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2026-01-29 22:28:09,423 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
 2026-01-29 22:40:35,725 - INFO - D:\Sepahkar\DjangoProject\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-14 17:30:36,719 - WARNING - Not Found: /ConfigurationChangeRequest/testgeneratetoken/
+2026-02-14 17:30:36,879 - WARNING - Not Found: /favicon.ico
+2026-02-14 17:30:53,177 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-14 17:37:57,836 - INFO - D:\SLM GITHUB\asd\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-14 17:38:15,348 - INFO - D:\SLM GITHUB\asd\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-14 17:38:21,351 - INFO - D:\SLM GITHUB\asd\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-14 17:38:37,446 - INFO - D:\SLM GITHUB\asd\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-14 21:16:30,594 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-14 21:17:21,182 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-14 21:36:48,789 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-14 21:37:00,654 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-14 21:40:24,457 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-15 19:56:42,679 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2026-02-15 19:56:44,227 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-15 19:59:37,157 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-15 20:42:24,466 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-15 21:32:55,270 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-15 23:50:58,638 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 00:05:50,827 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 00:19:03,478 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4926, in create_request
+    self.request_instance.delete()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1274, in delete
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: ConfigurationChangeRequest object can't be deleted because its id attribute is set to None.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 294, in request_create
+    result = request_obj.create_request(form_data, current_user_nationalcode)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4938, in create_request
+    msg = msg
+          ^^^
+UnboundLocalError: cannot access local variable 'msg' where it is not associated with a value
+2026-02-16 00:23:22,954 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4926, in create_request
+    self.request_instance.delete()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1274, in delete
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: ConfigurationChangeRequest object can't be deleted because its id attribute is set to None.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 294, in request_create
+    result = request_obj.create_request(form_data, current_user_nationalcode)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4938, in create_request
+    msg = msg
+          ^^^
+UnboundLocalError: cannot access local variable 'msg' where it is not associated with a value
+2026-02-16 00:23:40,523 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4926, in create_request
+    self.request_instance.delete()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1274, in delete
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: ConfigurationChangeRequest object can't be deleted because its id attribute is set to None.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 294, in request_create
+    result = request_obj.create_request(form_data, current_user_nationalcode)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4938, in create_request
+    msg = msg
+          ^^^
+UnboundLocalError: cannot access local variable 'msg' where it is not associated with a value
+2026-02-16 00:25:09,438 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4926, in create_request
+    self.request_instance.delete()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1274, in delete
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: ConfigurationChangeRequest object can't be deleted because its id attribute is set to None.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 294, in request_create
+    result = request_obj.create_request(form_data, current_user_nationalcode)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4938, in create_request
+    msg = msg
+          ^^^
+UnboundLocalError: cannot access local variable 'msg' where it is not associated with a value
+2026-02-16 00:26:30,841 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4926, in create_request
+    self.request_instance.delete()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1274, in delete
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: ConfigurationChangeRequest object can't be deleted because its id attribute is set to None.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 294, in request_create
+    result = request_obj.create_request(form_data, current_user_nationalcode)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4938, in create_request
+    msg = msg
+          ^^^
+UnboundLocalError: cannot access local variable 'msg' where it is not associated with a value
+2026-02-16 00:27:02,920 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 00:28:29,177 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 00:28:42,939 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 00:28:58,316 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 00:39:45,844 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 00:44:26,753 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 13:04:33,851 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 13:06:09,484 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-16 13:12:20,335 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 13:18:18,673 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 13:21:51,833 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 13:27:06,702 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 13:28:21,148 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 13:28:41,356 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 13:33:08,866 - WARNING - Not Found: /ConfigurationChangeRequest/181/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 13:41:10,534 - WARNING - Not Found: /ConfigurationChangeRequest/181/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 18:55:38,016 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 18:56:36,206 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 18:56:39,552 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 18:56:59,715 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 18:57:35,584 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 18:58:07,857 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 18:58:21,363 - ERROR - Internal Server Error: /ConfigurationChangeRequest/
+Traceback (most recent call last):
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 948, in get_or_create
+    return self.get(**kwargs), False
+           ~~~~~~~~^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    raise self.model.DoesNotExist(
+        "%s matching query does not exist." % self.model._meta.object_name
+    )
+auth2.models.User.DoesNotExist: User matching query does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\mssql\base.py", line 679, in execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+pyodbc.IntegrityError: ('23000', "[23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__auth2_us__D65D8532CB762417'. Cannot insert duplicate key in object 'dbo.auth2_user'. The duplicate key value is (). (2627) (SQLExecDirectW); [23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The statement has been terminated. (3621)")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\contrib\auth\middleware.py", line 132, in __call__
+    self.process_request(request)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\auth2\middleware.py", line 65, in process_request
+    user = auth_backend.authenticate(request=request, remote_user=settings.DEV_USER)
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\contrib\auth\backends.py", line 284, in authenticate
+    user, created = UserModel._default_manager.get_or_create(
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        **{UserModel.USERNAME_FIELD: username}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 955, in get_or_create
+    return self.create(**params), True
+           ~~~~~~~~~~~^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 665, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 65, in save
+    super().save(*args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 902, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1008, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1169, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1210, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1873, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1882, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\mssql\base.py", line 679, in execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.IntegrityError: ('23000', "[23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__auth2_us__D65D8532CB762417'. Cannot insert duplicate key in object 'dbo.auth2_user'. The duplicate key value is (). (2627) (SQLExecDirectW); [23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The statement has been terminated. (3621)")
+2026-02-16 18:58:22,119 - ERROR - Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 948, in get_or_create
+    return self.get(**kwargs), False
+           ~~~~~~~~^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    raise self.model.DoesNotExist(
+        "%s matching query does not exist." % self.model._meta.object_name
+    )
+auth2.models.User.DoesNotExist: User matching query does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\mssql\base.py", line 679, in execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+pyodbc.IntegrityError: ('23000', "[23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__auth2_us__D65D8532CB762417'. Cannot insert duplicate key in object 'dbo.auth2_user'. The duplicate key value is (). (2627) (SQLExecDirectW); [23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The statement has been terminated. (3621)")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\contrib\auth\middleware.py", line 132, in __call__
+    self.process_request(request)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\auth2\middleware.py", line 65, in process_request
+    user = auth_backend.authenticate(request=request, remote_user=settings.DEV_USER)
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\contrib\auth\backends.py", line 284, in authenticate
+    user, created = UserModel._default_manager.get_or_create(
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        **{UserModel.USERNAME_FIELD: username}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 955, in get_or_create
+    return self.create(**params), True
+           ~~~~~~~~~~~^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 665, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 65, in save
+    super().save(*args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 902, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1008, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1169, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\base.py", line 1210, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 1873, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1882, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\SLM GITHUB\asd\SecurityLogManagement\venv\Lib\site-packages\mssql\base.py", line 679, in execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.IntegrityError: ('23000', "[23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Violation of PRIMARY KEY constraint 'PK__auth2_us__D65D8532CB762417'. Cannot insert duplicate key in object 'dbo.auth2_user'. The duplicate key value is (). (2627) (SQLExecDirectW); [23000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The statement has been terminated. (3621)")
+2026-02-16 18:59:33,706 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 19:46:51,425 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 22:49:07,717 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 22:55:57,950 - INFO - D:\Django\SecurityLogManagement\Config\settings.py changed, reloading.
+2026-02-16 22:55:58,319 - WARNING - Not Found: /ConfigurationChangeRequest/175/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 23:01:59,477 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-16 23:02:23,267 - WARNING - Not Found: /ConfigurationChangeRequest/175/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 23:04:53,881 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2026-02-16 23:06:10,922 - WARNING - Not Found: /.well-known/appspecific/com.chrome.devtools.json
+2026-02-16 23:09:17,216 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-16 23:09:26,513 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-16 23:09:36,140 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-16 23:09:45,570 - WARNING - Not Found: /favicon.ico
+2026-02-16 23:10:12,567 - WARNING - Not Found: /ConfigurationChangeRequest/task/591/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 23:13:31,829 - WARNING - Not Found: /ConfigurationChangeRequest/taks/593
+2026-02-16 23:13:40,316 - WARNING - Not Found: /ConfigurationChangeRequest/task/593/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 23:14:03,838 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-16 23:14:13,848 - WARNING - Not Found: /ConfigurationChangeRequest/task/593/static/ConfigurationChangeRequest/favicon.ico
+2026-02-16 23:34:04,199 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 23:34:14,366 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 23:34:22,864 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 23:34:32,447 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 23:34:48,884 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 23:34:59,818 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 23:35:10,350 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-16 23:37:55,757 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-16 23:38:19,215 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-16 23:39:46,519 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-16 23:40:02,352 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-16 23:40:12,424 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-17 00:01:16,377 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:03:54,949 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:04:19,226 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:04:29,488 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:04:48,173 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:04:56,170 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:05:19,243 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:06:02,796 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:06:59,020 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:07:08,537 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:07:16,743 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:07:25,218 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:08:11,836 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-17 00:10:21,120 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-17 00:14:59,882 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-17 00:20:42,096 - INFO - D:\Django\SecurityLogManagement\Config\settings.py changed, reloading.
+2026-02-17 00:25:51,805 - WARNING - Not Found: /ConfigurationChangeRequest/task/592/static/ConfigurationChangeRequest/favicon.ico
+2026-02-17 00:26:08,831 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-17 00:26:26,754 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py changed, reloading.
+2026-02-17 00:26:39,667 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-17 00:26:44,365 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-17 00:31:09,867 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-18 12:10:53,804 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 12:12:19,512 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-18 12:42:43,180 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-18 12:44:02,907 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-18 13:01:48,390 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\exit_cartable.py changed, reloading.
+2026-02-18 13:02:04,263 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 13:04:33,016 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\exit_cartable.py changed, reloading.
+2026-02-18 13:04:48,701 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\exit_cartable.py changed, reloading.
+2026-02-18 13:05:31,502 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 13:14:13,733 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 13:16:20,423 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 13:16:52,258 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 13:17:27,419 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 13:19:00,665 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 13:19:12,482 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 13:19:44,852 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 13:21:53,453 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 13:28:12,012 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 13:29:49,741 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 13:41:35,430 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 13:43:17,715 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 13:43:52,040 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 13:47:09,467 - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23000
+2026-02-18 13:47:16,075 - DEBUG - http://127.0.0.1:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 500 98853
+2026-02-18 13:48:50,951 - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23000
+2026-02-18 13:48:52,548 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 13:49:47,057 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 13:49:47,212 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 13:52:06,248 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 13:52:06,391 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 13:53:14,041 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 13:53:14,175 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 13:53:41,012 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 13:53:41,139 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 13:55:28,963 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 13:55:29,125 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 13:59:04,674 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 13:59:04,829 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 13:59:44,707 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 13:59:44,815 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:00:40,352 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 14:02:45,505 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:02:45,670 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:04:11,805 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 14:04:33,322 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 14:05:28,164 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:05:28,294 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:06:50,790 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:06:50,942 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:08:07,425 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 14:09:23,226 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:09:23,362 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:09:54,597 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 14:17:15,906 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:17:16,086 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:17:45,831 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 14:18:31,517 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:18:31,654 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:18:37,664 - DEBUG - Encoding detection: utf_8 is most likely the one.
+2026-02-18 14:18:42,839 - DEBUG - Encoding detection: utf_8 is most likely the one.
+2026-02-18 14:19:45,411 - DEBUG - Encoding detection: utf_8 is most likely the one.
+2026-02-18 14:20:09,868 - DEBUG - Encoding detection: utf_8 is most likely the one.
+2026-02-18 14:20:27,651 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 14:21:05,649 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:21:05,805 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:26:03,794 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\register_document.py changed, reloading.
+2026-02-18 14:26:39,272 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:26:39,384 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:27:02,687 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:27:02,863 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 500 212
+2026-02-18 14:30:42,310 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:30:42,414 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:31:53,576 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:31:53,714 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 500 212
+2026-02-18 14:32:09,256 - DEBUG - Encoding detection: ascii is most likely the one.
+2026-02-18 14:37:47,489 - DEBUG - Encoding detection: ascii is most likely the one.
+2026-02-18 14:37:48,304 - DEBUG - Encoding detection: ascii is most likely the one.
+2026-02-18 14:37:50,071 - DEBUG - Encoding detection: ascii is most likely the one.
+2026-02-18 14:37:52,665 - DEBUG - Encoding detection: ascii is most likely the one.
+2026-02-18 14:38:04,855 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-18 14:38:32,095 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:38:32,268 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:38:38,388 - DEBUG - Starting new HTTP connection (1): 127.0.0.1:23000
+2026-02-18 14:38:50,646 - DEBUG - http://127.0.0.1:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 500 103324
+2026-02-18 14:39:29,641 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\send_document.py changed, reloading.
+2026-02-18 14:45:17,265 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 14:58:19,245 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:58:19,339 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 14:58:25,870 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 14:58:26,069 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:00:23,347 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:00:23,459 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:01:58,908 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:01:59,081 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:13:10,420 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:13:33,338 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:13:33,479 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:13:36,252 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:13:36,463 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:23:39,073 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:25:18,227 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:25:18,360 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:25:19,742 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:25:19,926 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:30:47,342 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:32:56,866 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:32:57,049 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:33:01,175 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:33:01,314 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:33:35,670 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 15:34:09,100 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:34:09,254 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:34:14,483 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:34:14,645 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:34:49,371 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:34:49,477 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:35:07,335 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:35:07,494 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:35:48,816 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:35:48,938 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:35:54,267 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:35:54,418 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:39:02,749 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:39:40,219 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:40:28,541 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:40:28,649 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:40:33,878 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:40:34,171 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:41:40,339 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:41:40,449 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:41:44,296 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:41:44,469 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:42:05,192 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:42:06,747 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:42:10,113 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:42:10,261 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:44:01,032 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:46:14,760 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:46:14,869 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:46:21,500 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:46:21,707 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:47:25,480 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:47:44,250 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:47:44,391 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:47:44,415 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:47:44,593 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:50:05,397 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:50:15,232 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:50:15,367 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:50:15,399 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:50:15,583 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:51:17,468 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:51:31,948 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:51:32,073 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 249
+2026-02-18 15:51:32,098 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:51:32,314 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:51:52,311 - DEBUG - Starting new HTTP connection (1): 127.0.0.1:8000
+2026-02-18 15:51:52,447 - DEBUG - http://127.0.0.1:8000 "POST /EmailService/api/v1/send-template-mail/ HTTP/1.1" 400 259
+2026-02-18 15:53:55,546 - WARNING - Not Found: /ConfigurationChangeRequest/229/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 15:54:53,268 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:56:48,768 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 15:57:12,222 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:57:13,746 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 15:57:13,764 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:57:13,874 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:57:32,680 - DEBUG - Starting new HTTP connection (1): eit-app:8000
+2026-02-18 15:58:42,219 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:58:42,340 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 15:58:42,360 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 15:58:42,495 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 15:59:02,814 - DEBUG - Starting new HTTP connection (1): eit-app:6000
+2026-02-18 15:59:07,579 - DEBUG - http://eit-app:6000 "POST /EmailService/api/v1/send-template-mail/ HTTP/1.1" 400 491
+2026-02-18 16:08:36,565 - WARNING - Not Found: /ConfigurationChangeRequest/231/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 16:10:45,674 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 16:10:45,811 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 16:10:45,827 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 16:10:46,006 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 16:19:14,686 - DEBUG - Starting new HTTP connection (1): eit-app:6000
+2026-02-18 16:22:36,568 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 16:22:36,704 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 16:22:36,723 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 16:22:36,885 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 16:23:11,034 - DEBUG - Starting new HTTP connection (1): eit-app:6000
+2026-02-18 16:23:11,422 - DEBUG - http://eit-app:6000 "POST /EmailService/api/v1/send-template-mail/ HTTP/1.1" 400 259
+2026-02-18 16:25:28,570 - WARNING - Not Found: /ConfigurationChangeRequest/233/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 16:25:33,957 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Notification\send_email.py changed, reloading.
+2026-02-18 16:29:26,782 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 16:29:26,933 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 16:29:26,957 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 16:29:27,111 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 16:30:46,527 - DEBUG - Starting new HTTP connection (1): eit-app:6000
+2026-02-18 16:30:48,298 - DEBUG - http://eit-app:6000 "POST /EmailService/api/v1/send-template-mail/ HTTP/1.1" 400 491
+2026-02-18 16:40:57,787 - WARNING - Not Found: /ConfigurationChangeRequest/234/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 16:41:36,681 - WARNING - Not Found: /ConfigurationChangeRequest/234/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 16:43:27,598 - INFO - D:\Django\SecurityLogManagement\Config\settings.py changed, reloading.
+2026-02-18 22:37:29,093 - ERROR - Internal Server Error: /ConfigurationChangeRequest/234/
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3967, in __init__
+    self.request_instance = m.ConfigurationChangeRequest.objects.get(
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        id=request_id
+        ^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    raise self.model.DoesNotExist(
+        "%s matching query does not exist." % self.model._meta.object_name
+    )
+ConfigurationChangeRequest.models.ConfigurationChangeRequest.DoesNotExist: ConfigurationChangeRequest matching query does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 327, in request_view
+    request_obj = Request(current_user_national_code=current_user_nationalcode,request_id=request_id)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4045, in __init__
+    self.obj_error_log.error_log(function_name, parameter_values, self.error_message)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 6552, in error_log
+    'doc_id': self.request_obj.obj_cartable.doc_id
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'doc_id'
+2026-02-18 22:37:29,341 - WARNING - Not Found: /favicon.ico
+2026-02-18 22:40:01,011 - ERROR - Internal Server Error: /ConfigurationChangeRequest/234/
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 3967, in __init__
+    self.request_instance = m.ConfigurationChangeRequest.objects.get(
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        id=request_id
+        ^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    raise self.model.DoesNotExist(
+        "%s matching query does not exist." % self.model._meta.object_name
+    )
+ConfigurationChangeRequest.models.ConfigurationChangeRequest.DoesNotExist: ConfigurationChangeRequest matching query does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django\SecurityLogManagement\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\views.py", line 327, in request_view
+    request_obj = Request(current_user_national_code=current_user_nationalcode,request_id=request_id)
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 4045, in __init__
+    self.obj_error_log.error_log(function_name, parameter_values, self.error_message)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py", line 6552, in error_log
+    'doc_id': self.request_obj.obj_cartable.doc_id
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'doc_id'
+2026-02-18 22:40:01,451 - WARNING - Not Found: /favicon.ico
+2026-02-18 22:40:11,918 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 22:40:16,430 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:40:16,684 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 22:40:16,824 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:40:17,239 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 22:40:17,242 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:40:17,254 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162397 HTTP/1.1" 401 1293
+2026-02-18 22:43:30,289 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 22:43:35,093 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:43:35,406 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 22:43:35,427 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:43:35,839 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 22:43:35,842 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:43:35,852 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162398 HTTP/1.1" 401 1293
+2026-02-18 22:43:41,303 - DEBUG - Starting new HTTP connection (1): eit-app:6000
+2026-02-18 22:44:44,599 - WARNING - Not Found: /ConfigurationChangeRequest/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 22:44:48,505 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:44:48,745 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v2/documents/ HTTP/1.1" 200 282
+2026-02-18 22:44:48,761 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:44:49,112 - DEBUG - http://eit-app:23000 "PUT /Cartable/api/v3/document-flows/ HTTP/1.1" 200 414
+2026-02-18 22:44:49,115 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:44:49,126 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 22:45:08,211 - DEBUG - Starting new HTTP connection (1): eit-app:6000
+2026-02-18 22:45:08,875 - DEBUG - http://eit-app:6000 "POST /EmailService/api/v1/send-template-mail/ HTTP/1.1" 400 491
+2026-02-18 22:45:45,171 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:45:45,202 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 22:45:45,521 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 22:53:50,074 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:53:50,108 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 22:53:50,722 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 22:53:54,129 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:53:54,168 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 22:53:54,644 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 22:56:17,084 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:56:17,241 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:56:27,990 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:56:28,016 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:56:36,556 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:56:36,570 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:57:02,130 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:57:02,922 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\document_flow_url.py changed, reloading.
+2026-02-18 22:57:47,378 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 22:57:47,410 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 22:58:16,202 - DEBUG - Encoding detection: latin_1 is most likely the one.
+2026-02-18 22:58:52,030 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 23:05:01,989 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:05:02,546 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:06:22,229 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 23:06:22,278 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:06:34,082 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 23:06:45,465 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:06:45,655 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:07:21,687 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-18 23:07:21,713 - DEBUG - http://192.168.20.81:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:26:51,118 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 23:28:55,506 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-18 23:28:55,528 - DEBUG - http://192.168.20.81:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:29:15,445 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:29:17,119 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:29:53,043 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-18 23:29:53,073 - DEBUG - http://192.168.20.81:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:30:06,434 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:30:20,650 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:30:58,829 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 23:30:58,949 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:31:34,844 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-18 23:31:34,858 - DEBUG - http://192.168.20.81:23000 "GET /Cartable/comments/count/?document_id=162399&document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:31:47,211 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 23:31:55,104 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:31:55,115 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:32:38,965 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-18 23:32:38,979 - DEBUG - http://192.168.20.81:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:38:58,087 - WARNING - Not Found: /ConfigurationChangeRequest/177/static/ConfigurationChangeRequest/favicon.ico
+2026-02-18 23:39:09,095 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:39:09,614 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:39:50,016 - DEBUG - Starting new HTTP connection (1): 192.168.20.81:23000
+2026-02-18 23:39:50,058 - DEBUG - http://192.168.20.81:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:40:15,648 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:40:27,827 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:41:38,721 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 23:41:38,737 - DEBUG - http://eit-app:23000 "GET /Cartable/comments/count/?document_id=162399 HTTP/1.1" 401 1293
+2026-02-18 23:45:38,772 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:45:48,060 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:45:59,999 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:46:43,771 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:47:51,875 - INFO - D:\Django\SecurityLogManagement\Utility\APIManager\Portal\comment_url.py changed, reloading.
+2026-02-18 23:48:24,795 - DEBUG - Starting new HTTP connection (1): eit-app:23000
+2026-02-18 23:48:24,890 - DEBUG - http://eit-app:23000 "GET /Cartable/api/comments/count/?document_id=162399 HTTP/1.1" 200 43
+2026-02-18 23:50:08,060 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 23:50:21,147 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 23:50:29,221 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 23:50:37,996 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.
+2026-02-18 23:52:14,155 - INFO - D:\Django\SecurityLogManagement\ConfigurationChangeRequest\business.py changed, reloading.

@@ -1,7 +1,7 @@
 @font-face
 {
   font-family: Defined-Titr;
-  src: url("../font/BTitrBd.TTF");
+  src: url("../font/BTitrBd.ttf");
 }
 .feature-text{
     font-family: Defined-Titr;

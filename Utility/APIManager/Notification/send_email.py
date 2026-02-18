@@ -1,6 +1,32 @@
 import requests
 from Utility import configs
 from shared_lib import core as slcore
+from datetime import date,datetime
+import json
+from decimal import Decimal
+import jdatetime
+
+def _serialize_dates(obj):
+    """
+    Recursively convert dates/datetimes, jdatetime, and Decimal to JSON-serializable types.
+    - date/datetime → ISO string
+    - jdatetime → Jalali string YYYY-MM-DD
+    - Decimal → float
+    """
+    if isinstance(obj, (date, datetime)):
+        return obj.isoformat()
+    elif isinstance(obj, (jdatetime.date, jdatetime.datetime)):
+        # Keep as Jalali string in YYYY-MM-DD
+        return f"{obj.year:04d}-{obj.month:02d}-{obj.day:02d}"
+    elif isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: _serialize_dates(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_serialize_dates(v) for v in obj]
+    else:
+        return obj
+
 
 def v1(
     template_code: str,
@@ -52,6 +78,7 @@ def v2(
         to: list[str],
         cc: list[str],
         bcc: list[str]
+        
 ) -> dict:
         """
         این تابع بر اساس کد الگوی اطلاع رسانی دریافتی، سرویس مربوط به اطلاع رسانی را فراخوانی می کند
@@ -86,5 +113,57 @@ def v2(
                 invalid_email_address[]: لیست ایمیل های نامعتبر
                 invalid_variable[]: لیست متغییرهای نامعتبر
         """
+        url = f"http://eit-app:6000/EmailService/api/v1/send-template-mail/"
 
-        return {"success":True,"message":"اطلاع رسانی با موفقیت انجام شد","return_code":200}
+        # Recursively convert dates, jdatetime, and decimals in variable_value
+        safe_variables = _serialize_dates(variable_value)
+
+        payload = {
+            "template_code": template_code,
+            "variables": safe_variables,
+            "to": to,
+            "cc": cc,
+            "bcc": bcc
+        }
+
+        headers = {
+            "Service-Authorization": slcore.generate_token("v.bagheri"),
+            "Content-Type": "application/json"
+        }
+
+        try:
+            json_payload = json.dumps(payload, default=str)
+            response = requests.post(url, data=json_payload, headers=headers, timeout=5)
+            try:
+                result = response.json()
+            except Exception:
+                return {
+                    "success": False,
+                    "message": f"پاسخ سرویس ایمیل نامعتبر است: {response.text[:200]}",
+                    "error_code": -20,
+                    "invalid_email_address": [],
+                    "invalid_variablep": [],
+                    "return_code": response.status_code
+                }
+        except requests.exceptions.RequestException as e:
+            return {
+                "success": False,
+                "message": f"سرویس ایمیل در دسترس نیست: {str(e)}",
+                "error_code": -10,
+                "invalid_email_address": [],
+                "invalid_variablep": [],
+                "return_code": -10
+            }
+
+        return {
+            "success": result.get("success", False),
+            "message": result.get("message", ""),
+            "error_code": result.get("error_code", -50),
+            "invalid_email_address": result.get("invalid_email_address", []),
+            "invalid_variablep": result.get("invalid_variablep", []),
+            "return_code": 200
+        }
+
+
+
+        # return {"success":True,"message":"اطلاع رسانی با موفقیت انجام شد","return_code":200}

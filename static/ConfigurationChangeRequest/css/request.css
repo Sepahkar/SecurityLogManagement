@@ -30,7 +30,7 @@
 @font-face
 {
   font-family: Defined-Titr;
-  src: url("../font/BTitrBd.TTF");
+  src: url("../font/BTitrBd.ttf");
 }
 @font-face
 {
@@ -86,17 +86,17 @@
 @font-face
 {
   font-family: Defined-Titr;
-  src: url("../font/BTitrBd.TTF");
+  src: url("../font/BTitrBd.ttf");
 }
 @font-face
 {
   font-family: Defined-IranSans;
-  src: url("../font/IRANSans_Light.TTF");
+  src: url("../font/IRANSans_Light.ttf");
 }
 @font-face
 {
   font-family: Defined-Traffic;
-  src: url("../font/BTraffic.TTF");
+  src: url("../font/BTraffic.ttf");
 }
 
 /************** Font style end***************/
